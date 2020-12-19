@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Command">
+    <Text>Command TopoAlign</Text>
+    <Description>Some description for TopoAlign</Description>
+    <Assembly>TopoAlign.dll</Assembly>
+    <FullClassName>TopoAlign.Command</FullClassName>
+    <ClientId>444cd193-263b-4117-9d52-3eb5f74bba9e</ClientId>
+    <VendorId>com.typepad.thebuildingcoder</VendorId>
+    <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
+  </AddIn>
+  <AddIn Type="Application">
+    <Name>Application TopoAlign</Name>
+    <Assembly>TopoAlign.dll</Assembly>
+    <FullClassName>TopoAlign.App</FullClassName>
+    <ClientId>a690f988-5715-4967-b892-0a5f49b185fc</ClientId>
+    <VendorId>com.typepad.thebuildingcoder</VendorId>
+    <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
+  </AddIn>
+</RevitAddIns>
