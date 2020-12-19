@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <!--<AddIn Type="Command">
+    <Text>Command ARCHISOFT_topoalign</Text>
+    <Description>Some description for ARCHISOFT_topoalign</Description>
+    <Assembly>ARCHISOFT_topoalign.dll</Assembly>
+    <FullClassName>ARCHISOFT_topoalign.AdskCommand</FullClassName>
+    <ClientId>d4927302-40ff-4165-9459-94d390d408f5</ClientId>
+    <VendorId>TBC_</VendorId>
+    <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
+  </AddIn>-->
+  <AddIn Type="Application">
+    <Name>ARCHISOFT Topo Align</Name>
+    <Assembly>D:\Dropbox\Revit Development\My Projects\0036 Revit - Topo Align\ARCHISOFT_topoalign\ARCHISOFT_topoalign\bin\2016\ARCHISOFT_topoalign.dll</Assembly>
+    <ClientId>60ce490d-ee24-40e1-817b-ba9f23820564</ClientId>
+    <FullClassName>ARCHISOFT_topoalign.AdskApplication</FullClassName>
+    <VendorId>ARBG</VendorId>
+		<VisibilityMode>NotVisibleInFamily</VisibilityMode>
+		<VisibilityMode>NotVisibleWhenNoActiveDocument</VisibilityMode>
+  </AddIn>
+</RevitAddIns>

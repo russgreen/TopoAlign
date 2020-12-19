@@ -1,0 +1,294 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+      None
+    </ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>
+    </SchemaVersion>
+    <ProjectGuid>{99B0A9C1-8155-4B07-A9F6-575AD58F0ED9}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ARCHISOFT_topoalign</RootNamespace>
+    <FileAlignment>512</FileAlignment>
+    <MyType>Windows</MyType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionCompare>Binary</OptionCompare>
+    <OptionStrict>Off</OptionStrict>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2015|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\2015\</OutputPath>
+    <DebugType>Full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2016|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\2016\</OutputPath>
+    <DebugType>Full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2016 BVN|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\2016 BVN\</OutputPath>
+    <DebugType>Full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2016 Trial|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\2016 Trial\</OutputPath>
+    <DebugType>Full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2017|x64'">
+    <OutputPath>bin\2017\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>Full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2017 O3S|x64'">
+    <OutputPath>bin\2017 O3S\</OutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2018|x64'">
+    <OutputPath>bin\2018\</OutputPath>
+    <DebugType>Full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2019|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\2019\</OutputPath>
+    <DebugType>Full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2020|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\2020\</OutputPath>
+    <DebugType>Full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>russ.green%40live.co.uk_new.pfx</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2021|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\2021\</OutputPath>
+    <DebugType>Full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2015' ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2015\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2015' ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2015\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2016' Or '$(Configuration)' == '2016 BVN' Or '$(Configuration)' == '2016 Trial'  ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2016\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2016' Or '$(Configuration)' == '2016 BVN' Or '$(Configuration)' == '2016 Trial' ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2016\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2017' Or '$(Configuration)' == '2017 O3S' ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2017\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2017' Or '$(Configuration)' == '2017 O3S' ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2017\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2018' ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2018\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2018'  ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2018\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2019' ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2019\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2019'  ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2019\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2020' ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2020\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2020'  ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2020\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2021' ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2021\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2021'  ">
+      <HintPath>C:\Program Files\Autodesk\Revit 2021\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.XML" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Autodesk.Revit.ApplicationServices" />
+    <Import Include="Autodesk.Revit.Attributes" />
+    <Import Include="Autodesk.Revit.DB" />
+    <Import Include="Autodesk.Revit.UI" />
+    <Import Include="Autodesk.Revit.UI.Selection" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AdskApplication.vb" />
+    <Compile Include="cmdAlignTopo.vb" />
+    <Compile Include="cmdPointsAtIntersection.vb" />
+    <Compile Include="cmdPointsAlongContours.vb" />
+    <Compile Include="cmdPointsOnSurface.vb" />
+    <Compile Include="cmdResetTopoRegion.vb" />
+    <Compile Include="ContiguousCurveSorter.vb" />
+    <Compile Include="Creator.vb" />
+    <Compile Include="Cypher.vb" />
+    <Compile Include="Pick Filters\FacePickFilter.vb" />
+    <Compile Include="Pick Filters\ElemPickFilter.vb" />
+    <Compile Include="EventLogger.vb" />
+    <Compile Include="frmProjectPhases.Designer.vb">
+      <DependentUpon>frmProjectPhases.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmProjectPhases.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmResetTopo.Designer.vb">
+      <DependentUpon>frmResetTopo.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmResetTopo.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="JtBoundingBoxXyz.vb" />
+    <Compile Include="Pick Filters\LinePickFilter.vb" />
+    <Compile Include="XyzEqualityComparer.vb" />
+    <Compile Include="FailureHandler.vb" />
+    <Compile Include="frmAlignTopo.Designer.vb">
+      <DependentUpon>frmAlignTopo.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmAlignTopo.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="PointInPoly.vb" />
+    <Compile Include="ProgressForm.designer.vb">
+      <DependentUpon>ProgressForm.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ProgressForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Settings.vb" />
+    <Compile Include="Pick Filters\TopoPickFilter.vb" />
+    <Compile Include="Util.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ARCHISOFT_topoalign.addin">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="ARCHISOFT_topoalign_2021.addin" />
+    <None Include="russ.green%40live.co.uk.pfx" />
+    <None Include="russ.green%40live.co.uk_new.pfx" />
+    <None Include="russ.green%40live.co.uk_unchained.pfx" />
+    <None Include="RussGreen.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="frmProjectPhases.resx">
+      <DependentUpon>frmProjectPhases.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmResetTopo.resx">
+      <DependentUpon>frmResetTopo.vb</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="frmAlignTopo.resx">
+      <DependentUpon>frmAlignTopo.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProgressForm.resx">
+      <DependentUpon>ProgressForm.vb</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ARCHISOFT_topoalign_2015.addin" />
+    <None Include="ARCHISOFT_topoalign_2016.addin">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Notes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ARCHISOFT_topoalign_2017.addin" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\Align32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ARCHISOFT_topoalign_2018.addin" />
+    <None Include="ARCHISOFT_topoalign_2019.addin" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ARCHISOFT_topoalign_2020.addin" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\PointsFromContours32.png" />
+    <EmbeddedResource Include="Images\PointsFromLines32.png" />
+    <EmbeddedResource Include="Images\Reset32.png" />
+    <EmbeddedResource Include="Images\TopoAlign32.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <Target Name="AfterClean">
+    <Delete Files="$(AppData)\Autodesk\REVIT\Addins\2015\ARCHISOFT_topoalign.addin" />
+    <Delete Files="$(AppData)\Autodesk\REVIT\Addins\2016\ARCHISOFT_topoalign.addin" />
+  </Target>
+  <PropertyGroup>
+    <PostBuildEvent>"C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe" sign /fd SHA256 /f "C:\Users\russgreen\Dropbox\Revit Development\My Projects\Certificates\RussGreen.pfx" /p "Top_00Secret" "$(TargetDir)$(TargetFileName)"
+"C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe" timestamp /td sha256 /tr "http://sha256timestamp.ws.symantec.com/sha256/" "$(TargetDir)$(TargetFileName)"
+copy "$(ProjectDir)ARCHISOFT_topoalign_2021.addin" "$(AppData)\Autodesk\REVIT\Addins\2021\ARCHISOFT_topoalign.addin"</PostBuildEvent>
+  </PropertyGroup>
+</Project>
