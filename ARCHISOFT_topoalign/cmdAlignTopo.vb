@@ -7,6 +7,9 @@ Imports Autodesk.Revit.DB
 Imports Autodesk.Revit.UI
 Imports Autodesk.Revit.UI.Selection
 Imports System.Windows.Forms
+Imports Microsoft.AppCenter
+Imports Microsoft.AppCenter.Analytics
+Imports Microsoft.AppCenter.Crashes
 #End Region
 
 #If CONFIG = "2016" Or CONFIG = "2017" Then
@@ -56,6 +59,24 @@ Public Class cmdAlignTopo
       ByRef message As String,
       ByVal elements As ElementSet) _
     As Result Implements IExternalCommand.Execute
+
+        AppCenter.Start("c26c8f38-0aad-44c7-9064-478429495727", GetType(Analytics), GetType(Crashes))
+        AppCenter.LogLevel = LogLevel.Verbose
+
+        Dim revitVersion As String
+#If CONFIG = "2018" Then
+            revitVersion = "2018"
+#ElseIf CONFIG = "2019" Then
+            revitVersion = "2019"
+#ElseIf CONFIG = "2020" Then
+            revitVersion = "2020"
+#ElseIf CONFIG = "2021" Then
+        revitVersion = "2021"
+#ElseIf CONFIG = "2022" Then
+            revitVersion = "2022"
+#End If
+
+        Analytics.TrackEvent($"Revit Version {revitVersion}")
 
         cSettings = New Settings
         cSettings.LoadSettings()
@@ -111,12 +132,14 @@ Public Class cmdAlignTopo
 
             'pupulate the display units dropdown
             For Each displayUnitType As DisplayUnitType In UnitUtils.GetValidDisplayUnits(UnitType.UT_Length)
-                If LabelUtils.GetLabelFor(displayUnitType).ToLower.Contains("fractional") Then
-                    'don't add it
-                Else
-                    .DisplayUnitTypecomboBox.Items.AddRange(New Object() {displayUnitType})
-                    .DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelFor(displayUnitType))
-                End If
+                'If LabelUtils.GetLabelFor(displayUnitType).ToLower.Contains("fractional") Then
+                '    'don't add it
+                'Else
+                '    .DisplayUnitTypecomboBox.Items.AddRange(New Object() {displayUnitType})
+                '    .DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelFor(displayUnitType))
+                'End If
+                .DisplayUnitTypecomboBox.Items.AddRange(New Object() {displayUnitType})
+                .DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelFor(displayUnitType))
             Next
 
             .DisplayUnitTypecomboBox.SelectedItem = m_DocDisplayUnits
@@ -245,6 +268,7 @@ Public Class cmdAlignTopo
 
         Catch ex As Exception
             TaskDialog.Show("Align topo", ex.Message)
+            'Crashes.TrackError(ex)
             Return False
         End Try
 
