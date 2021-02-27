@@ -2,6 +2,10 @@
     Implements ISelectionFilter
 
     Public Function AllowElement(elem As Element) As Boolean Implements ISelectionFilter.AllowElement
+        If elem.Category Is Nothing Then
+            Return False
+        End If
+
         Select Case elem.Category.Id.IntegerValue
             Case CInt(BuiltInCategory.OST_Topography) : Return True
             Case CInt(BuiltInCategory.OST_BuildingPad) : Return True

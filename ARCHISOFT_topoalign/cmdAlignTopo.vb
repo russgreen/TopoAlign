@@ -42,8 +42,13 @@ Public Class cmdAlignTopo
     Dim m_TopoSurface As Autodesk.Revit.DB.Architecture.TopographySurface
 
     Dim m_DocUnits As Units
+#If CONFIG < "2021" Then
     Dim m_DocDisplayUnits As DisplayUnitType
     Dim m_UseDisplayUnits As DisplayUnitType
+#Else
+    Dim m_DocDisplayUnits As ForgeTypeId
+    Dim m_UseDisplayUnits As ForgeTypeId
+#End If
 
     Public cSettings As Settings
 
@@ -60,8 +65,8 @@ Public Class cmdAlignTopo
       ByVal elements As ElementSet) _
     As Result Implements IExternalCommand.Execute
 
-        AppCenter.Start("c26c8f38-0aad-44c7-9064-478429495727", GetType(Analytics), GetType(Crashes))
-        AppCenter.LogLevel = LogLevel.Verbose
+        'AppCenter.Start("c26c8f38-0aad-44c7-9064-478429495727", GetType(Analytics), GetType(Crashes))
+        'AppCenter.LogLevel = LogLevel.Verbose
 
         Dim revitVersion As String
 #If CONFIG = "2018" Then
@@ -76,7 +81,7 @@ Public Class cmdAlignTopo
             revitVersion = "2022"
 #End If
 
-        Analytics.TrackEvent($"Revit Version {revitVersion}")
+        'Analytics.TrackEvent($"Revit Version {revitVersion}")
 
         cSettings = New Settings
         cSettings.LoadSettings()
@@ -87,21 +92,14 @@ Public Class cmdAlignTopo
         doc = uidoc.Document
         sel = uidoc.Selection
 
+#If CONFIG < "2021" Then
         m_DocUnits = doc.GetUnits
         m_DocDisplayUnits = doc.GetUnits().GetFormatOptions(UnitType.UT_Length).DisplayUnits
-
-#If CONFIG = "2016" Or CONFIG = "2017" Then
-        'check entitlement
-        If clsUtil.LicenseCheck(app) = False Then
-            Return Result.Failed
-        End If
-#ElseIf CONFIG = "2016 Trial" Then
-        If Date.Now.Month <= 4 And Date.Now.Year = 2016 Then
-            'were OK in trial
-        Else
-            Return Result.Failed
-        End If
+#Else
+        m_DocUnits = doc.GetUnits
+        m_DocDisplayUnits = doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId
 #End If
+
 
         Dim frm As New frmAlignTopo
 
@@ -130,6 +128,7 @@ Public Class cmdAlignTopo
             .rdoBottom.Checked = Not (.rdoTop.Checked)
             '.lblUnits.Text = "Units are in " & LabelUtils.GetLabelFor(m_DocDisplayUnits)
 
+#If CONFIG < "2021" Then
             'pupulate the display units dropdown
             For Each displayUnitType As DisplayUnitType In UnitUtils.GetValidDisplayUnits(UnitType.UT_Length)
                 'If LabelUtils.GetLabelFor(displayUnitType).ToLower.Contains("fractional") Then
@@ -144,11 +143,28 @@ Public Class cmdAlignTopo
 
             .DisplayUnitTypecomboBox.SelectedItem = m_DocDisplayUnits
             .DisplayUnitcomboBox.SelectedIndex = .DisplayUnitTypecomboBox.SelectedIndex
+#Else
+            'pupulate the display units dropdown
+            For Each displayUnitType As ForgeTypeId In UnitUtils.GetValidUnits(SpecTypeId.Length)
+                .DisplayUnitTypecomboBox.Items.AddRange(New Object() {displayUnitType})
+                Debug.WriteLine(LabelUtils.GetLabelForUnit(displayUnitType))
+                .DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelForUnit(displayUnitType))
+            Next
+
+            .DisplayUnitTypecomboBox.SelectedItem = m_DocDisplayUnits
+            .DisplayUnitcomboBox.SelectedIndex = .DisplayUnitTypecomboBox.SelectedIndex
+#End If
 
             If .ShowDialog = DialogResult.OK Then
+#If CONFIG < "2021" Then
                 m_UseDisplayUnits = DirectCast(.DisplayUnitTypecomboBox.SelectedItem, DisplayUnitType)
                 divide = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(.nudDivide.Value, m_UseDisplayUnits))
                 offset = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(.nudVertOffset.Value, m_UseDisplayUnits))
+#Else
+                m_UseDisplayUnits = DirectCast(.DisplayUnitTypecomboBox.SelectedItem, ForgeTypeId)
+                divide = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(.nudDivide.Value, m_UseDisplayUnits))
+                offset = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(.nudVertOffset.Value, m_UseDisplayUnits))
+#End If
 
                 'first save the settings for next time
                 cSettings.SingleElement = .rdoElem.Checked

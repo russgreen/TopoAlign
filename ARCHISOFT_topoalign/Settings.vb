@@ -1,4 +1,5 @@
-﻿Imports Microsoft.Win32
+﻿Imports Microsoft.AppCenter.Crashes
+Imports Microsoft.Win32
 Imports System.ComponentModel
 
 Public Class Settings
@@ -77,7 +78,7 @@ Public Class Settings
                 End With
             End If
         Catch ex As Exception
-
+            Crashes.TrackError(ex)
         Finally
             My.Computer.Registry.CurrentUser.Close()
         End Try
@@ -93,7 +94,7 @@ Public Class Settings
             .SetValue("CleanTopoPoints", m_CleanTopoPoints, RegistryValueKind.String)
             .SetValue("TopFace", m_TopFace, RegistryValueKind.String)
             .SetValue("DivideEdgeDistance", m_DivideEdgeDistance, RegistryValueKind.String)
-            .setValue("VerticalOffset", m_VerticalOffset, RegistryValueKind.String)
+            .SetValue("VerticalOffset", m_VerticalOffset, RegistryValueKind.String)
         End With
     End Sub
 End Class
