@@ -9,16 +9,6 @@ Imports Autodesk.Revit.UI.Selection
 Imports System.Windows.Forms
 #End Region
 
-#If CONFIG = "2016" Or CONFIG = "2017" Then
-Imports System.Threading.Tasks
-Imports System.Net 'for HttpStatusCode 
-
-'Added for REST API
-Imports RestSharp
-Imports RestSharp.Deserializers
-#End If
-
-
 <Transaction(TransactionMode.Manual)>
 Public Class cmdPointsOnSurface
     Implements IExternalCommand
@@ -53,19 +43,6 @@ As Result Implements IExternalCommand.Execute
         doc = uidoc.Document
         sel = uidoc.Selection
 
-#If CONFIG = "2016" Or CONFIG = "2017" Then
-        'check entitlement
-        If clsUtil.LicenseCheck(app) = False Then
-            Return Result.Failed
-        End If
-#ElseIf CONFIG = "2016 Trial" Then
-        If Date.Now.Month <= 4 And Date.Now.Year = 2016 Then
-            'were OK in trial
-        Else
-            Return Result.Failed
-        End If
-#End If
-
         If TypeOf doc.ActiveView Is Autodesk.Revit.DB.View3D Then
             v3d = DirectCast(doc.ActiveView, View3D)
         Else
@@ -95,22 +72,29 @@ As Result Implements IExternalCommand.Execute
 
         Try
             For Each r As Reference In uidoc.Selection.PickObjects(ObjectType.Element, lineFilter, "Select lines(s) to add topo points along")
-                Dim m_Curve As Curve
+                Dim m_Curve As Curve = Nothing
 
                 Dim modelLine As ModelLine = TryCast(doc.GetElement(r), ModelLine)
                 Dim modelCurve As ModelCurve = TryCast(doc.GetElement(r), ModelCurve)
 
-                Try
-                    m_Curve = modelLine.GeometryCurve
-                Catch ex As Exception
-                End Try
+                If modelLine IsNot Nothing Then
+                    Try
+                        m_Curve = modelLine.GeometryCurve
+                    Catch ex As Exception
+                    End Try
+                End If
 
-                Try
-                    m_Curve = modelCurve.GeometryCurve
-                Catch ex As Exception
-                End Try
+                If modelCurve IsNot Nothing Then
+                    Try
+                        m_Curve = modelCurve.GeometryCurve
+                    Catch ex As Exception
+                    End Try
+                End If
 
-                m_Curves.Add(m_Curve)
+                If m_Curve IsNot Nothing Then
+                    m_Curves.Add(m_Curve)
+                End If
+
             Next
         Catch ex As Exception
             Return Result.Failed

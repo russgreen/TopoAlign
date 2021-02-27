@@ -11,14 +11,6 @@ Imports Autodesk.Revit.DB.Architecture
 
 #End Region
 
-#If CONFIG = "2016" Or CONFIG = "2017" Then
-Imports System.Threading.Tasks
-Imports System.Net 'for HttpStatusCode 
-
-'Added for REST API
-Imports RestSharp
-Imports RestSharp.Deserializers
-#End If
 
 <Transaction(TransactionMode.Manual)>
 Public Class cmdResetTopoRegion

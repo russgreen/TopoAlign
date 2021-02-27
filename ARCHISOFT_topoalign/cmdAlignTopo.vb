@@ -7,19 +7,10 @@ Imports Autodesk.Revit.DB
 Imports Autodesk.Revit.UI
 Imports Autodesk.Revit.UI.Selection
 Imports System.Windows.Forms
-Imports Microsoft.AppCenter
-Imports Microsoft.AppCenter.Analytics
-Imports Microsoft.AppCenter.Crashes
+'Imports Microsoft.AppCenter
+'Imports Microsoft.AppCenter.Analytics
+'Imports Microsoft.AppCenter.Crashes
 #End Region
-
-#If CONFIG = "2016" Or CONFIG = "2017" Then
-Imports System.Threading.Tasks
-Imports System.Net 'for HttpStatusCode 
-
-'Added for REST API
-Imports RestSharp
-Imports RestSharp.Deserializers
-#End If
 
 
 <Transaction(TransactionMode.Manual)>
@@ -126,7 +117,6 @@ Public Class cmdAlignTopo
             .chkRemoveInside.Checked = cSettings.CleanTopoPoints
             .rdoTop.Checked = cSettings.TopFace
             .rdoBottom.Checked = Not (.rdoTop.Checked)
-            '.lblUnits.Text = "Units are in " & LabelUtils.GetLabelFor(m_DocDisplayUnits)
 
 #If CONFIG < "2021" Then
             'pupulate the display units dropdown

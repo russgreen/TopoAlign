@@ -7,7 +7,6 @@ Imports System.Reflection
 Imports System.Windows.Media.Imaging
 Imports System.IO
 Imports System.Windows.Media
-
 #End Region
 
 <Transaction(TransactionMode.Manual)> <Regeneration(RegenerationOption.Manual)> Class AdskApplication
@@ -32,7 +31,6 @@ Imports System.Windows.Media
     '#ElseIf CONFIG = "2016" Then
     '    Public Shared elog As New EventLogger("2016")
     '#End If
-
 
     Public Function OnStartup(
       ByVal app As UIControlledApplication) _
@@ -80,22 +78,6 @@ Imports System.Windows.Media
     Function CreateRibbonPanel() As RibbonPanel
         Dim panel As RibbonPanel
 
-        '#If CONFIG = "2015 Exchange Apps" Then
-        '        'TODO: Check if "Archisoft Tools already exists and use if its there
-        '        Dim panel As RibbonPanel = _cachedUiCtrApp.CreateRibbonPanel("Number")
-
-        '#Else
-        '        Try
-        '            _cachedUiCtrApp.CreateRibbonTab("Archisoft Tools")
-        '        Catch
-        '        End Try
-
-        '        Dim panel As RibbonPanel = _cachedUiCtrApp.CreateRibbonPanel("Archisoft Tools", Guid.NewGuid().ToString())
-        '        panel.Name = "ARBG_Number_ExtApp"
-        '        panel.Title = "Number"
-        '#End If
-
-
         'Check if "Archisoft Tools already exists and use if its there
         Try
             panel = _cachedUiCtrApp.CreateRibbonPanel("Archisoft Tools", Guid.NewGuid().ToString())
@@ -129,18 +111,11 @@ Imports System.Windows.Media
         pbTopoAlign.LargeImage = RetriveImage("ARCHISOFT_topoalign.TopoAlign32.png")
         'pbTopoAlign.Image = RetriveImage("ARCHISOFT_topoalign.TopoAlign16x16.bmp")
 
-
         Dim pbDataPointsFromLines As PushButtonData = New PushButtonData("Points from Lines", "Points from Lines", Assembly.GetExecutingAssembly().Location, "ARCHISOFT_topoalign.cmdPointsOnSurface")
         Dim pbPointsFromLines As PushButton = CType(panel.AddItem(pbDataPointsFromLines), PushButton)
         pbPointsFromLines.ToolTip = "Add points on surface along selected model lines. Model lines must be lines and arcs and be BELOW the topo surface."
         pbPointsFromLines.LargeImage = RetriveImage("ARCHISOFT_topoalign.PointsFromLines32.png")
         'pbPointsFromLines.Image = RetriveImage("ARCHISOFT_topoalign.TopoPoints16x16.bmp")
-
-        'Dim pbDataPointsAtIntersection As PushButtonData = New PushButtonData("Points at intersection", "Points at intersection", Assembly.GetExecutingAssembly().Location, "ARCHISOFT_topoalign.cmdPointsAtIntersection")
-        'Dim pbPointsAtIntersection As PushButton = CType(panel.AddItem(pbDataPointsAtIntersection), PushButton)
-        'pbPointsAtIntersection.ToolTip = "Add points on surface where selected faces interest with the surface."
-        'pbPointsAtIntersection.LargeImage = RetriveImage("ARCHISOFT_topoalign.TopoPoints32x32.bmp")
-        'pbPointsAtIntersection.Image = RetriveImage("ARCHISOFT_topoalign.TopoPoints16x16.bmp")
 
         Dim pbDataPointsAlongContours As PushButtonData = New PushButtonData("Points along contours", "Points along contours", Assembly.GetExecutingAssembly().Location, "ARCHISOFT_topoalign.cmdPointsAlongContours")
         Dim pbPointsAlongContours As PushButton = CType(panel.AddItem(pbDataPointsAlongContours), PushButton)
@@ -164,6 +139,8 @@ Imports System.Windows.Media
         contextHelp = New ContextualHelp(ContextualHelpType.Url, "https://apps.autodesk.com/RVT/en/Detail/HelpDoc?appId=7668296925673994353&appLang=en&os=Win64")
 #ElseIf CONFIG = "2021" Then
         contextHelp = New ContextualHelp(ContextualHelpType.Url, "https://apps.autodesk.com/RVT/en/Detail/HelpDoc?appId=3561777884450830300&appLang=en&os=Win64")
+#ElseIf CONFIG = "2022" Then
+        contextHelp = New ContextualHelp(ContextualHelpType.Url, "https://apps.autodesk.com/ACD/en/Detail/HelpDoc?appId=7412914718855875408&appLang=en&os=Win64")
 #End If
 
         pbTopoAlign.SetContextualHelp(contextHelp)
@@ -171,14 +148,6 @@ Imports System.Windows.Media
 
 
     End Function
-
-    'Private Function BmpImageSource(ByVal embeddedPath As String) As System.Windows.Media.ImageSource
-    '    Dim stream As Stream = Me.GetType().Assembly.GetManifestResourceStream(embeddedPath)
-    '    Dim decoder As BmpBitmapDecoder = New System.Windows.Media.Imaging.BmpBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default)
-
-    '    Return decoder.Frames(0)
-    'End Function
-
 
     Private Shared Function RetriveImage(imagePath As String) As ImageSource
         Dim manifestResourceStream As Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(imagePath)
