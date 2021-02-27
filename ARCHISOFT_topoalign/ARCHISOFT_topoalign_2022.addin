@@ -12,8 +12,8 @@
   
   <AddIn Type="Application">
     <Name>ARCHISOFT Topo Align</Name>
-         <Assembly>D:\Dropbox\Revit Development\My Projects\0036 Revit - Topo Align\ARCHISOFT_topoalign\ARCHISOFT_topoalign\bin\2017\ARCHISOFT_topoalign.dll</Assembly>
-    <!--<Assembly>C:\Users\russgreen\Dropbox\Revit Development\My Projects\0036 Revit - Topo Align\ARCHISOFT_topoalign\ARCHISOFT_topoalign\bin\2017\ARCHISOFT_topoalign.dll</Assembly>-->
+    <!--<Assembly>D:\Dropbox\Revit Development\My Projects\0036 Revit - Topo Align\ARCHISOFT_topoalign\ARCHISOFT_topoalign\bin\2021\ARCHISOFT_topoalign.dll</Assembly>-->
+       <Assembly>D:\Development\Source\Repos\TopoAlign\ARCHISOFT_topoalign\bin\2022\ARCHISOFT_topoalign.dll</Assembly>
         <ClientId>60ce490d-ee24-40e1-817b-ba9f23820564</ClientId>
     <FullClassName>ARCHISOFT_topoalign.AdskApplication</FullClassName>
     <VendorId>ARBG</VendorId>

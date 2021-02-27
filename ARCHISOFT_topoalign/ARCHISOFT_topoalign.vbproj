@@ -26,46 +26,6 @@
     <OptionStrict>Off</OptionStrict>
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2015|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\2015\</OutputPath>
-    <DebugType>Full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2016|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\2016\</OutputPath>
-    <DebugType>Full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2016 BVN|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\2016 BVN\</OutputPath>
-    <DebugType>Full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2016 Trial|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\2016 Trial\</OutputPath>
-    <DebugType>Full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2017|x64'">
-    <OutputPath>bin\2017\</OutputPath>
-    <PlatformTarget>x64</PlatformTarget>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>Full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2017 O3S|x64'">
-    <OutputPath>bin\2017 O3S\</OutputPath>
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>None</DebugType>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2018|x64'">
     <OutputPath>bin\2018\</OutputPath>
     <DebugType>Full</DebugType>
@@ -103,6 +63,16 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '2022|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\2022\</OutputPath>
+    <DebugType>Full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Path_DLL_API>..\..\RevitAPI\</Path_DLL_API>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.AppCenter, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.AppCenter.4.1.0\lib\net461\Microsoft.AppCenter.dll</HintPath>
@@ -117,61 +87,20 @@
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
-    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2015' ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2015\RevitAPI.dll</HintPath>
-      <Private>False</Private>
+     <Reference Include="AdWindows">
+      <HintPath>$(Path_DLL_API)\$(Configuration)\AdWindows.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <Private>false</Private>
     </Reference>
-    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2015' ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2015\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="RevitAPI">
+      <HintPath>$(Path_DLL_API)\$(Configuration)\RevitAPI.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <Private>false</Private>
     </Reference>
-    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2016' Or '$(Configuration)' == '2016 BVN' Or '$(Configuration)' == '2016 Trial'  ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2016\RevitAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2016' Or '$(Configuration)' == '2016 BVN' Or '$(Configuration)' == '2016 Trial' ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2016\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2017' Or '$(Configuration)' == '2017 O3S' ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2017\RevitAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2017' Or '$(Configuration)' == '2017 O3S' ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2017\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2018' ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2018\RevitAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2018'  ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2018\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2019' ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2019\RevitAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2019'  ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2019\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2020' ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2020\RevitAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2020'  ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2020\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPI" Condition=" '$(Configuration)' == '2021' ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2021\RevitAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI" Condition=" '$(Configuration)' == '2021'  ">
-      <HintPath>C:\Program Files\Autodesk\Revit 2021\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="RevitAPIUI">
+      <HintPath>$(Path_DLL_API)\$(Configuration)\RevitAPIUI.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+      <Private>false</Private>
     </Reference>
     <Reference Include="SQLitePCLRaw.batteries_v2, Version=2.0.2.669, Culture=neutral, PublicKeyToken=8226ea5df37bcae9, processorArchitecture=MSIL">
       <HintPath>..\packages\SQLitePCLRaw.bundle_green.2.0.2\lib\net461\SQLitePCLRaw.batteries_v2.dll</HintPath>
@@ -325,13 +254,17 @@
     <EmbeddedResource Include="Images\Reset32.png" />
     <EmbeddedResource Include="Images\TopoAlign32.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ARCHISOFT_topoalign_2022.addin" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Target Name="AfterClean">
     <Delete Files="$(AppData)\Autodesk\REVIT\Addins\2015\ARCHISOFT_topoalign.addin" />
     <Delete Files="$(AppData)\Autodesk\REVIT\Addins\2016\ARCHISOFT_topoalign.addin" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>copy "$(ProjectDir)ARCHISOFT_topoalign_2021.addin" "$(AppData)\Autodesk\REVIT\Addins\2021\ARCHISOFT_topoalign.addin"</PostBuildEvent>
+    <PostBuildEvent>copy "$(ProjectDir)ARCHISOFT_topoalign_2021.addin" "$(AppData)\Autodesk\REVIT\Addins\2021\ARCHISOFT_topoalign.addin"
+copy "$(ProjectDir)ARCHISOFT_topoalign_2022.addin" "$(AppData)\Autodesk\REVIT\Addins\2022\ARCHISOFT_topoalign.addin"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.2\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets" Condition="Exists('..\packages\SQLitePCLRaw.lib.e_sqlite3.2.0.2\build\net461\SQLitePCLRaw.lib.e_sqlite3.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
