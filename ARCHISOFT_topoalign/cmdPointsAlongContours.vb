@@ -7,6 +7,7 @@ Imports Autodesk.Revit.DB
 Imports Autodesk.Revit.UI
 Imports Autodesk.Revit.UI.Selection
 Imports System.Windows.Forms
+Imports Microsoft.AppCenter.Crashes
 #End Region
 
 <Transaction(TransactionMode.Manual)>
@@ -29,11 +30,10 @@ Public Class cmdPointsAlongContours
 
     Public cSettings As Settings
 
-    Public Function Execute(
-  ByVal commandData As ExternalCommandData,
-  ByRef message As String,
-  ByVal elements As ElementSet) _
-As Result Implements IExternalCommand.Execute
+    Public Function Execute(ByVal commandData As ExternalCommandData,
+  ByRef message As String, ByVal elements As ElementSet) As Result Implements IExternalCommand.Execute
+        'Crashes.GenerateTestCrash()
+
         cSettings = New Settings
         cSettings.LoadSettings()
 
@@ -42,19 +42,6 @@ As Result Implements IExternalCommand.Execute
         app = uiapp.Application
         doc = uidoc.Document
         sel = uidoc.Selection
-
-#If CONFIG = "2016" Or CONFIG = "2017" Then
-        'check entitlement
-        If clsUtil.LicenseCheck(app) = False Then
-            Return Result.Failed
-        End If
-#ElseIf CONFIG = "2016 Trial" Then
-        If Date.Now.Month <= 4 And Date.Now.Year = 2016 Then
-            'were OK in trial
-        Else
-            Return Result.Failed
-        End If
-#End If
 
         If TypeOf doc.ActiveView Is Autodesk.Revit.DB.View3D Then
             v3d = DirectCast(doc.ActiveView, View3D)

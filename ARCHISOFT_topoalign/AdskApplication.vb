@@ -7,6 +7,8 @@ Imports System.Reflection
 Imports System.Windows.Media.Imaging
 Imports System.IO
 Imports System.Windows.Media
+'Imports Microsoft.AppCenter
+'Imports Microsoft.AppCenter.Crashes
 #End Region
 
 <Transaction(TransactionMode.Manual)> <Regeneration(RegenerationOption.Manual)> Class AdskApplication
@@ -24,7 +26,7 @@ Imports System.Windows.Media
     ''' </returns>
 
     Public Shared _cachedUiCtrApp As UIControlledApplication
-    Public Shared elog As New EventLogger
+    'Public Shared elog As New EventLogger
 
     '#If CONFIG = "2015" Then
     '    Public Shared elog As New EventLogger("2015")
@@ -36,6 +38,21 @@ Imports System.Windows.Media
       ByVal app As UIControlledApplication) _
     As Result Implements IExternalApplication.OnStartup
 
+        'AppCenter.LogLevel = LogLevel.Verbose
+        'Crashes.ShouldAwaitUserConfirmation = Function()
+        '                                          ' Build your own UI to ask for user consent here. SDK doesn't provide one by default.
+        '                                          Dim dialog = New DialogUserConfirmation()
+
+        '                                          If dialog.ShowDialog() = System.Windows.Forms.DialogResult.None Then
+        '                                              Crashes.NotifyUserConfirmation(dialog.ClickResult)
+        '                                          End If
+
+        '                                          ' Return true if you built a UI for user consent and are waiting for user input on that custom UI, otherwise false.
+        '                                          Return True
+        '                                      End Function
+
+        'AppCenter.Start("c26c8f38-0aad-44c7-9064-478429495727", GetType(Crashes))
+
         Try
             ' Add your code here
             _cachedUiCtrApp = app
@@ -46,13 +63,13 @@ Imports System.Windows.Media
             Return Result.Succeeded
 
         Catch ex As Exception
-            'AdskApplication.elog.WriteEntry(ex.ToString, EventLogEntryType.Error)
+            'Crashes.TrackError(ex)
 
-            ' Return Failure
             Return Result.Failed
 
         End Try
     End Function
+
 
     ''' <summary>
     ''' This method is called when Revit is about to exit.

@@ -7,6 +7,7 @@ Imports Autodesk.Revit.DB
 Imports Autodesk.Revit.UI
 Imports Autodesk.Revit.UI.Selection
 Imports System.Windows.Forms
+Imports Microsoft.AppCenter.Crashes
 #End Region
 
 <Transaction(TransactionMode.Manual)>
@@ -34,6 +35,8 @@ Public Class cmdPointsOnSurface
   ByRef message As String,
   ByVal elements As ElementSet) _
 As Result Implements IExternalCommand.Execute
+        'Crashes.GenerateTestCrash()
+
         cSettings = New Settings
         cSettings.LoadSettings()
 

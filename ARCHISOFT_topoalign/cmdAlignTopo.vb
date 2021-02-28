@@ -7,9 +7,7 @@ Imports Autodesk.Revit.DB
 Imports Autodesk.Revit.UI
 Imports Autodesk.Revit.UI.Selection
 Imports System.Windows.Forms
-'Imports Microsoft.AppCenter
-'Imports Microsoft.AppCenter.Analytics
-'Imports Microsoft.AppCenter.Crashes
+Imports Microsoft.AppCenter.Crashes
 #End Region
 
 
@@ -56,8 +54,6 @@ Public Class cmdAlignTopo
       ByVal elements As ElementSet) _
     As Result Implements IExternalCommand.Execute
 
-        'AppCenter.Start("c26c8f38-0aad-44c7-9064-478429495727", GetType(Analytics), GetType(Crashes))
-        'AppCenter.LogLevel = LogLevel.Verbose
 
         Dim revitVersion As String
 #If CONFIG = "2018" Then
@@ -69,10 +65,11 @@ Public Class cmdAlignTopo
 #ElseIf CONFIG = "2021" Then
         revitVersion = "2021"
 #ElseIf CONFIG = "2022" Then
-            revitVersion = "2022"
+        revitVersion = "2022"
 #End If
 
         'Analytics.TrackEvent($"Revit Version {revitVersion}")
+        'Crashes.GenerateTestCrash()
 
         cSettings = New Settings
         cSettings.LoadSettings()
@@ -175,6 +172,7 @@ Public Class cmdAlignTopo
     End Function
 
     Private Function AlignTopo(Optional TopFace As Boolean = True, Optional UseEdge As Boolean = False) As Boolean
+
         Dim retval As Boolean = True
 
         Dim fh As New FailureHandler()

@@ -69,6 +69,7 @@
     <DebugType>Full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <DefineDebug>true</DefineDebug>
   </PropertyGroup>
   <PropertyGroup>
     <Path_DLL_API>..\..\RevitAPI\</Path_DLL_API>
@@ -125,6 +126,12 @@
     <Compile Include="ContiguousCurveSorter.vb" />
     <Compile Include="Creator.vb" />
     <Compile Include="Cypher.vb" />
+    <Compile Include="DialogUserConfirmation.Designer.vb">
+      <DependentUpon>DialogUserConfirmation.vb</DependentUpon>
+    </Compile>
+    <Compile Include="DialogUserConfirmation.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Pick Filters\FacePickFilter.vb" />
     <Compile Include="Pick Filters\ElemPickFilter.vb" />
     <Compile Include="EventLogger.vb" />
@@ -174,6 +181,9 @@
     <None Include="RussGreen.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="DialogUserConfirmation.resx">
+      <DependentUpon>DialogUserConfirmation.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmProjectPhases.resx">
       <DependentUpon>frmProjectPhases.vb</DependentUpon>
     </EmbeddedResource>

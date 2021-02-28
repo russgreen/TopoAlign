@@ -78,15 +78,15 @@ Class Creator
                 End If
             End While
 
-#If DEBUG Then
-				If True Then
-					Dim normal2 As XYZ
-					While System.Threading.Interlocked.Increment(i) < n - 1
-						w = pts(i) - p
-						normal2 = v.CrossProduct(w)
-						Debug.Assert(normal2.IsZeroLength() OrElse Util.IsZero(normal2.AngleTo(normal)), "expected all points of curve to " & "lie in same plane")
-					End While
-#End If
+            '#If DEBUG Then
+            '				If True Then
+            '					Dim normal2 As XYZ
+            '					While System.Threading.Interlocked.Increment(i) < n - 1
+            '						w = pts(i) - p
+            '						normal2 = v.CrossProduct(w)
+            '						Debug.Assert(normal2.IsZeroLength() OrElse Util.IsZero(normal2.AngleTo(normal)), "expected all points of curve to " & "lie in same plane")
+            '					End While
+            '#End If
 
         End If
         Return normal
@@ -185,17 +185,17 @@ Class Creator
         Dim plane As Plane = creApp.NewPlane(norm, p)
 #End If
 
-#If DEBUG Then
-			If Not (TypeOf curve Is Line) Then
-				Dim a As CurveArray = _creapp.NewCurveArray()
-				a.Append(curve)
-				Dim plane2 As Plane = _creapp.NewPlane(a)
+        '#If DEBUG Then
+        '			If Not (TypeOf curve Is Line) Then
+        '				Dim a As CurveArray = _creapp.NewCurveArray()
+        '				a.Append(curve)
+        '				Dim plane2 As Plane = _creapp.NewPlane(a)
 
-				Debug.Assert(Util.IsParallel(plane2.Normal, plane.Normal), "expected equal planes")
+        '				Debug.Assert(Util.IsParallel(plane2.Normal, plane.Normal), "expected equal planes")
 
-				Debug.Assert(Util.IsZero(plane2.SignedDistanceTo(plane.Origin)), "expected equal planes")
-			End If
-#End If
+        '				Debug.Assert(Util.IsZero(plane2.SignedDistanceTo(plane.Origin)), "expected equal planes")
+        '			End If
+        '#End If
 
         'return _credoc.NewSketchPlane( plane ); // 2013
 

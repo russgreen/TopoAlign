@@ -1,4 +1,4 @@
-﻿'Imports Microsoft.AppCenter.Crashes
+﻿Imports Microsoft.AppCenter.Crashes
 Imports Microsoft.Win32
 Imports System.ComponentModel
 
@@ -78,7 +78,7 @@ Public Class Settings
                 End With
             End If
         Catch ex As Exception
-            'Crashes.TrackError(ex)
+            Crashes.TrackError(ex)
         Finally
             My.Computer.Registry.CurrentUser.Close()
         End Try

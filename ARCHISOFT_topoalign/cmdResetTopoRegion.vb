@@ -8,6 +8,7 @@ Imports Autodesk.Revit.UI
 Imports Autodesk.Revit.UI.Selection
 Imports System.Windows.Forms
 Imports Autodesk.Revit.DB.Architecture
+Imports Microsoft.AppCenter.Crashes
 
 #End Region
 
@@ -31,24 +32,12 @@ Public Class cmdResetTopoRegion
 
 
     Public Function Execute(commandData As ExternalCommandData, ByRef message As String, elements As ElementSet) As Result Implements IExternalCommand.Execute
+        'Crashes.GenerateTestCrash()
 
         uiapp = commandData.Application
         uidoc = uiapp.ActiveUIDocument
         app = uiapp.Application
         doc = uidoc.Document
-
-#If CONFIG = "2016" Or CONFIG = "2017" Then
-        'check entitlement
-        If clsUtil.LicenseCheck(app) = False Then
-            Return Result.Failed
-        End If
-#ElseIf CONFIG = "2016 Trial" Then
-        If Date.Now.Month <= 4 And Date.Now.Year = 2016 Then
-            'were OK in trial
-        Else
-            Return Result.Failed
-        End If
-#End If
 
         'check if the active view is a plan view
         If doc.ActiveView.ViewType <> ViewType.FloorPlan Then
