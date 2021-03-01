@@ -54,6 +54,22 @@
     <OutputPath>bin</OutputPath>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
+  
+   <ItemGroup>
+     <None Remove="Images\Align32.png" />
+     <None Remove="Images\PointsFromContours32.png" />
+     <None Remove="Images\PointsFromLines32.png" />
+     <None Remove="Images\Reset32.png" />
+     <None Remove="Images\TopoAlign32.png" />
+   </ItemGroup>
+  
+   <ItemGroup>
+     <EmbeddedResource Include="Images\Align32.png" />
+     <EmbeddedResource Include="Images\PointsFromContours32.png" />
+     <EmbeddedResource Include="Images\PointsFromLines32.png" />
+     <EmbeddedResource Include="Images\Reset32.png" />
+     <EmbeddedResource Include="Images\TopoAlign32.png" />
+   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="AdWindows">
@@ -85,5 +101,10 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System.Printing" />
     <Reference Include="WindowsBase" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="PickFilters\" />
   </ItemGroup>
 </Project>
