@@ -29,6 +29,8 @@ namespace TopoAlign.Models
                         DivideEdgeDistance = Convert.ToDecimal(key.GetValue("DivideEdgeDistance", DivideEdgeDistance));
                         VerticalOffset = Convert.ToDecimal(key.GetValue("VerticalOffset", VerticalOffset));
                     }
+
+
                 }
         }
 
@@ -36,9 +38,9 @@ namespace TopoAlign.Models
         {
             using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true))
             {
-                if (key != null)
+                if (key == null)
                 {
-                    Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+                   Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
                 }
 
                 key.SetValue("SingleElement", SingleElement, Microsoft.Win32.RegistryValueKind.String);

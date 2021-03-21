@@ -79,6 +79,10 @@
      <EmbeddedResource Include="Images\Reset32.png" />
      <EmbeddedResource Include="Images\TopoAlign32.png" />
    </ItemGroup>
+  
+   <ItemGroup>
+     <PackageReference Include="RestSharp" Version="106.11.7" />
+   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="AdWindows">
@@ -110,6 +114,12 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System.Printing" />
     <Reference Include="WindowsBase" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="ProgressForm.resx">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

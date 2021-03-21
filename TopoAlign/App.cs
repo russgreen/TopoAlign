@@ -113,7 +113,7 @@ namespace TopoAlign
             pbResetRegion.ToolTip = "Copy points from existing topo surface to new topo surface within a region to undo changes made.";
             pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
 
-            //Help document
+            //TODO - Set help document
             ContextualHelp contextHelp;
 #if REVIT2018
             contextHelp = new ContextualHelp(ContextualHelpType.Url, "C:\ProgramData\Autodesk\ApplicationPlugins\Archisoft TopoAlign.bundle\Contents\TopoAlign.htm");
