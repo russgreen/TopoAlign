@@ -162,8 +162,6 @@ Imports System.Windows.Media
 
         pbTopoAlign.SetContextualHelp(contextHelp)
 
-
-
     End Function
 
     Private Shared Function RetriveImage(imagePath As String) As ImageSource

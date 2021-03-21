@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Topo Align</Name>
+    <Assembly>TopoAlign.dll</Assembly>
+    <ClientId>60ce490d-ee24-40e1-817b-ba9f23820564</ClientId>
+    <FullClassName>TopoAlign.App</FullClassName>
+    <VendorId>ARBG</VendorId>
+		<VisibilityMode>NotVisibleInFamily</VisibilityMode>
+		<VisibilityMode>NotVisibleWhenNoActiveDocument</VisibilityMode>
+  </AddIn>
+</RevitAddIns>
