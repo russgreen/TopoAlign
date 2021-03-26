@@ -40,18 +40,17 @@ namespace TopoAlign
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            string revitVersion;
 
 #if REVIT2018
-            revitVersion = "2018";
+            var revitVersion = "2018";
 #elif REVIT2019
-            revitVersion = "2019";
+            var revitVersion = "2019";
 #elif REVIT2020
-            revitVersion = "2020";
+            var revitVersion = "2020";
 #elif REVIT2021
-            revitVersion = "2021";
+            var revitVersion = "2021";
 #elif REVIT2022
-            revitVersion = "2022";
+            var revitVersion = "2022";
 #endif
             //Analytics.TrackEvent($"Revit Version {revitVersion}");
 
@@ -63,6 +62,12 @@ namespace TopoAlign
             _app = _uiapp.Application;
             _doc = _uidoc.Document;
             _sel = _uidoc.Selection;
+
+            //check entitlement
+            //if (CheckEntitlement.LicenseCheck(_app) == false)
+            //{
+            //    return Result.Cancelled;
+            //}
 
 #if REVIT2018 || REVIT2019 || REVIT2020
             _docUnits = _doc.GetUnits();
@@ -164,7 +169,7 @@ namespace TopoAlign
                 var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
                 _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -179,7 +184,7 @@ namespace TopoAlign
                     var refElement = _uidoc.Selection.PickObject(ObjectType.Element, elemFilter, "Select an object to align to");
                     _element = _doc.GetElement(refElement);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return false;
                 }
@@ -209,7 +214,7 @@ namespace TopoAlign
                         curves.Add(m_Curve);
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return false;
                 }
@@ -490,26 +495,14 @@ namespace TopoAlign
             // try and get boundary and cleanup topo
             switch (element.Category.Name ?? "")
             {
-                case var @case when @case == "Floors":
-                {
+                case "Floors":
                     break;
-                }
-
-                case var case1 when case1 == "Roofs":
-                {
+                case "Roofs":
                     break;
-                }
-
-                case var case2 when case2 == "Walls":
-                {
+                case "Walls":
                     break;
-                }
-
-                case var case3 when case3 == "Pads":
-                {
+                case "Pads":
                     break;
-                }
-
                 default:
                 {
                     // don't cleanup

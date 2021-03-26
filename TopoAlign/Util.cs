@@ -320,7 +320,7 @@ namespace TopoAlign
             var a = new List<UV>(polygon.Count);
             foreach (XYZ p in polygon)
             {
-                Debug.Assert(IsEqual(p.Z, z), "expected horizontal polygon");
+                //Debug.Assert(IsEqual(p.Z, z), "expected horizontal polygon");
                 a.Add(Flatten(p));
             }
 
@@ -336,7 +336,7 @@ namespace TopoAlign
             var a = new List<List<UV>>(polygons.Count);
             foreach (List<XYZ> polygon in polygons)
             {
-                Debug.Assert(IsEqual(polygon[0].Z, z), "expected horizontal polygons");
+                //Debug.Assert(IsEqual(polygon[0].Z, z), "expected horizontal polygons");
                 a.Add(Flatten(polygon));
             }
 
@@ -1329,6 +1329,8 @@ const T f = ( ay * bx ) - ( ax * by );
       "l" // DUT_LITERS = 26,
           };
 
+        #if REVIT2018 || REVIT2019 || REVIT2020
+#else
         /// <summary>
         /// List all Forge type ids
         /// </summary>
@@ -1390,9 +1392,11 @@ const T f = ( ay * bx ) - ( ax * by );
                   UnitUtils.GetTypeCatalogStringForUnit(fti));
             }
         }
-        #endregion // Unit Handling
+#endif
 
-        #region Formatting
+#endregion // Unit Handling
+
+#region Formatting
         /// <summary>
         /// Return an English plural suffix for the given
         /// number of items, i.e. 's' for zero or more
@@ -1674,7 +1678,7 @@ const T f = ( ay * bx ) - ( ax * by );
               + PointArrayString(curve.Tessellate());
         }
 
-        #region Using Obsolete pre-Forge Unit API Functionality Deprecated in Revit 2021
+#region Using Obsolete pre-Forge Unit API Functionality Deprecated in Revit 2021
 #if USE_PRE_FORGE_UNIT_FUNCTIONALITY
     /// <summary>
     /// Convert a UnitSymbolType enumeration value
@@ -1696,10 +1700,10 @@ const T f = ( ay * bx ) - ( ax * by );
       return s;
     }
 #endif // USE_PRE_FORGE_UNIT_FUNCTIONALITY
-        #endregion // Using Obsolete pre-Forge Unit API Functionality Deprecated in Revit 2021
-        #endregion // Formatting
+#endregion // Using Obsolete pre-Forge Unit API Functionality Deprecated in Revit 2021
+#endregion // Formatting
 
-        #region Display a message
+#region Display a message
         const string _caption = "The Building Coder";
 
         public static void InfoMsg(string msg)
@@ -1821,9 +1825,9 @@ const T f = ( ay * bx ) - ( ax * by );
         {
             return ((LocationPoint)fi?.Location)?.Point;
         }
-        #endregion // Display a message
+#endregion // Display a message
 
-        #region Element Selection
+#region Element Selection
         public static Element SelectSingleElement(
           UIDocument uidoc,
           string description)
@@ -1961,9 +1965,9 @@ const T f = ( ay * bx ) - ( ax * by );
             }
             return 0 < a.Count;
         }
-        #endregion // Element Selection
+#endregion // Element Selection
 
-        #region Element Filtering
+#region Element Filtering
         /// <summary>
         /// Return all elements of the requested class i.e. System.Type
         /// matching the given built-in category in the given document.
@@ -2130,11 +2134,11 @@ const T f = ( ay * bx ) - ( ax * by );
               .First(q => q.Name.Equals(name))
                 as FamilySymbol;
         }
-        #endregion // Element Filtering
+#endregion // Element Filtering
 
     }
 
-    #region Extension Method Classes
+#region Extension Method Classes
 
     public static class IEnumerableExtensions
     {
@@ -2563,5 +2567,5 @@ const T f = ( ay * bx ) - ( ax * by );
               : p.AsString();
         }
     }
-    #endregion // Extension Method Classes
+#endregion // Extension Method Classes
 }

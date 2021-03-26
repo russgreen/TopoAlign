@@ -57,12 +57,12 @@ namespace TopoAlign
         {
             RibbonPanel panel;
 
-            // Check if "Archisoft Tools already exists and use if its there
+            // Check if "Archisoft Tools" already exists and use if its there
             try
             {
                 panel = cachedUiCtrApp.CreateRibbonPanel("Archisoft Tools", Guid.NewGuid().ToString());
-                panel.Name = "ARBG_Transmittal_ExtApp";
-                panel.Title = "eProject Transmittal";
+                panel.Name = "ARBG_TopoAlign_ExtApp";
+                panel.Title = "Topo Align";
             }
             catch
             {
@@ -84,8 +84,8 @@ namespace TopoAlign
                 {
                     cachedUiCtrApp.CreateRibbonTab("Archisoft Tools");
                     panel = cachedUiCtrApp.CreateRibbonPanel("Archisoft Tools", Guid.NewGuid().ToString());
-                    panel.Name = "ARBG_Transmittal_ExtApp";
-                    panel.Title = "eProject Transmittal";
+                    panel.Name = "ARBG_TopoAlign_ExtApp";
+                    panel.Title = "Topo Align";
                 }
                 else
                 {
@@ -113,19 +113,8 @@ namespace TopoAlign
             pbResetRegion.ToolTip = "Copy points from existing topo surface to new topo surface within a region to undo changes made.";
             pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
 
-            //TODO - Set help document
-            ContextualHelp contextHelp;
-#if REVIT2018
-            contextHelp = new ContextualHelp(ContextualHelpType.Url, "C:\ProgramData\Autodesk\ApplicationPlugins\Archisoft TopoAlign.bundle\Contents\TopoAlign.htm");
-#elif REVIT2019
-            contextHelp = new ContextualHelp(ContextualHelpType.Url, "https://apps.autodesk.com/RVT/en/Detail/HelpDoc?appId=4811020092910907691&appLang=en&os=Win64");
-#elif REVIT2020
-            contextHelp = new ContextualHelp(ContextualHelpType.Url, "https://apps.autodesk.com/RVT/en/Detail/HelpDoc?appId=7668296925673994353&appLang=en&os=Win64");
-#elif REVIT2021
-            contextHelp = new ContextualHelp(ContextualHelpType.Url, "https://apps.autodesk.com/RVT/en/Detail/HelpDoc?appId=3561777884450830300&appLang=en&os=Win64");
-#elif REVIT2022
-            contextHelp = new ContextualHelp(ContextualHelpType.Url, "https://apps.autodesk.com/ACD/en/Detail/HelpDoc?appId=7412914718855875408&appLang=en&os=Win64");
-#endif
+            //set help document
+            ContextualHelp contextHelp = new ContextualHelp(ContextualHelpType.Url, $"https://apps.autodesk.com/RVT/en/Detail/Index?id={CheckEntitlement.appId}&appLang=en&os=Win64");
 
             pbTopoAlign.SetContextualHelp(contextHelp);
 

@@ -16,13 +16,21 @@ namespace TopoAlign
         public const string baseApiUrl = @"https://apps.autodesk.com/"; 
             
         //App ID
-        public const string appId = @"7412914718855875408";
+        public const string appId = @"7412914718855875408";  
+        //public const string appId = @"3561777884450830300"; //another app id used to test the logic
 
         public static bool LicenseCheck(Autodesk.Revit.ApplicationServices.Application app)
         {
+            string domain = System.Environment.UserDomainName;
             string userId = string.Empty;
             bool isValid;
             DateTime checkDate;
+
+            //check if its an O3S user....they get a free pass
+            if(domain.ToLower().Contains("origin3studio"))
+            {
+                return true;
+            }
 
             using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true))
             {
