@@ -29,26 +29,24 @@ namespace TopoAlign.Models
                         DivideEdgeDistance = Convert.ToDecimal(key.GetValue("DivideEdgeDistance", DivideEdgeDistance));
                         VerticalOffset = Convert.ToDecimal(key.GetValue("VerticalOffset", VerticalOffset));
                     }
-
-
                 }
         }
 
         public void SaveSettings()
         {
-            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true))
+            Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+            if (key == null)
             {
-                if (key == null)
-                {
-                   Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
-                }
+                Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+            }
 
                 key.SetValue("SingleElement", SingleElement, Microsoft.Win32.RegistryValueKind.String);
                 key.SetValue("CleanTopoPoints", CleanTopoPoints, Microsoft.Win32.RegistryValueKind.String);
                 key.SetValue("TopFace", TopFace, Microsoft.Win32.RegistryValueKind.String);
                 key.SetValue("DivideEdgeDistance", DivideEdgeDistance, Microsoft.Win32.RegistryValueKind.String);
                 key.SetValue("VerticalOffset", VerticalOffset, Microsoft.Win32.RegistryValueKind.String);
-            }
+       
         }
 
     }
