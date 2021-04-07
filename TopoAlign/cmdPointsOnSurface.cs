@@ -38,6 +38,14 @@ namespace TopoAlign
             _app = _uiapp.Application;
             _doc = _uidoc.Document;
             _sel = _uidoc.Selection;
+
+            //check entitlement
+            if (CheckEntitlement.LicenseCheck(_app) == false)
+            {
+                return Result.Cancelled;
+            }
+
+            //check the active view is a 3D view
             if (_doc.ActiveView is View3D)
             {
                 _v3d = (View3D)_doc.ActiveView;

@@ -64,10 +64,10 @@ namespace TopoAlign
             _sel = _uidoc.Selection;
 
             //check entitlement
-            //if (CheckEntitlement.LicenseCheck(_app) == false)
-            //{
-            //    return Result.Cancelled;
-            //}
+            if (CheckEntitlement.LicenseCheck(_app) == false)
+            {
+                return Result.Cancelled;
+            }
 
 #if REVIT2018 || REVIT2019 || REVIT2020
             _docUnits = _doc.GetUnits();

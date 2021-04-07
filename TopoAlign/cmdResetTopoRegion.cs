@@ -32,6 +32,12 @@ namespace TopoAlign
             _app = _uiapp.Application;
             _doc = _uidoc.Document;
 
+            //check entitlement
+            if (CheckEntitlement.LicenseCheck(_app) == false)
+            {
+                return Result.Cancelled;
+            }
+
             // check if the active view is a plan view
             if (_doc.ActiveView.ViewType != ViewType.FloorPlan)
             {
