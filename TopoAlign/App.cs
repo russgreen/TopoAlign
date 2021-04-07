@@ -114,9 +114,12 @@ namespace TopoAlign
             pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
 
             //set help document
-            ContextualHelp contextHelp = new ContextualHelp(ContextualHelpType.Url, $"https://apps.autodesk.com/RVT/en/Detail/Index?id={CheckEntitlement.appId}&appLang=en&os=Win64");
+            ContextualHelp contextHelp = new ContextualHelp(ContextualHelpType.Url, @"C:\ProgramData\Autodesk\ApplicationPlugins\archisoft tools Topo Align.bundle\Contents\help.html");
 
             pbTopoAlign.SetContextualHelp(contextHelp);
+            pbPointsFromLines.SetContextualHelp(contextHelp);
+            pbPointsAlongContours.SetContextualHelp(contextHelp);
+            pbResetRegion.SetContextualHelp(contextHelp);
 
             return panel;
         }
