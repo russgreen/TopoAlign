@@ -4,7 +4,7 @@
     <Configurations>2018;2019;2020;2021;2022</Configurations>
     <Description>Align topo surface to model elements</Description>
     <Copyright>Copyright © 2014 - 2021 Russell Green</Copyright>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 

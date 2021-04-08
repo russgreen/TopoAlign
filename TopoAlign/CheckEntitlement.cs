@@ -19,80 +19,82 @@ namespace TopoAlign
         public const string appId = @"7412914718855875408";  
         //public const string appId = @"3561777884450830300"; //another app id used to test the logic
 
+        private static string _domain = System.Environment.UserDomainName;
+        private static string _userId = string.Empty;
+        private static bool _isValid;
+
         public static bool LicenseCheck(Autodesk.Revit.ApplicationServices.Application app)
         {
-            string domain = System.Environment.UserDomainName;
-            string userId = string.Empty;
-            bool isValid;
+
             DateTime checkDate;
 
             //check if its an O3S user....they get a free pass
-            if(domain.ToLower().Contains("origin3studio"))
+            if(_domain.ToLower().Contains("origin3studio"))
             {
                 return true;
             }
 
-            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true))
+            Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+
+            if (key == null)
             {
-                if (key == null)
+                Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+            }
+
+            _userId = key.GetValue("UserID", string.Empty).ToString();
+
+            if(_userId != string.Empty)
+            {
+                _isValid = bool.Parse(Cypher.DecryptString(key.GetValue("IsValid").ToString(), _userId));
+                checkDate = DateTime.Parse(Cypher.DecryptString(key.GetValue("Checked").ToString(), _userId));
+
+                if (_isValid == true)
                 {
-                    Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
-                }
-
-                userId = key.GetValue("UserID", string.Empty).ToString();
-
-                if (userId != string.Empty)
-                {
-                    isValid = bool.Parse(Cypher.DecryptString(key.GetValue("IsValid").ToString(), userId));
-                    checkDate = DateTime.Parse(Cypher.DecryptString(key.GetValue("Checked").ToString(), userId));
-
-                    if(isValid == true)
+                    // check if we need to re-validate (every 30days)
+                    if (DateTime.Now.Subtract(checkDate).Days > 30)
                     {
-                        // check if we need to re-validate (every 30days)
-                        if (DateTime.Now.Subtract(checkDate).Days > 30)
+                        if (CheckLogin( app) == true)
                         {
-                            if (CheckLogin(userId, app) == true)
-                            {
-                                // record in the details in the registry
-                                key.SetValue("UserID", userId, Microsoft.Win32.RegistryValueKind.String);
-                                key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), userId), Microsoft.Win32.RegistryValueKind.String);
-                                key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), userId), Microsoft.Win32.RegistryValueKind.String);
-                            }
-                            else
-                            {
-                                return false;
-                            }
+                            // record in the details in the registry
+                            key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
+                            key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
+                            key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
+                        }
+                        else
+                        {
+                            return false;
                         }
                     }
-                    else if (CheckLogin(userId, app) == true)
-                    {
-                        // record in the details in the registry
-                        key.SetValue("UserID", userId, Microsoft.Win32.RegistryValueKind.String);
-                        key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), userId), Microsoft.Win32.RegistryValueKind.String);
-                        key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), userId), Microsoft.Win32.RegistryValueKind.String);
-                    }
-                    else
-                    {
-                        return false;
-                    }
                 }
-                else if (CheckLogin(userId, app) == true)
+                else if (CheckLogin( app) == true)
                 {
                     // record in the details in the registry
-                    key.SetValue("UserID", userId, Microsoft.Win32.RegistryValueKind.String);
-                    key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), userId), Microsoft.Win32.RegistryValueKind.String);
-                    key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), userId), Microsoft.Win32.RegistryValueKind.String);
+                    key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
+                    key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
+                    key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
                 }
                 else
                 {
                     return false;
                 }
             }
+            else if (CheckLogin(app) == true)
+            {
+                // record in the details in the registry
+                key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
+                key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
+                key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
+            }
+            else
+            {
+                return false;
+            }
 
             return true;
         }
 
-        private static bool CheckLogin(string userId, Autodesk.Revit.ApplicationServices.Application app)
+        private static bool CheckLogin(Autodesk.Revit.ApplicationServices.Application app)
         {
             // Check to see if the user is logged in.
             if (!Autodesk.Revit.ApplicationServices.Application.IsLoggedIn)
@@ -102,8 +104,8 @@ namespace TopoAlign
             }
 
             // Get the user id, and check entitlement 
-            userId = app.LoginUserId;
-            bool isValid = Entitlement(userId);
+            _userId = app.LoginUserId;
+            bool isValid = Entitlement(_userId);
             if (isValid == false)
             {
                 TaskDialog.Show("TopoAlign addin license", "You do not appear to have a valid license to use this addin. Please contact the author via the app store\n");
