@@ -13,20 +13,19 @@ namespace TopoAlign
     public static class CheckEntitlement
     {
         //Set values specific to the environment
-        public const string baseApiUrl = @"https://apps.autodesk.com/"; 
+        public const string baseApiUrl = @"https://apps.autodesk.com"; 
             
         //App ID
         public const string appId = @"7412914718855875408";  
-        //public const string appId = @"3561777884450830300"; //another app id used to test the logic
 
         private static string _domain = System.Environment.UserDomainName;
         private static string _userId = string.Empty;
-        private static bool _isValid;
+        private static bool _isValid = false;
 
         public static bool LicenseCheck(Autodesk.Revit.ApplicationServices.Application app)
         {
 
-            DateTime checkDate;
+            DateTime checkDate = DateTime.Now;
 
             //check if its an O3S user....they get a free pass
             if(_domain.ToLower().Contains("origin3studio"))
@@ -44,10 +43,18 @@ namespace TopoAlign
 
             _userId = key.GetValue("UserID", string.Empty).ToString();
 
-            if(_userId != string.Empty)
+            if(_userId != string.Empty) 
             {
-                _isValid = bool.Parse(Cypher.DecryptString(key.GetValue("IsValid").ToString(), _userId));
-                checkDate = DateTime.Parse(Cypher.DecryptString(key.GetValue("Checked").ToString(), _userId));
+                try
+                {
+                    _isValid = bool.Parse(Cypher.DecryptString(key.GetValue("IsValid").ToString(), _userId));
+                    checkDate = DateTime.Parse(Cypher.DecryptString(key.GetValue("Checked").ToString(), _userId));
+                }
+                catch
+                {
+                    _isValid = false;
+                }
+                              
 
                 if (_isValid == true)
                 {
@@ -105,7 +112,9 @@ namespace TopoAlign
 
             // Get the user id, and check entitlement 
             _userId = app.LoginUserId;
+
             bool isValid = Entitlement(_userId);
+
             if (isValid == false)
             {
                 TaskDialog.Show("TopoAlign addin license", "You do not appear to have a valid license to use this addin. Please contact the author via the app store\n");
@@ -146,16 +155,13 @@ namespace TopoAlign
             request.AddParameter("appid", appId);
 
             //(2) Execute request and get response
-            IRestResponse response = client.Execute(request);
+            IRestResponse<EntitlementResult> response = client.Execute<EntitlementResult>(request);
 
-            //Get the entitlement status.
+            // Get the auth token. 
             bool isValid = false;
-            if (response.StatusCode == HttpStatusCode.OK)
+            if (response.Data != null && response.Data.IsValid)
             {
-                JsonDeserializer deserial = new JsonDeserializer();
-                EntitlementResponse entitlementResponse =
-                deserial.Deserialize<EntitlementResponse>(response);
-                isValid = entitlementResponse.IsValid;
+                isValid = true;
             }
 
             return isValid;
@@ -163,7 +169,7 @@ namespace TopoAlign
     }
 
     [Serializable]
-    public class EntitlementResponse
+    public class EntitlementResult
     {
         public string UserId { get; set; }
         public string AppId { get; set; }
