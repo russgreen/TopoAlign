@@ -105,7 +105,7 @@ namespace TopoAlign
 
             PushButtonData pbDataPointsAlongContours = new PushButtonData("Points along contours", "Points along contours", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAlongContours");
             PushButton pbPointsAlongContours  = (PushButton)panel.AddItem(pbDataPointsAlongContours);
-            pbPointsAlongContours.ToolTip = "Add points on surface along selected contour model lines";
+            pbPointsAlongContours.ToolTip = "Add points on surface along selected contour model lines. Model lines can on a datum BELOW the topo surface and projected up a set distance using an offset value.";
             pbPointsAlongContours.LargeImage = PngImageSource("TopoAlign.Images.PointsFromContours32.png");
 
             PushButtonData pbDataResetRegion = new PushButtonData("Reset region", "Reset region", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdResetTopoRegion");
