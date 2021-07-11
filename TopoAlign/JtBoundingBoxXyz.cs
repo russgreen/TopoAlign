@@ -5,22 +5,22 @@ namespace TopoAlign
 {
 
     /// <summary>
-/// A bounding box for a collection of XYZ instances.
-/// The components of a tuple are read-only and cannot be changed after instantiation, so I cannot use that easily.
-/// The components of an XYZ are read-only and cannot be changed except by re-instantiation, so I cannot use that easily either.
-/// </summary>
+    /// A bounding box for a collection of XYZ instances.
+    /// The components of a tuple are read-only and cannot be changed after instantiation, so I cannot use that easily.
+    /// The components of an XYZ are read-only and cannot be changed except by re-instantiation, so I cannot use that easily either.
+    /// </summary>
     public class JtBoundingBoxXyz
     {
         // : Tuple<XYZ, XYZ>
         /// <summary>
-    /// Array of six doubles, first three for
-    /// minimum, last three for maximum values.
-    /// </summary>
+        /// Array of six doubles, first three for
+        /// minimum, last three for maximum values.
+        /// </summary>
         private double[] _a;
 
         /// <summary>
-    /// Initialise to infinite values.
-    /// </summary>
+        /// Initialise to infinite values.
+        /// </summary>
         public JtBoundingBoxXyz()
         {
             // : base(
@@ -34,8 +34,8 @@ namespace TopoAlign
         }
 
         /// <summary>
-    /// Return current lower left corner.
-    /// </summary>
+        /// Return current lower left corner.
+        /// </summary>
         public XYZ Min
         {
             get
@@ -45,8 +45,8 @@ namespace TopoAlign
         }
 
         /// <summary>
-    /// Return current upper right corner.
-    /// </summary>
+        /// Return current upper right corner.
+        /// </summary>
         public XYZ Max
         {
             get
@@ -65,9 +65,9 @@ namespace TopoAlign
 
 
         /// <summary>
-    /// Expand bounding box to contain
-    /// the given new point.
-    /// </summary>
+        /// Expand bounding box to contain
+        /// the given new point.
+        /// </summary>
         public void ExpandToContain(XYZ p)
         {
             if (p.X < _a[0])

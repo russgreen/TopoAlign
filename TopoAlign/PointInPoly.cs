@@ -8,19 +8,19 @@ namespace TopoAlign
     public class PointInPoly
     {
         /// <summary>
-    /// Determine the quadrant of a polygon vertex
-    /// relative to the test point.
-    /// </summary>
+        /// Determine the quadrant of a polygon vertex
+        /// relative to the test point.
+        /// </summary>
         private static int GetQuadrant(UV vertex, UV p)
         {
             return vertex.U > p.U ? vertex.V > p.V ? 0 : 3 : vertex.V > p.V ? 1 : 2;
         }
 
         /// <summary>
-    /// Determine the X intercept of a polygon edge
-    /// with a horizontal line at the Y value of the
-    /// test point.
-    /// </summary>
+        /// Determine the X intercept of a polygon edge
+        /// with a horizontal line at the Y value of the
+        /// test point.
+        /// </summary>
         private static double X_intercept(UV p, UV q, double y)
         {
             Debug.Assert(0d != p.V - q.V, "unexpected horizontal segment");
@@ -58,22 +58,22 @@ namespace TopoAlign
         }
 
         /// <summary>
-    /// Determine whether given 2D point lies within
-    /// the polygon.
-    /// 
-    /// Written by Jeremy Tammik, Autodesk, 2009-09-23,
-    /// based on code that I wrote back in 1996 in C++,
-    /// which in turn was based on C code from the
-    /// article "An Incremental Angle Point in Polygon
-    /// Test" by Kevin Weiler, Autodesk, in "Graphics
-    /// Gems IV", Academic Press, 1994.
-    /// 
-    /// Copyright (C) 2009 by Jeremy Tammik. All
-    /// rights reserved.
-    /// 
-    /// This code may be freely used. Please preserve
-    /// this comment.
-    /// </summary>
+        /// Determine whether given 2D point lies within
+        /// the polygon.
+        /// 
+        /// Written by Jeremy Tammik, Autodesk, 2009-09-23,
+        /// based on code that I wrote back in 1996 in C++,
+        /// which in turn was based on C code from the
+        /// article "An Incremental Angle Point in Polygon
+        /// Test" by Kevin Weiler, Autodesk, in "Graphics
+        /// Gems IV", Academic Press, 1994.
+        /// 
+        /// Copyright (C) 2009 by Jeremy Tammik. All
+        /// rights reserved.
+        /// 
+        /// This code may be freely used. Please preserve
+        /// this comment.
+        /// </summary>
         // Public Shared Function PolygonContains(polygon As List(Of UV), point As UV) As Boolean
         // ' initialize
         // Dim quad As Quadrant = GetQuadrant(polygon.Item(0), point)

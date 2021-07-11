@@ -238,6 +238,7 @@ namespace TopoAlign
                         {
                             if (cSettings.CleanTopoPoints == true)
                                 CleanupTopoPoints(_element);
+
                             points = GetPointsFromElement(_element, TopFace);
                         }
 
@@ -250,7 +251,7 @@ namespace TopoAlign
                     }
                     else
                     {
-                        points = GetPointsFromCurves(curves);
+                        points = PointsUtils.GetPointsFromCurves(curves, (double)_divide, -(double)_offset);
                     }
 
                     // delete duplicate points
@@ -272,47 +273,6 @@ namespace TopoAlign
             }
 
             return true;
-        }
-
-        private IList<XYZ> GetPointsFromCurves(List<Curve> curves)
-        {
-            var points = new List<XYZ>();
-            foreach (Curve curve in curves)
-            {
-                int i = curve.Tessellate().Count;
-                if (i > 2)
-                {
-                    foreach (XYZ pt in curve.Tessellate())
-                    {
-                        var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)_offset);
-                        points.Add(pt1);
-                    }
-                }
-                else
-                {
-                    double len = curve.ApproximateLength;
-                    if (len > (double)_divide)
-                    {
-                        var pt0 = new XYZ(curve.Tessellate()[0].X, curve.Tessellate()[0].Y, curve.Tessellate()[0].Z);
-                        var pt1 = new XYZ(curve.Tessellate()[1].X, curve.Tessellate()[1].Y, curve.Tessellate()[1].Z);
-                        foreach (XYZ pt in Util.DividePoints(pt0, pt1, len, (double)_divide))
-                        {
-                            var p = new XYZ(pt.X, pt.Y, pt.Z - (double)_offset);
-                            points.Add(p);
-                        }
-                    }
-                    else
-                    {
-                        foreach (XYZ pt in curve.Tessellate())
-                        {
-                            var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)_offset);
-                            points.Add(pt1);
-                        }
-                    }
-                }
-            }
-
-            return points;
         }
 
         private IList<XYZ> GetPointsFromElement(Element element, bool topFace)
