@@ -103,10 +103,15 @@ namespace TopoAlign
             pbPointsFromLines.ToolTip = "Add points on surface along selected model lines. Model lines must be lines and arcs and be BELOW the topo surface.";
             pbPointsFromLines.LargeImage = PngImageSource("TopoAlign.Images.PointsFromLines32.png");
 
-            PushButtonData pbDataPointsAlongContours = new PushButtonData("Points along contours", "Points along contours", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAlongContours");
+            PushButtonData pbDataPointsAlongContours = new PushButtonData("Points along Contours", "Points along Contours", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAlongContours");
             PushButton pbPointsAlongContours  = (PushButton)panel.AddItem(pbDataPointsAlongContours);
             pbPointsAlongContours.ToolTip = "Add points on surface along selected contour model lines. Model lines can on a datum BELOW the topo surface and projected up a set distance using an offset value.";
             pbPointsAlongContours.LargeImage = PngImageSource("TopoAlign.Images.PointsFromContours32.png");
+
+            PushButtonData pbDataPointsAtIntersection = new PushButtonData("Points at Intersection", "Points at Intersection", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAtIntersection");
+            PushButton pbPointsAtIntersection = (PushButton)panel.AddItem(pbDataPointsAtIntersection);
+            pbPointsAtIntersection.ToolTip = "Add points on surface at the intersection with a selected face.";
+            pbPointsAtIntersection.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
 
             PushButtonData pbDataResetRegion = new PushButtonData("Reset region", "Reset region", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdResetTopoRegion");
             PushButton pbResetRegion  = (PushButton)panel.AddItem(pbDataResetRegion);
@@ -119,6 +124,7 @@ namespace TopoAlign
             pbTopoAlign.SetContextualHelp(contextHelp);
             pbPointsFromLines.SetContextualHelp(contextHelp);
             pbPointsAlongContours.SetContextualHelp(contextHelp);
+            pbPointsAtIntersection.SetContextualHelp(contextHelp);
             pbResetRegion.SetContextualHelp(contextHelp);
 
             return panel;

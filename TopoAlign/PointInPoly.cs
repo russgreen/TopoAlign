@@ -74,44 +74,6 @@ namespace TopoAlign
         /// This code may be freely used. Please preserve
         /// this comment.
         /// </summary>
-        // Public Shared Function PolygonContains(polygon As List(Of UV), point As UV) As Boolean
-        // ' initialize
-        // Dim quad As Quadrant = GetQuadrant(polygon.Item(0), point)
-
-        // Dim angle As Quadrant = 0
-
-        // ' loop on all vertices of polygon
-        // Dim next_quad As Quadrant, delta As Quadrant
-        // Dim n As Integer = polygon.Count
-        // For i As Integer = 0 To n - 1
-        // Dim vertex As UV = polygon.Item(i)
-
-        // Dim next_vertex As UV = polygon.Item(If((i + 1 < n), i + 1, 0))
-
-        // ' calculate quadrant and delta from last quadrant
-
-        // next_quad = GetQuadrant(next_vertex, point)
-        // delta = next_quad - quad
-
-        // AdjustDelta(delta, vertex, next_vertex, point)
-
-        // ' add delta to total angle sum
-        // angle = angle + delta
-
-        // ' increment for next step
-        // quad = next_quad
-        // Next
-
-        // ' complete 360 degrees (angle of + 4 or -4 ) 
-        // ' means inside
-
-        // Return (angle = +4) OrElse (angle = -4)
-
-        // ' odd number of windings rule:
-        // ' if (angle & 4) return INSIDE; else return OUTSIDE;
-        // ' non-zero winding rule:
-        // ' if (angle != 0) return INSIDE; else return OUTSIDE;
-        // End Function
         public static bool PolygonContains(UVArray polygon, UV point)
         {
             // initialize
@@ -212,9 +174,6 @@ namespace TopoAlign
         }
 
         private static float DotProduct(float Ax, float Ay, float Bx, float By, float Cx, float Cy)
-
-
-
         {
             float DotProductRet = default;
             float BAx;
@@ -234,9 +193,6 @@ namespace TopoAlign
         }
 
         private static float CrossProductLength(float Ax, float Ay, float Bx, float By, float Cx, float Cy)
-
-
-
         {
             float CrossProductLengthRet = default;
             float BAx;

@@ -12,15 +12,15 @@ namespace TopoAlign
             m_doc = doc;
         }
 
-        bool ISelectionFilter.AllowElement(Element elem)
+        public bool AllowElement(Element elem)
         {
             return true;
         }
 
-        bool ISelectionFilter.AllowReference(Reference reference, XYZ position)
+        public bool AllowReference(Reference reference, XYZ position)
         {
             var geoObject = m_doc.GetElement(reference).GetGeometryObjectFromReference(reference);
-            return geoObject is object && geoObject is PlanarFace;
+            return geoObject is object && geoObject is Face;
         }
     }
 }

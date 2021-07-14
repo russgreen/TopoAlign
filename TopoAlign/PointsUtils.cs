@@ -6,6 +6,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using GeometRi;
 
 namespace TopoAlign
 {
@@ -159,12 +160,12 @@ namespace TopoAlign
         {
             var points = new List<XYZ>();
 
-            foreach (Curve m_Curve in curves)
+            foreach (var curve in curves)
             {
-                int i = m_Curve.Tessellate().Count;
+                int i = curve.Tessellate().Count;
                 if (i > 2)
                 {
-                    foreach (XYZ pt in m_Curve.Tessellate())
+                    foreach (XYZ pt in curve.Tessellate())
                     {
                         var pt1 = new XYZ(pt.X, pt.Y, pt.Z + offset);
                         points.Add(pt1);
@@ -172,11 +173,11 @@ namespace TopoAlign
                 }
                 else
                 {
-                    double len = m_Curve.ApproximateLength;
+                    double len = curve.ApproximateLength;
                     if (len > divide)
                     {
-                        var pt0 = new XYZ(m_Curve.Tessellate()[0].X, m_Curve.Tessellate()[0].Y, m_Curve.Tessellate()[0].Z);
-                        var pt1 = new XYZ(m_Curve.Tessellate()[1].X, m_Curve.Tessellate()[1].Y, m_Curve.Tessellate()[1].Z);
+                        var pt0 = new XYZ(curve.Tessellate()[0].X, curve.Tessellate()[0].Y, curve.Tessellate()[0].Z);
+                        var pt1 = new XYZ(curve.Tessellate()[1].X, curve.Tessellate()[1].Y, curve.Tessellate()[1].Z);
                         foreach (XYZ pt in Util.DividePoints(pt0, pt1, len, divide))
                         {
                             var p = new XYZ(pt.X, pt.Y, pt.Z + offset);
@@ -185,11 +186,36 @@ namespace TopoAlign
                     }
                     else
                     {
-                        foreach (XYZ pt in m_Curve.Tessellate())
+                        foreach (XYZ pt in curve.Tessellate())
                         {
                             var pt1 = new XYZ(pt.X, pt.Y, pt.Z + offset);
                             points.Add(pt1);
                         }
+                    }
+                }
+            }
+
+            return points;
+        }
+
+        public static List<XYZ> GetPointsFromSegments(List<Segment3d> segments, double divide = 1000d * 0.00328084d, double offset = 0)
+        {
+            var points = new List<XYZ>();
+
+            foreach (var segment in segments)
+            {
+                var pt1 = new XYZ(segment.P1.X, segment.P1.Y, segment.P1.Z + offset);
+                var pt2 = new XYZ(segment.P2.X, segment.P2.Y, segment.P2.Z + offset);
+
+                points.Add(pt1);
+                points.Add(pt2);
+
+                if(segment.Length > divide)
+                {
+                    foreach (XYZ pt in Util.DividePoints(pt1, pt2, segment.Length, divide))
+                    {
+                        var p = new XYZ(pt.X, pt.Y, pt.Z + offset);
+                        points.Add(p);
                     }
                 }
             }
