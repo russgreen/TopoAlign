@@ -6,7 +6,8 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
-using GeometRi;
+//using GeometRi;
+using g3;
 
 namespace TopoAlign
 {
@@ -197,27 +198,15 @@ namespace TopoAlign
 
             return points;
         }
-
-        public static List<XYZ> GetPointsFromSegments(List<Segment3d> segments, double divide = 1000d * 0.00328084d, double offset = 0)
+        public static List<XYZ> GetPointsFromVector3ds(List<Vector3d> Vector3ds, double offset = 0)
         {
             var points = new List<XYZ>();
 
-            foreach (var segment in segments)
+            foreach (var vector in Vector3ds)
             {
-                var pt1 = new XYZ(segment.P1.X, segment.P1.Y, segment.P1.Z + offset);
-                var pt2 = new XYZ(segment.P2.X, segment.P2.Y, segment.P2.Z + offset);
+                var xyz = new XYZ(vector.x, vector.y, vector.z + offset);
 
-                points.Add(pt1);
-                points.Add(pt2);
-
-                if(segment.Length > divide)
-                {
-                    foreach (XYZ pt in Util.DividePoints(pt1, pt2, segment.Length, divide))
-                    {
-                        var p = new XYZ(pt.X, pt.Y, pt.Z + offset);
-                        points.Add(p);
-                    }
-                }
+                points.Add(xyz);
             }
 
             return points;

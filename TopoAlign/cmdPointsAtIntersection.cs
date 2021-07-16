@@ -65,6 +65,7 @@ namespace TopoAlign
             _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
 #endif
 
+            /**
             using (FormDivideLines frm = new FormDivideLines())
             {
                 _divide = Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)cSettings.DivideEdgeDistance, _docDisplayUnits));
@@ -117,7 +118,12 @@ namespace TopoAlign
                     }
                 }
             }
+            **/
 
+            if (PointsOnSurfaceAtIntersection() == false)
+            {
+                return Result.Failed;
+            }
 
             // Return Success
             return Result.Succeeded;
@@ -162,13 +168,10 @@ namespace TopoAlign
                 return false;
             }
 
-            List<GeometRi.Triangle> topoTriangles = TriTriIntersect.TrianglesFromTopo(_topoSurface);
+            List<g3.Triangle3d> topoTriangles = TriTriIntersect.TrianglesFromTopo(_topoSurface);
+            List<g3.Triangle3d> faceTriangles = TriTriIntersect.TrianglesFromGeoObj(_face);
 
-            List<GeometRi.Triangle> faceTriangles = TriTriIntersect.TrianglesFromGeoObj(_face);
-
-            //todo - reduce list of topoTriangles by bounding box of surfaceTriangles
-
-            var intersections = TriTriIntersect.IntersectTriangleLists(topoTriangles, faceTriangles);
+            var intersections = TriTriIntersect.IntersectTriangleLists(topoTriangles, faceTriangles, (double)_divide);
 
             try
             {
@@ -176,7 +179,7 @@ namespace TopoAlign
                 {
                     tes.Start(_topoSurface.Id);
 
-                    List<XYZ> points = PointsUtils.GetPointsFromSegments(intersections);
+                    List<XYZ> points = PointsUtils.GetPointsFromVector3ds(intersections);
 
                     if (points.Count == 0)
                     {

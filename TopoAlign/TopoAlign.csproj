@@ -4,7 +4,7 @@
     <Configurations>2018;2019;2020;2021;2022</Configurations>
     <Description>Align topo surface to model elements</Description>
     <Copyright>Copyright © 2014 - 2021 Russell Green</Copyright>
-    <Version>2.0.3</Version>
+    <Version>2.1.0</Version>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
@@ -100,7 +100,7 @@
        <PrivateAssets>all</PrivateAssets>
        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
      </PackageReference>
-     <PackageReference Include="GeometRi" Version="1.3.5.16" />
+     <PackageReference Include="geometry3Sharp" Version="1.0.324" />
      <PackageReference Include="RestSharp" Version="106.11.7" />
    </ItemGroup>
 

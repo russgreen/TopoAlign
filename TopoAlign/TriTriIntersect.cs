@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Autodesk.Revit.DB;
-using GeometRi;
+using g3;
 
 namespace TopoAlign
 {
     public class TriTriIntersect
     {
 
-        public static List<Triangle> TrianglesFromTopo(Autodesk.Revit.DB.Architecture.TopographySurface topoSurface)
+        public static List<Triangle3d> TrianglesFromTopo(Autodesk.Revit.DB.Architecture.TopographySurface topoSurface)
         {
             Options op = new Options
             {
@@ -17,7 +18,7 @@ namespace TopoAlign
             };
             var geoObjects = topoSurface.get_Geometry(op).GetEnumerator();
 
-            List<Triangle> topoTriangles = new List<Triangle>();
+            List<Triangle3d> topoTriangles = new List<Triangle3d>();
 
             while (geoObjects.MoveNext())
             {
@@ -34,13 +35,14 @@ namespace TopoAlign
                         XYZ T12 = meshTriangle.get_Vertex(1);
                         XYZ T13 = meshTriangle.get_Vertex(2);
 
-                        Point3d T21 = new Point3d(T11.X, T11.Y, T11.Z);
-                        Point3d T22 = new Point3d(T12.X, T12.Y, T12.Z);
-                        Point3d T23 = new Point3d(T13.X, T13.Y, T13.Z);
+                        Vector3d v1 = new Vector3d(T11.X, T11.Y, T11.Z);
+                        Vector3d v2 = new Vector3d(T12.X, T12.Y, T12.Z);
+                        Vector3d v3 = new Vector3d(T13.X, T13.Y, T13.Z);
+                        
+                        Triangle3d triangle3D = new Triangle3d(v1, v2, v3);
 
-                        Triangle triangle = new Triangle(T21, T22, T23);
 
-                        topoTriangles.Add(triangle);
+                        topoTriangles.Add(triangle3D);
                     }
                 }
             }
@@ -48,9 +50,9 @@ namespace TopoAlign
             return topoTriangles;
         }
 
-        public static List<Triangle> TrianglesFromGeoObj(Face face)
+        public static List<Triangle3d> TrianglesFromGeoObj(Face face)
         {
-            List<Triangle> faceTriangles = new List<Triangle>();
+            List<Triangle3d> faceTriangles = new List<Triangle3d>();
 
             Mesh mesh = face.Triangulate();
 
@@ -61,69 +63,62 @@ namespace TopoAlign
                 XYZ T12 = meshTriangle.get_Vertex(1);
                 XYZ T13 = meshTriangle.get_Vertex(2);
 
-                Point3d T21 = new Point3d(T11.X, T11.Y, T11.Z);
-                Point3d T22 = new Point3d(T12.X, T12.Y, T12.Z);
-                Point3d T23 = new Point3d(T13.X, T13.Y, T13.Z);
+                Vector3d v1 = new Vector3d(T11.X, T11.Y, T11.Z);
+                Vector3d v2 = new Vector3d(T12.X, T12.Y, T12.Z);
+                Vector3d v3 = new Vector3d(T13.X, T13.Y, T13.Z);
 
-                Triangle triangle = new Triangle(T21, T22, T23);
+                Triangle3d triangle3D = new Triangle3d(v1, v2, v3);
 
-                faceTriangles.Add(triangle);
+                faceTriangles.Add(triangle3D);
             }
 
             return faceTriangles;
         }
 
-        public static List<Segment3d> IntersectTriangleLists(List<Triangle> topoTriangles, List<Triangle> faceTriangles)
+        public static List<Vector3d> IntersectTriangleLists(List<Triangle3d> topoTriangles, List<Triangle3d> faceTriangles, double divide = 1000d * 0.00328084d)
         {
-            List<Segment3d> segments = new List<Segment3d>();
+            var points = new List<Vector3d>();
 
             foreach (var topoTriangle in topoTriangles)
             {
                 foreach (var faceTriangle in faceTriangles)
                 {
-                    var segment = IntersectTriangles(topoTriangle, faceTriangle);
-                    if(segment != null)
+                    IntrTriangle3Triangle3 tritri = new IntrTriangle3Triangle3(topoTriangle, faceTriangle);
+
+                    if (tritri.Test() == true)
                     {
-                        segments.Add(segment);
+                        tritri.Find();
+
+                        if(tritri.Result == g3.IntersectionResult.Intersects)
+                        {
+                            points.Add(tritri.Points.V0);
+
+                            if(tritri.Type == IntersectionType.Segment)
+                            {
+                                points.Add(tritri.Points.V1);
+
+                                var deltaX = tritri.Points.V1.x - tritri.Points.V0.x;
+                                var deltaY = tritri.Points.V1.y - tritri.Points.V0.y;
+                                var deltaZ = tritri.Points.V1.z - tritri.Points.V0.z;
+
+                                var distance = Math.Sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+
+                                if (distance > divide)
+                                {
+                                    //TODO - create intermeditate points
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            if(segments.Count == 0)
+            if(points.Count == 0)
             {
-                segments = null;
+                points = null;
             }
                         
-            return segments;
-
-        }
-
-        private static Segment3d IntersectTriangles(Triangle t1, Triangle t2)
-        {
-            //Segment3d segment3D = new Segment3d(new Point3d(0,0,0), new Point3d(0,0,0));
-            Segment3d segment3D;
-
-            if (t1.Intersects(t2) == true)
-            {
-                Debug.WriteLine("Intersection found");
-
-                object obj = t1.IntersectionWith(t2.ToPlane);
-
-                if (obj != null)
-                {
-                    if (obj.GetType() == typeof(Segment3d))
-                    {
-                        Debug.WriteLine("Intersection is segment");
-                        segment3D = (Segment3d)obj;
-                        Debug.WriteLine(segment3D.ToString());
-
-                        return segment3D;
-                    }                    
-                }                
-            }
-
-            segment3D = null;
-            return segment3D;
+            return points;
         }
     }
 }
