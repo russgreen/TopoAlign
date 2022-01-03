@@ -19,7 +19,7 @@ namespace TopoAlign
     {
         public static UIControlledApplication cachedUiCtrApp;
 
-        public static Autodesk.Revit.DB.Document revitDocument;
+        //public static Autodesk.Revit.DB.Document revitDocument;
 
         public Result OnStartup(UIControlledApplication a)
         {

@@ -347,9 +347,11 @@ namespace TopoAlign
         #region Geometrical Calculation
         public static List<XYZ> DividePoints(XYZ A, XYZ B, double length, double increment)
         {
-            var retval = new List<XYZ>();
-            retval.Add(A);
-            retval.Add(B);
+            var retval = new List<XYZ>
+            {
+                A,
+                B
+            };
 
             // retval.Add(Midpoint(A, B))
 
@@ -1370,7 +1372,7 @@ const T f = ( ay * bx ) - ( ax * by );
                 }
             }
 
-            IList<ForgeTypeId> specs = UnitUtils.GetAllSpecs();
+            IList<ForgeTypeId> specs = UnitUtils.GetAllMeasurableSpecs();
 
             Debug.Print("{0} specs:", specs.Count);
 
@@ -1720,9 +1722,11 @@ const T f = ( ay * bx ) - ( ax * by );
           string content)
         {
             Debug.WriteLine(instruction + "\r\n" + content);
-            TaskDialog d = new TaskDialog(_caption);
-            d.MainInstruction = instruction;
-            d.MainContent = content;
+            TaskDialog d = new TaskDialog(_caption)
+            {
+                MainInstruction = instruction,
+                MainContent = content
+            };
             d.Show();
         }
 
@@ -1795,8 +1799,7 @@ const T f = ( ay * bx ) - ( ax * by );
             Location loc = e.Location;
             if (null != loc)
             {
-                LocationPoint lp = loc as LocationPoint;
-                if (null != lp)
+                if (loc is LocationPoint lp)
                 {
                     p = lp.Point;
                     rc = true;

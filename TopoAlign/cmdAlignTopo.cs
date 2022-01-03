@@ -201,8 +201,7 @@ namespace TopoAlign
                         var element = _doc.GetElement(r.ElementId);
                         Edge selectedEdge = element.GetGeometryObjectFromReference(r) as Edge;
                         var m_Curve = selectedEdge.AsCurve();
-                        FamilyInstance fi = element as FamilyInstance;
-                        if (fi is object)
+                        if (element is FamilyInstance fi)
                         {
                             var the_list_of_the_joined = JoinGeometryUtils.GetJoinedElements(_doc, fi);
                             if (the_list_of_the_joined.Count == 0)
@@ -225,12 +224,13 @@ namespace TopoAlign
                 using (var tes = new Autodesk.Revit.DB.Architecture.TopographyEditScope(_doc, "Align topo"))
                 {
                     tes.Start(_topoSurface.Id);
-                    FamilyInstance fi = _element as FamilyInstance;
-                    var opt = new Options();
-                    opt.ComputeReferences = true;
+                    var opt = new Options
+                    {
+                        ComputeReferences = true
+                    };
                     if (UseEdge == false)
                     {
-                        if (fi is object)
+                        if (_element is FamilyInstance fi)
                         {
                             points = GetPointsFromFamily(fi.get_Geometry(opt), TopFace);
                         }
@@ -278,8 +278,10 @@ namespace TopoAlign
         private IList<XYZ> GetPointsFromElement(Element element, bool topFace)
         {
             var points = new List<XYZ>();
-            var opt = new Options();
-            opt.ComputeReferences = true;
+            var opt = new Options
+            {
+                ComputeReferences = true
+            };
             var m_GeometryElement = element.get_Geometry(opt);
             foreach (GeometryObject m_GeometryObject in m_GeometryElement)
             {
@@ -389,8 +391,7 @@ namespace TopoAlign
 
                         foreach (Face f in faces)
                         {
-                            PlanarFace pf = f as PlanarFace;
-                            if (pf is object)
+                            if (f is PlanarFace pf)
                             {
                                 if (face == null)
                                     face = pf;
@@ -471,8 +472,10 @@ namespace TopoAlign
             }
 
             var polygons = new List<List<XYZ>>();
-            var opt = new Options();
-            opt.ComputeReferences = true;
+            var opt = new Options
+            {
+                ComputeReferences = true
+            };
             var m_GeometryElement = element.get_Geometry(opt);
             foreach (GeometryObject m_GeometryObject in m_GeometryElement)
             {
@@ -610,8 +613,7 @@ namespace TopoAlign
             var faces = solid.Faces;
             foreach (Face f in faces)
             {
-                PlanarFace pf = f as PlanarFace;
-                if (pf is object)
+                if (f is PlanarFace pf)
                 {
                     if (lowest is null || pf.Origin.Z < lowest.Origin.Z)
                     {
@@ -675,8 +677,7 @@ namespace TopoAlign
 
                 foreach (GeometryObject obj in geo)
                 {
-                    Solid solid = obj as Solid;
-                    if (solid is object)
+                    if (obj is Solid solid)
                     {
                         GetBoundary(polygons, solid);
                     }
