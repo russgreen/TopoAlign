@@ -51,6 +51,8 @@ namespace TopoAlign
             var revitVersion = "2021";
 #elif REVIT2022
             var revitVersion = "2022";
+#elif REVIT2023
+            var revitVersion = "2023";
 #endif
             //Analytics.TrackEvent($"Revit Version {revitVersion}");
 
