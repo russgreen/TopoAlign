@@ -8,27 +8,26 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TopoAlign
+namespace TopoAlign;
+
+public partial class FormResetTopo : Form
 {
-    public partial class FormResetTopo : Form
+    public FormResetTopo()
     {
-        public FormResetTopo()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+    }
 
-        private void cboTopoSource_SelectedIndexChanged(object sender, EventArgs e)
+    private void cboTopoSource_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (cboTopoSource.Items.Count > 0 & cboTopoTarget.Items.Count > 0)
         {
-            if (cboTopoSource.Items.Count > 0 & cboTopoTarget.Items.Count > 0)
-            {
-                Button_OK.Enabled = true;
-            }
+            Button_OK.Enabled = true;
         }
+    }
 
-        private void Button_OK_Click(object sender, EventArgs e)
-        {
-            DialogResult = System.Windows.Forms.DialogResult.OK;
-            Close();
-        }
+    private void Button_OK_Click(object sender, EventArgs e)
+    {
+        DialogResult = System.Windows.Forms.DialogResult.OK;
+        Close();
     }
 }

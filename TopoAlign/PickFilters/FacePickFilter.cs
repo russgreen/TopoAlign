@@ -1,26 +1,25 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI.Selection;
 
-namespace TopoAlign
+namespace TopoAlign;
+
+public class FacePickFilter : ISelectionFilter
 {
-    public class FacePickFilter : ISelectionFilter
+    private Document m_doc = null;
+
+    public FacePickFilter(Document doc)
     {
-        private Document m_doc = null;
+        m_doc = doc;
+    }
 
-        public FacePickFilter(Document doc)
-        {
-            m_doc = doc;
-        }
+    public bool AllowElement(Element elem)
+    {
+        return true;
+    }
 
-        public bool AllowElement(Element elem)
-        {
-            return true;
-        }
-
-        public bool AllowReference(Reference reference, XYZ position)
-        {
-            var geoObject = m_doc.GetElement(reference).GetGeometryObjectFromReference(reference);
-            return geoObject is object && geoObject is Face;
-        }
+    public bool AllowReference(Reference reference, XYZ position)
+    {
+        var geoObject = m_doc.GetElement(reference).GetGeometryObjectFromReference(reference);
+        return geoObject is object && geoObject is Face;
     }
 }

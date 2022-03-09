@@ -8,13 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TopoAlign
+namespace TopoAlign;
+
+public partial class FormProjectPhases : Form
 {
-    public partial class FormProjectPhases : Form
+    public FormProjectPhases()
     {
-        public FormProjectPhases()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

@@ -8,53 +8,52 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TopoAlign
+namespace TopoAlign;
+
+public partial class FormAlignTopo : Form
 {
-    public partial class FormAlignTopo : Form
- {
-        private bool _oldVal;
-   
-        public FormAlignTopo()
-        {
-            InitializeComponent();
-        }
+    private bool _oldVal;
 
-        private void btnAlign_Click(object sender, EventArgs e)
-        {
-            DialogResult = System.Windows.Forms.DialogResult.OK;
-            Close();
-        }
+    public FormAlignTopo()
+    {
+        InitializeComponent();
+    }
 
-        private void rdoElem_CheckedChanged(object sender, EventArgs e)
-        {
-            if (rdoElem.Checked == true)
-            {
-                gbFaceToUse.Enabled = true;
-            }
-            else
-            {
-                gbFaceToUse.Enabled = false;
-            }
-        }
+    private void btnAlign_Click(object sender, EventArgs e)
+    {
+        DialogResult = System.Windows.Forms.DialogResult.OK;
+        Close();
+    }
 
-        private void rdoEdge_CheckedChanged(object sender, EventArgs e)
+    private void rdoElem_CheckedChanged(object sender, EventArgs e)
+    {
+        if (rdoElem.Checked == true)
         {
-            if (rdoEdge.Checked == true)
-            {
-                _oldVal = chkRemoveInside.Checked;
-                chkRemoveInside.Checked = false;
-                chkRemoveInside.Enabled = false;
-            }
-            else
-            {
-                chkRemoveInside.Enabled = true;
-                chkRemoveInside.Checked = _oldVal;
-            }
+            gbFaceToUse.Enabled = true;
         }
+        else
+        {
+            gbFaceToUse.Enabled = false;
+        }
+    }
 
-        private void DisplayUnitcomboBox_SelectedIndexChanged(object sender, EventArgs e)
+    private void rdoEdge_CheckedChanged(object sender, EventArgs e)
+    {
+        if (rdoEdge.Checked == true)
         {
-            DisplayUnitTypecomboBox.SelectedIndex = DisplayUnitcomboBox.SelectedIndex;
+            _oldVal = chkRemoveInside.Checked;
+            chkRemoveInside.Checked = false;
+            chkRemoveInside.Enabled = false;
         }
+        else
+        {
+            chkRemoveInside.Enabled = true;
+            chkRemoveInside.Checked = _oldVal;
+        }
+    }
+
+    private void DisplayUnitcomboBox_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        DisplayUnitTypecomboBox.SelectedIndex = DisplayUnitcomboBox.SelectedIndex;
     }
 }

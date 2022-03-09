@@ -8,85 +8,73 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TopoAlign
+namespace TopoAlign;
+
+public static class CheckEntitlement
 {
-    public static class CheckEntitlement
+    //Set values specific to the environment
+    public const string baseApiUrl = @"https://apps.autodesk.com"; 
+        
+    //App ID
+    public const string appId = @"7412914718855875408";  
+
+    private static string _domain = System.Environment.UserDomainName;
+    private static string _userId = string.Empty;
+    private static bool _isValid = false;
+
+    public static bool LicenseCheck(Autodesk.Revit.ApplicationServices.Application app)
     {
-        //Set values specific to the environment
-        public const string baseApiUrl = @"https://apps.autodesk.com"; 
-            
-        //App ID
-        public const string appId = @"7412914718855875408";  
 
-        private static string _domain = System.Environment.UserDomainName;
-        private static string _userId = string.Empty;
-        private static bool _isValid = false;
+        DateTime checkDate = DateTime.Now;
 
-        public static bool LicenseCheck(Autodesk.Revit.ApplicationServices.Application app)
+        //check if its an O3S user....they get a free pass
+        if(_domain.ToLower().Contains("origin3studio"))
         {
+            return true;
+        }
 
-            DateTime checkDate = DateTime.Now;
+        Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
 
-            //check if its an O3S user....they get a free pass
-            if(_domain.ToLower().Contains("origin3studio"))
+        if (key == null)
+        {
+            Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+        }
+
+        _userId = key.GetValue("UserID", string.Empty).ToString();
+
+        if(_userId != string.Empty) 
+        {
+            try
             {
-                return true;
+                _isValid = bool.Parse(Cypher.DecryptString(key.GetValue("IsValid").ToString(), _userId));
+                checkDate = DateTime.Parse(Cypher.DecryptString(key.GetValue("Checked").ToString(), _userId));
             }
-
-            Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
-
-            if (key == null)
+            catch
             {
-                Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
-                key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+                _isValid = false;
             }
+                          
 
-            _userId = key.GetValue("UserID", string.Empty).ToString();
-
-            if(_userId != string.Empty) 
+            if (_isValid == true)
             {
-                try
+                // check if we need to re-validate (every 30days)
+                if (DateTime.Now.Subtract(checkDate).Days > 30)
                 {
-                    _isValid = bool.Parse(Cypher.DecryptString(key.GetValue("IsValid").ToString(), _userId));
-                    checkDate = DateTime.Parse(Cypher.DecryptString(key.GetValue("Checked").ToString(), _userId));
-                }
-                catch
-                {
-                    _isValid = false;
-                }
-                              
-
-                if (_isValid == true)
-                {
-                    // check if we need to re-validate (every 30days)
-                    if (DateTime.Now.Subtract(checkDate).Days > 30)
+                    if (CheckLogin( app) == true)
                     {
-                        if (CheckLogin( app) == true)
-                        {
-                            // record in the details in the registry
-                            key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
-                            key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
-                            key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
-                        }
-                        else
-                        {
-                            return false;
-                        }
+                        // record in the details in the registry
+                        key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
+                        key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
+                        key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
+                    }
+                    else
+                    {
+                        return false;
                     }
                 }
-                else if (CheckLogin( app) == true)
-                {
-                    // record in the details in the registry
-                    key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
-                    key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
-                    key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
-                }
-                else
-                {
-                    return false;
-                }
             }
-            else if (CheckLogin(app) == true)
+            else if (CheckLogin( app) == true)
             {
                 // record in the details in the registry
                 key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
@@ -97,84 +85,95 @@ namespace TopoAlign
             {
                 return false;
             }
-
-            return true;
         }
-
-        private static bool CheckLogin(Autodesk.Revit.ApplicationServices.Application app)
+        else if (CheckLogin(app) == true)
         {
-            // Check to see if the user is logged in.
-            if (!Autodesk.Revit.ApplicationServices.Application.IsLoggedIn)
-            {
-                TaskDialog.Show("TopoAlign addin license", "Please login to Autodesk 360 first\n");
-                return false;
-            }
-
-            // Get the user id, and check entitlement 
-            _userId = app.LoginUserId;
-
-            bool isValid = Entitlement(_userId);
-
-            if (isValid == false)
-            {
-                TaskDialog.Show("TopoAlign addin license", "You do not appear to have a valid license to use this addin. Please contact the author via the app store\n");
-                return false;
-            }
-
-            return true;
+            // record in the details in the registry
+            key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("IsValid", Cypher.EncryptData(true.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("Checked", Cypher.EncryptData(DateTime.Now.ToString(), _userId), Microsoft.Win32.RegistryValueKind.String);
         }
-
-        ///============================================================
-        /// URL: https://apps.autodesk.com/webservices/checkentitlement
-        ///
-        /// Method: GET
-        ///
-        /// Sample response
-        /// {
-        /// "UserId":"2N5FMZW9CCED",
-        /// "AppId":"2024453975166401172",
-        /// "IsValid":false,
-        /// "Message":"Ok"
-        /// }
-        ///============================================================
-        private static bool Entitlement(string userId)
+        else
         {
-            //REST API call for the entitlement API.
-
-            //(1) Build request
-            var client = new RestClient();
-            client.BaseUrl = new System.Uri(baseApiUrl);
-
-            //Set resource/end point
-            var request = new RestRequest();
-            request.Resource = "webservices/checkentitlement";
-            request.Method = Method.GET;
-
-            //Add parameters
-            request.AddParameter("userid", userId);
-            request.AddParameter("appid", appId);
-
-            //(2) Execute request and get response
-            IRestResponse<EntitlementResult> response = client.Execute<EntitlementResult>(request);
-
-            // Get the auth token. 
-            bool isValid = false;
-            if (response.Data != null && response.Data.IsValid)
-            {
-                isValid = true;
-            }
-
-            return isValid;
+            return false;
         }
+
+        return true;
     }
 
-    [Serializable]
-    public class EntitlementResult
+    private static bool CheckLogin(Autodesk.Revit.ApplicationServices.Application app)
     {
-        public string UserId { get; set; }
-        public string AppId { get; set; }
-        public bool IsValid { get; set; }
-        public string Message { get; set; }
+        // Check to see if the user is logged in.
+        if (!Autodesk.Revit.ApplicationServices.Application.IsLoggedIn)
+        {
+            TaskDialog.Show("TopoAlign addin license", "Please login to Autodesk 360 first\n");
+            return false;
+        }
+
+        // Get the user id, and check entitlement 
+        _userId = app.LoginUserId;
+
+        bool isValid = Entitlement(_userId);
+
+        if (isValid == false)
+        {
+            TaskDialog.Show("TopoAlign addin license", "You do not appear to have a valid license to use this addin. Please contact the author via the app store\n");
+            return false;
+        }
+
+        return true;
     }
 
+    ///============================================================
+    /// URL: https://apps.autodesk.com/webservices/checkentitlement
+    ///
+    /// Method: GET
+    ///
+    /// Sample response
+    /// {
+    /// "UserId":"2N5FMZW9CCED",
+    /// "AppId":"2024453975166401172",
+    /// "IsValid":false,
+    /// "Message":"Ok"
+    /// }
+    ///============================================================
+    private static bool Entitlement(string userId)
+    {
+        //REST API call for the entitlement API.
+
+        //(1) Build request
+        var client = new RestClient();
+        client.BaseUrl = new System.Uri(baseApiUrl);
+
+        //Set resource/end point
+        var request = new RestRequest();
+        request.Resource = "webservices/checkentitlement";
+        request.Method = Method.GET;
+
+        //Add parameters
+        request.AddParameter("userid", userId);
+        request.AddParameter("appid", appId);
+
+        //(2) Execute request and get response
+        IRestResponse<EntitlementResult> response = client.Execute<EntitlementResult>(request);
+
+        // Get the auth token. 
+        bool isValid = false;
+        if (response.Data != null && response.Data.IsValid)
+        {
+            isValid = true;
+        }
+
+        return isValid;
+    }
 }
+
+[Serializable]
+public class EntitlementResult
+{
+    public string UserId { get; set; }
+    public string AppId { get; set; }
+    public bool IsValid { get; set; }
+    public string Message { get; set; }
+}
+
