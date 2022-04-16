@@ -20,6 +20,7 @@ class App : IExternalApplication
     public static UIControlledApplication cachedUiCtrApp;
 
     //public static Autodesk.Revit.DB.Document revitDocument;
+    private readonly string _tabName = "RG Tools";
 
     public Result OnStartup(UIControlledApplication a)
     {
@@ -57,10 +58,10 @@ class App : IExternalApplication
     {
         RibbonPanel panel;
 
-        // Check if "Archisoft Tools" already exists and use if its there
+        // Check if "Tab" already exists and use if its there
         try
         {
-            panel = cachedUiCtrApp.CreateRibbonPanel("Archisoft Tools", Guid.NewGuid().ToString());
+            panel = cachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
             panel.Name = "ARBG_TopoAlign_ExtApp";
             panel.Title = "Topo Align";
         }
@@ -77,13 +78,19 @@ class App : IExternalApplication
                         archisoftPanel = true;
                         break;
                     }
+
+                    if(folder.ToLower().Contains("rg") == true & folder.ToLower().Contains("rg topoalign") == false)
+                    {
+                        archisoftPanel = true;
+                        break;
+                    }                    
                 }
             }
 
             if(archisoftPanel == true)
             {
-                cachedUiCtrApp.CreateRibbonTab("Archisoft Tools");
-                panel = cachedUiCtrApp.CreateRibbonPanel("Archisoft Tools", Guid.NewGuid().ToString());
+                cachedUiCtrApp.CreateRibbonTab(_tabName);
+                panel = cachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
                 panel.Name = "ARBG_TopoAlign_ExtApp";
                 panel.Title = "Topo Align";
             }
@@ -119,7 +126,7 @@ class App : IExternalApplication
         pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
 
         //set help document
-        ContextualHelp contextHelp = new ContextualHelp(ContextualHelpType.Url, @"C:\ProgramData\Autodesk\ApplicationPlugins\archisoft tools Topo Align.bundle\Contents\help.html");
+        ContextualHelp contextHelp = new ContextualHelp(ContextualHelpType.Url, @"C:\ProgramData\Autodesk\ApplicationPlugins\rg tools Topo Align.bundle\Contents\help.html");
 
         pbTopoAlign.SetContextualHelp(contextHelp);
         pbPointsFromLines.SetContextualHelp(contextHelp);
