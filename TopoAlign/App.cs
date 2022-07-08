@@ -67,27 +67,21 @@ class App : IExternalApplication
         }
         catch
         {
-            var archisoftPanel = false;
+            var rgPanel = false;
             var pluginPath = @"C:\ProgramData\Autodesk\ApplicationPlugins";
             if (System.IO.Directory.Exists(pluginPath) == true)
             {
                 foreach (var folder in System.IO.Directory.GetDirectories(pluginPath))
                 {
-                    if(folder.ToLower().Contains("archisoft") == true & folder.ToLower().Contains("archisoft topoalign") == false)
+                    if(folder.ToLower().Contains("rg") == true & folder.ToLower().Contains("rg tools topo align") == false)
                     {
-                        archisoftPanel = true;
-                        break;
-                    }
-
-                    if(folder.ToLower().Contains("rg") == true & folder.ToLower().Contains("rg topoalign") == false)
-                    {
-                        archisoftPanel = true;
+                        rgPanel = true;
                         break;
                     }                    
                 }
             }
 
-            if(archisoftPanel == true)
+            if(rgPanel == true)
             {
                 cachedUiCtrApp.CreateRibbonTab(_tabName);
                 panel = cachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
@@ -100,27 +94,32 @@ class App : IExternalApplication
             }
         }
 
-        PushButtonData pbDataTopoAlign = new PushButtonData("Align to Element", "Align to Element", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdAlignTopo");
+        PushButtonData pbDataTopoAlign = new PushButtonData("Align to Element", $"Align to{System.Environment.NewLine}Element", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdAlignTopo");
         PushButton pbTopoAlign  = (PushButton)panel.AddItem(pbDataTopoAlign);
         pbTopoAlign.ToolTip = "Adjust topo to edge or floor geometry";
         pbTopoAlign.LargeImage = PngImageSource("TopoAlign.Images.TopoAlign32.png");
 
-        PushButtonData pbDataPointsFromLines  = new PushButtonData("Points from Lines", "Points from Lines", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsOnSurface");
+        PushButtonData pbDataFloorAlign = new PushButtonData("Align to Topo", $"Align to{System.Environment.NewLine}Topo", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdAlignFloor");
+        PushButton pbFloorAlign = (PushButton)panel.AddItem(pbDataFloorAlign);
+        pbFloorAlign.ToolTip = "Adjust a floor to follow the topography";
+        pbFloorAlign.LargeImage = PngImageSource("TopoAlign.Images.FloorToTopo32.png");
+
+        PushButtonData pbDataPointsFromLines  = new PushButtonData("Points from Lines", $"Points from{System.Environment.NewLine}Lines", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsOnSurface");
         PushButton pbPointsFromLines = (PushButton)panel.AddItem(pbDataPointsFromLines);
-        pbPointsFromLines.ToolTip = "Add points on surface along selected model lines. Model lines must be lines and arcs and be BELOW the topo surface.";
+        pbPointsFromLines.ToolTip = "Add points on the surface along selected model lines. Model lines must be lines and arcs and be placed BELOW the topo surface.";
         pbPointsFromLines.LargeImage = PngImageSource("TopoAlign.Images.PointsFromLines32.png");
 
-        PushButtonData pbDataPointsAlongContours = new PushButtonData("Points along Contours", "Points along Contours", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAlongContours");
+        PushButtonData pbDataPointsAlongContours = new PushButtonData("Points along Contours", $"Points along{System.Environment.NewLine}Contours", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAlongContours");
         PushButton pbPointsAlongContours  = (PushButton)panel.AddItem(pbDataPointsAlongContours);
-        pbPointsAlongContours.ToolTip = "Add points on surface along selected contour model lines. Model lines can on a datum BELOW the topo surface and projected up a set distance using an offset value.";
+        pbPointsAlongContours.ToolTip = "Add points on surface along selected contour model lines. Model lines can be placed on zero datum BELOW the topo surface and projected up a set distance using an offset value.";
         pbPointsAlongContours.LargeImage = PngImageSource("TopoAlign.Images.PointsFromContours32.png");
 
-        PushButtonData pbDataPointsAtIntersection = new PushButtonData("Points at Intersection", "Points at Intersection", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAtIntersection");
+        PushButtonData pbDataPointsAtIntersection = new PushButtonData("Points at Intersection", $"Points at{System.Environment.NewLine}Intersection", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAtIntersection");
         PushButton pbPointsAtIntersection = (PushButton)panel.AddItem(pbDataPointsAtIntersection);
-        pbPointsAtIntersection.ToolTip = "Add points on surface at the intersection with a selected face.";
+        pbPointsAtIntersection.ToolTip = "Add points on the surface at the intersection with a selected face.";
         pbPointsAtIntersection.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
 
-        PushButtonData pbDataResetRegion = new PushButtonData("Reset region", "Reset region", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdResetTopoRegion");
+        PushButtonData pbDataResetRegion = new PushButtonData("Reset region", $"Reset{System.Environment.NewLine}region", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdResetTopoRegion");
         PushButton pbResetRegion  = (PushButton)panel.AddItem(pbDataResetRegion);
         pbResetRegion.ToolTip = "Copy points from existing topo surface to new topo surface within a region to undo changes made.";
         pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
@@ -129,6 +128,7 @@ class App : IExternalApplication
         ContextualHelp contextHelp = new ContextualHelp(ContextualHelpType.Url, @"C:\ProgramData\Autodesk\ApplicationPlugins\rg tools Topo Align.bundle\Contents\help.html");
 
         pbTopoAlign.SetContextualHelp(contextHelp);
+        pbFloorAlign.SetContextualHelp(contextHelp);
         pbPointsFromLines.SetContextualHelp(contextHelp);
         pbPointsAlongContours.SetContextualHelp(contextHelp);
         pbPointsAtIntersection.SetContextualHelp(contextHelp);

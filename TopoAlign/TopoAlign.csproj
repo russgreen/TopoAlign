@@ -4,7 +4,7 @@
     <Configurations>2018;2019;2020;2021;2022;2023</Configurations>
     <Description>Align topo surface to model elements</Description>
     <Copyright>Copyright © Russell Green</Copyright>
-    <Version>2.2.0</Version>
+    <Version>2.3.1</Version>
     <UseWindowsForms>true</UseWindowsForms>
 	<LangVersion>10</LangVersion>
 	<!--<ImplicitUsings>true</ImplicitUsings>-->
@@ -68,13 +68,6 @@
     <ConfuserProject>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(MSBuildProjectName)$(Configuration).crproj</ConfuserProject>
   </PropertyGroup>
   
-  <ItemGroup>
-    <PackageReference Include="Confuser.MSBuild" Version="1.5.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-  
    <ItemGroup>
      <Compile Remove="AppCenterHelper.cs" />
      <Compile Remove="DialogUserConfirmation.cs" />
@@ -86,6 +79,7 @@
    </ItemGroup>
   
    <ItemGroup>
+     <None Remove="Images\FloorToTopo32.png" />
      <None Remove="Images\PointsFromContours32.png" />
      <None Remove="Images\PointsFromLines32.png" />
      <None Remove="Images\Reset32.png" />
@@ -94,6 +88,7 @@
    </ItemGroup>
   
    <ItemGroup>
+     <EmbeddedResource Include="Images\FloorToTopo32.png" />
      <EmbeddedResource Include="Images\PointsFromContours32.png" />
      <EmbeddedResource Include="Images\PointsFromLines32.png" />
      <EmbeddedResource Include="Images\Reset32.png" />
@@ -102,12 +97,12 @@
    </ItemGroup>
   
    <ItemGroup>
-     <PackageReference Include="Confuser.MSBuild" Version="1.6.0">
+     <PackageReference Include="Confuser.MSBuild" Version="1.5.0">
        <PrivateAssets>all</PrivateAssets>
        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
      </PackageReference>
      <PackageReference Include="geometry3Sharp" Version="1.0.324" />
-     <PackageReference Include="RestSharp" Version="106.11.7" />
+     <PackageReference Include="RestSharp" Version="106.12.0" />
    </ItemGroup>
 
   <ItemGroup>
