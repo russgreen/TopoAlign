@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
 using Autodesk.Revit.DB;
 using g3;
 
@@ -53,7 +54,6 @@ public class TriTriIntersect
     public static List<Triangle3d> TrianglesFromGeoObj(Face face)
     {
         List<Triangle3d> faceTriangles = new List<Triangle3d>();
-
         Mesh mesh = face.Triangulate();
 
         for (int i = 0; i < mesh.NumTriangles; i++)
@@ -70,6 +70,73 @@ public class TriTriIntersect
             Triangle3d triangle3D = new Triangle3d(v1, v2, v3);
 
             faceTriangles.Add(triangle3D);
+        }
+
+        if(faceTriangles.Count == 2)
+        {
+            // we have a flat face and should try to sub-divide
+            var vertices = new List<Vector3f>();
+            foreach (var p in mesh.Vertices)
+            {
+                vertices.Add((Vector3f)new Vector3d(p.X, p.Y, p.Z));
+            }
+
+            Vector3d[] normals = new Vector3d[mesh.Vertices.Count];
+            Index3i[] triangles = new Index3i[faceTriangles.Count];
+            int tid = 0;
+            int nid = 0;
+            foreach (var t in faceTriangles)
+            {
+                //get the vertices from the triangle
+#if REVIT2019
+                normals.SetValue(t.Normal, nid);
+                nid = IncrementInt(nid, mesh.Vertices.Count);
+                normals.SetValue(t.Normal, nid);
+                nid = IncrementInt(nid, mesh.Vertices.Count);
+                normals.SetValue(t.Normal, nid);
+                nid = IncrementInt(nid, mesh.Vertices.Count);
+
+#else
+                normals.Append(t.Normal);
+                normals.Append(t.Normal);
+                normals.Append(t.Normal);
+#endif
+
+
+                //lookup the vid from V1 for each vertex in t
+                int vID0 = vertices.IndexOf((Vector3f)t.V0);
+                int vID1 = vertices.IndexOf((Vector3f)t.V1);
+                int vID2 = vertices.IndexOf((Vector3f)t.V2);
+
+                triangles[tid] = new Index3i(vID0, vID1, vID2);
+                tid++;
+            }
+                
+            DMesh3 dMesh = DMesh3Builder.Build(vertices, triangles, normals);
+
+            Remesher r = new Remesher(dMesh);
+            r.SetTargetEdgeLength(.7);
+            for (int i = 0; i < 10 ; i++)
+            {
+                r.BasicRemeshPass();
+            }
+
+            var isValid = dMesh.CheckValidity();
+
+            var meshTriangles = dMesh.Triangles();
+
+            faceTriangles.Clear();
+
+            foreach (var t in meshTriangles)
+            {
+                Vector3d v1 = dMesh.GetVertex(t.a);
+                Vector3d v2 = dMesh.GetVertex(t.b);
+                Vector3d v3 = dMesh.GetVertex(t.c);
+
+                Triangle3d triangle3D = new Triangle3d(v1, v2, v3);
+
+                faceTriangles.Add(triangle3D);
+            }
         }
 
         return faceTriangles;
@@ -120,4 +187,19 @@ public class TriTriIntersect
                     
         return points;
     }
+
+
+#if REVIT2019
+    private static int IncrementInt(int val, int max)
+    {
+        if(val < max)
+        {
+            return val++;
+        }
+        else
+        {
+            return val;
+        }
+    }
+#endif
 }

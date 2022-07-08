@@ -74,7 +74,7 @@ public static class CheckEntitlement
                     }
                 }
             }
-            else if (CheckLogin( app) == true)
+            else if (CheckLogin(app) == true)
             {
                 // record in the details in the registry
                 key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
@@ -106,7 +106,7 @@ public static class CheckEntitlement
         // Check to see if the user is logged in.
         if (!Autodesk.Revit.ApplicationServices.Application.IsLoggedIn)
         {
-            TaskDialog.Show("TopoAlign addin license", "Please login to Autodesk 360 first\n");
+            TaskDialog.Show("TopoAlign addin license", "Please login to your Autodesk account first.  You must use the same account in the app store as you are logged into Revit");
             return false;
         }
 
