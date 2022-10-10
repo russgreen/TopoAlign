@@ -347,3 +347,8 @@ ARCHISOFT_topoalign\ARCHISOFT_topoalign_2019.addin
 ARCHISOFT_topoalign\ARCHISOFT_topoalign_2020.addin
 ARCHISOFT_topoalign\ARCHISOFT_topoalign_2021.addin
 ARCHISOFT_topoalign\ARCHISOFT_topoalign_2022.addin
+
+# Advanced Installer
+Installer/*.back.aip
+Installer/TopoAlign-cache/*
+Installer/TopoAlign-SetupFiles/*

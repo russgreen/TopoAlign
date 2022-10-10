@@ -27,18 +27,18 @@ public static class CheckEntitlement
 
         DateTime checkDate = DateTime.Now;
 
-        //check if its an O3S user....they get a free pass
-        if(_domain.ToLower().Contains("origin3studio"))
+        //check if its an ECE user....they get a free pass
+        if(_domain.ToLower().Contains("ece"))
         {
             return true;
         }
 
-        Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+        Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\RGTools\TopoAlign", true);
 
         if (key == null)
         {
-            Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
-            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Archisoft\TopoAlign", true);
+            Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\RGTools\TopoAlign", true);
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\RGTools\TopoAlign", true);
         }
 
         _userId = key.GetValue("UserID", string.Empty).ToString();

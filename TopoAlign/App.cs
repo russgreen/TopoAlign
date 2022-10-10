@@ -20,30 +20,20 @@ class App : IExternalApplication
     public static UIControlledApplication cachedUiCtrApp;
 
     //public static Autodesk.Revit.DB.Document revitDocument;
-    private readonly string _tabName = "RG Tools";
+    private static string _domain = System.Environment.UserDomainName;
+    private string _tabName = "RG Tools";
+    private bool _useAddinsTab = true;
 
     public Result OnStartup(UIControlledApplication a)
     {
-        //AppCenter.LogLevel = LogLevel.Verbose;
-        //System.Windows.Forms.Application.ThreadException += (sender, args) =>
-        //{
-        //    Crashes.TrackError(args.Exception);
-        //};
-
-        //Crashes.ShouldAwaitUserConfirmation = () =>
-        //{
-        //    // Build your own UI to ask for user consent here. SDK doesn't provide one by default.     
-        //    var dialog = new DialogUserConfirmation();
-        //    dialog.ShowDialog();
-        //    Crashes.NotifyUserConfirmation(dialog.ClickResult);
-
-        //    // Return true if you built a UI for user consent and are waiting for user input on that custom UI, otherwise false.     
-        //    return true;
-        //};
-
-        //AppCenter.Start("c26c8f38-0aad-44c7-9064-478429495727", typeof(Crashes));
+        if (_domain.ToLower().Contains("ece"))
+        {
+            _tabName = "ECE Tools";
+            _useAddinsTab = false;
+        }
 
         cachedUiCtrApp = a;
+
         var ribbonPanel = CreateRibbonPanel();
 
         return Result.Succeeded;
@@ -67,7 +57,6 @@ class App : IExternalApplication
         }
         catch
         {
-            var rgPanel = false;
             var pluginPath = @"C:\ProgramData\Autodesk\ApplicationPlugins";
             if (System.IO.Directory.Exists(pluginPath) == true)
             {
@@ -75,13 +64,13 @@ class App : IExternalApplication
                 {
                     if(folder.ToLower().Contains("rg") == true & folder.ToLower().Contains("rg tools topo align") == false)
                     {
-                        rgPanel = true;
+                        _useAddinsTab = false;
                         break;
                     }                    
                 }
             }
 
-            if(rgPanel == true)
+            if(_useAddinsTab == false)
             {
                 cachedUiCtrApp.CreateRibbonTab(_tabName);
                 panel = cachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
