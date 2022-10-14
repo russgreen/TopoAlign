@@ -25,6 +25,7 @@ public class cmdAlignFloor : IExternalCommand
     private decimal _offset;
     private Floor _floor;
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+    private Autodesk.Revit.DB.Toposolid _topoSolid;
     private Units _docUnits;
 
 #if REVIT2018 || REVIT2019 || REVIT2020
@@ -143,9 +144,13 @@ public class cmdAlignFloor : IExternalCommand
         {
             t.Start();
 
+#if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
             _floor.SlabShapeEditor.ResetSlabShape();
+#else
+            _floor.GetSlabShapeEditor().ResetSlabShape();   
+#endif
 
-           t.Commit();
+            t.Commit();
         }
 
 
@@ -198,7 +203,12 @@ public class cmdAlignFloor : IExternalCommand
             foreach (XYZ pt in points)
             {
                 var pt1 = new XYZ(pt.X, pt.Y, pt.Z + offset);
-                _floor.SlabShapeEditor.DrawPoint(pt1);
+
+#if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
+           _floor.SlabShapeEditor.DrawPoint(pt1);
+#else
+                _floor.GetSlabShapeEditor().DrawPoint(pt1);
+#endif
             }
 
             //delete the sub-region.  we don't need it anymore

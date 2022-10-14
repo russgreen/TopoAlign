@@ -26,6 +26,7 @@ public class cmdAlignTopo : IExternalCommand
     private Element _element;
     private Edge _edge;
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+    private Autodesk.Revit.DB.Toposolid _topoSolid;
     private Units _docUnits;
 
 #if REVIT2018 || REVIT2019 || REVIT2020

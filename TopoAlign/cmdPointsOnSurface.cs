@@ -25,6 +25,7 @@ public class cmdPointsOnSurface : IExternalCommand
     private Element _element;
     private Edge _edge;
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+    private Autodesk.Revit.DB.Toposolid _topoSolid;
     private View3D _v3d;
     private Units _docUnits;
 

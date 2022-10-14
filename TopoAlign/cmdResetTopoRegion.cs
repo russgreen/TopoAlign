@@ -47,10 +47,21 @@ public class cmdResetTopoRegion : IExternalCommand
 
         var frm = new FormProjectPhases();
 
+#if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
         // load phases to combo
         var comboPhases = new Dictionary<int, string>();
+
         foreach (Phase phase in _doc.Phases)
             comboPhases.Add(phase.Id.IntegerValue, phase.Name);
+#else
+        // load phases to combo
+        var comboPhases = new Dictionary<long, string>();
+
+        foreach (Phase phase in _doc.Phases)
+            comboPhases.Add(phase.Id.Value, phase.Name);
+#endif
+
+
         if (comboPhases.Count > 0)
         {
             frm.cboPhaseSource.DisplayMember = "Value";
@@ -75,9 +86,16 @@ public class cmdResetTopoRegion : IExternalCommand
             var frm1 = new FormResetTopo();
             try
             {
+#if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
                 // load existing topo(s) to combo
                 var comboSource = new Dictionary<int, string>();
                 var comboTarget = new Dictionary<int, string>();
+#else
+                // load existing topo(s) to combo
+                var comboSource = new Dictionary<long, string>();
+                var comboTarget = new Dictionary<long, string>();
+#endif
+
                 foreach (TopographySurface topo in topoList)
                 {
                     if (topo.IsSiteSubRegion == false)
@@ -86,6 +104,8 @@ public class cmdResetTopoRegion : IExternalCommand
                         {
                             var phaseParam = topo.GetParameters("Phase Created")[0]; // clsUtil.FindParameterByName(m_Topo, "Phase Created")
                             var nameParam = topo.GetParameters("Name")[0]; // clsUtil.FindParameterByName(m_Topo, "Name")
+
+#if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
                             if ((phaseParam.AsValueString() ?? "") == (_sourcePhaseName ?? ""))
                             {
                                 comboSource.Add(topo.Id.IntegerValue, "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
@@ -95,6 +115,17 @@ public class cmdResetTopoRegion : IExternalCommand
                             {
                                 comboTarget.Add(topo.Id.IntegerValue, "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
                             }
+#else
+                            if ((phaseParam.AsValueString() ?? "") == (_sourcePhaseName ?? ""))
+                            {
+                                comboSource.Add(topo.Id.Value, "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
+                            }
+
+                            if ((phaseParam.AsValueString() ?? "") == (_targetPhaseName ?? ""))
+                            {
+                                comboTarget.Add(topo.Id.Value, "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
+                            }
+#endif
                         }
                         catch (Exception ex)
                         {

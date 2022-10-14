@@ -12,10 +12,17 @@ public class TopoPickFilter : ISelectionFilter
             return false;
         }
 
+#if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
         if (elem.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Topography)
         {
             return true;
         }
+#else
+        if (elem.Category.Id.Value == (long)BuiltInCategory.OST_Topography)
+        {
+            return true;
+        }
+#endif
 
 #if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022
 #else
