@@ -1,9 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TopoAlign;
 
@@ -20,7 +15,7 @@ class FailureHandler : IFailuresPreprocessor
             // We're just deleting all of the warning level
             // failures and rolling back any others
 
-            var id = failureMessageAccessor.GetFailureDefinitionId();
+            _ = failureMessageAccessor.GetFailureDefinitionId();
             try
             {
                 ErrorMessage = failureMessageAccessor.GetDescriptionText();
@@ -30,11 +25,16 @@ class FailureHandler : IFailuresPreprocessor
                 ErrorMessage = "Unknown Error";
             }
 
+            //if (ErrorMessage.ToLower().Contains("highlighted geometry no longer determines a plane"))
+            //{
+            //    failuresAccessor.DeleteWarning(failureMessageAccessor);
+            //}
+
             try
             {
-                var failureSeverity__1 = failureMessageAccessor.GetSeverity();
-                ErrorSeverity = failureSeverity__1.ToString();
-                if (failureSeverity__1 == FailureSeverity.Warning || failureSeverity__1 == FailureSeverity.Error)
+                var failureSeverity = failureMessageAccessor.GetSeverity();
+                ErrorSeverity = failureSeverity.ToString();
+                if (failureSeverity == FailureSeverity.Warning || failureSeverity == FailureSeverity.Error)
                 {
                     failuresAccessor.DeleteWarning(failureMessageAccessor);
                 }

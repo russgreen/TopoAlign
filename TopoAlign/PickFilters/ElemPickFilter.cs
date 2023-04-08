@@ -12,66 +12,7 @@ public class ElemPickFilter : ISelectionFilter
             return false;
         }
 
-#if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
-        switch (elem.Category.Id.IntegerValue)
-        {
-            case (int)BuiltInCategory.OST_Topography:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_BuildingPad:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Floors:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Roofs:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Site:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_GenericModel:
-            {
-                return true;
-            }
-            // Case CInt(BuiltInCategory.OST_Stairs) : Return True
-            // Case CInt(BuiltInCategory.OST_Ramps) : Return True
-            case (int)BuiltInCategory.OST_Furniture:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Mass:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Planting:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Walls:
-            {
-                return true;
-            }
-
-            default:
-            {
-                return false;
-            }
-        }
-#else
+#if REVIT2024_OR_GREATER
         switch (elem.Category.Id.Value)
         {
             case (long)BuiltInCategory.OST_Topography:
@@ -130,6 +71,65 @@ public class ElemPickFilter : ISelectionFilter
                 return false;
             }
         }
+#else
+     switch (elem.Category.Id.IntegerValue)
+        {
+            case (int)BuiltInCategory.OST_Topography:
+            {
+                return true;
+            }
+
+            case (int)BuiltInCategory.OST_BuildingPad:
+            {
+                return true;
+            }
+
+            case (int)BuiltInCategory.OST_Floors:
+            {
+                return true;
+            }
+
+            case (int)BuiltInCategory.OST_Roofs:
+            {
+                return true;
+            }
+
+            case (int)BuiltInCategory.OST_Site:
+            {
+                return true;
+            }
+
+            case (int)BuiltInCategory.OST_GenericModel:
+            {
+                return true;
+            }
+            // Case CInt(BuiltInCategory.OST_Stairs) : Return True
+            // Case CInt(BuiltInCategory.OST_Ramps) : Return True
+            case (int)BuiltInCategory.OST_Furniture:
+            {
+                return true;
+            }
+
+            case (int)BuiltInCategory.OST_Mass:
+            {
+                return true;
+            }
+
+            case (int)BuiltInCategory.OST_Planting:
+            {
+                return true;
+            }
+
+            case (int)BuiltInCategory.OST_Walls:
+            {
+                return true;
+            }
+
+            default:
+            {
+                return false;
+            }
+        }   
 #endif
 
     }

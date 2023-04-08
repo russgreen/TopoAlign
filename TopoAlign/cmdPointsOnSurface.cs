@@ -24,10 +24,14 @@ public class cmdPointsOnSurface : IExternalCommand
     private decimal _divide;
     private Element _element;
     private Edge _edge;
-    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
-    private Autodesk.Revit.DB.Toposolid _topoSolid;
     private View3D _v3d;
     private Units _docUnits;
+
+#if REVIT2024_OR_GREATER
+    private Autodesk.Revit.DB.Toposolid _topoSolid;
+#else
+    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+#endif
 
 #if REVIT2018 || REVIT2019 || REVIT2020
     private DisplayUnitType _docDisplayUnits; 
@@ -142,9 +146,14 @@ public class cmdPointsOnSurface : IExternalCommand
         try
         {
             var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
+
+#if REVIT2024_OR_GREATER
+            _topoSolid = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Toposolid;
+#else
             _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
+#endif
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }
@@ -164,7 +173,7 @@ public class cmdPointsOnSurface : IExternalCommand
                     {
                         curve = modelLine.GeometryCurve;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                     }
                 }
@@ -175,7 +184,7 @@ public class cmdPointsOnSurface : IExternalCommand
                     {
                         curve = modelCurve.GeometryCurve;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                     }
                 }
@@ -186,7 +195,7 @@ public class cmdPointsOnSurface : IExternalCommand
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }
@@ -196,7 +205,7 @@ public class cmdPointsOnSurface : IExternalCommand
         {
             CurveUtils.SortCurvesContiguous(curves);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             TaskDialog.Show("Points on surface", "The lines selected must all be connected", TaskDialogCommonButtons.Ok);
             return false;
@@ -213,6 +222,64 @@ public class cmdPointsOnSurface : IExternalCommand
 
         try
         {
+
+#if REVIT2024_OR_GREATER
+
+                var opt = new Options();
+                opt.ComputeReferences = true;
+                points = PointsUtils.GetPointsFromCurves(curves, (double)_divide);
+
+                if (points.Count == 0)
+                {
+                    TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the lines selected.", TaskDialogCommonButtons.Ok);
+                    return false;
+                }
+
+                // loop through each point and use reference intersector to get topo Z
+                foreach (XYZ pt in points)
+                {
+                    // The 3 inputs for ReferenceIntersector are:
+                    // A filter specifying that only ceilings will be reported
+                    // A FindReferenceTarget option indicating what types of objects to report
+                    // A 3d view (see http://wp.me/p2X0gy-2p for more info on how this works)
+
+                    var startPt = pt;
+                    var endPtUp = new XYZ(pt.X, pt.Y, pt.Z + 100d);
+                    var dirUp = (endPtUp - startPt).Normalize();
+                    var referenceIntersector = new ReferenceIntersector(_topoSolid.Id, FindReferenceTarget.All, _v3d);
+                    var obstructionsOnUnboundLineUp = referenceIntersector.Find(startPt, dirUp);
+                    XYZ point = null;
+                    var gRefWithContext = obstructionsOnUnboundLineUp.FirstOrDefault();
+                    var gRef = gRefWithContext.GetReference();
+                    point = gRef.GlobalPoint;
+                    points1.Add(point);
+                }
+
+                if (CleanupTopoPoints == true)
+                {
+                    PointsUtils.DeleteTopoPointsWithinCurves(curves, _doc, _topoSolid);
+                }
+
+                // we now have points with correct Z values.
+                // delete duplicate points and add to topo
+                // TODO: Check duplicates in more robust way.
+                // testing 0.1 instead of 0.01
+                var comparer = new XyzEqualityComparer(); // (0.1)
+                points1 = points1.Distinct(comparer).ToList();
+                using (var t = new Transaction(_doc, "add points"))
+                {
+                    t.Start();
+
+                    foreach (XYZ p in points1)
+                    {
+                        _topoSolid.GetSlabShapeEditor().DrawPoint(p);
+                    }
+
+                    t.Commit();
+                }
+
+
+#else
             using (var tes = new Autodesk.Revit.DB.Architecture.TopographyEditScope(_doc, "Align topo"))
             {
                 tes.Start(_topoSurface.Id);
@@ -265,8 +332,10 @@ public class cmdPointsOnSurface : IExternalCommand
 
                 tes.Commit(fh);
             }
+#endif
+
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false ;
         }

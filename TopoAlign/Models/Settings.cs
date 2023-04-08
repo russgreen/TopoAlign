@@ -9,8 +9,6 @@ namespace TopoAlign.Models;
 
 public class Settings //: INotifyPropertyChanged
 {
-    //public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
-
     public bool SingleElement { get; set; } = true;
     public bool CleanTopoPoints { get; set; } = true;
     public bool TopFace { get; set; } = true;

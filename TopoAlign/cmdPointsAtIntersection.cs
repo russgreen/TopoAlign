@@ -2,12 +2,6 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace TopoAlign;
 
@@ -25,12 +19,15 @@ public class cmdPointsAtIntersection : IExternalCommand
     private Element _element;
     private Edge _edge;
     private Face _face;
-    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
-    private Autodesk.Revit.DB.Toposolid _topoSolid;
     private View3D _v3d;
     private Units _docUnits;
 
-    
+#if REVIT2024_OR_GREATER
+    private Autodesk.Revit.DB.Toposolid _topoSolid;
+#else
+    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+#endif
+
 
 #if REVIT2018 || REVIT2019 || REVIT2020
     private DisplayUnitType _docDisplayUnits; 
@@ -66,61 +63,6 @@ public class cmdPointsAtIntersection : IExternalCommand
         _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
 #endif
 
-        /**
-        using (FormDivideLines frm = new FormDivideLines())
-        {
-            _divide = Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)cSettings.DivideEdgeDistance, _docDisplayUnits));
-
-            frm.nudVertOffset.Value = 0;
-            frm.nudVertOffset.Enabled = false;
-
-            if (_divide > frm.nudDivide.Maximum)
-            {
-                frm.nudDivide.Value = frm.nudDivide.Maximum;
-            }
-            else
-            {
-                frm.nudDivide.Value = _divide;
-            }
-
-#if REVIT2018 || REVIT2019 || REVIT2020
-            foreach (DisplayUnitType displayUnitType in UnitUtils.GetValidDisplayUnits(UnitType.UT_Length))
-            {
-                frm.DisplayUnitTypecomboBox.Items.AddRange(new object[] { displayUnitType });
-                frm.DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelFor(displayUnitType));
-            }
-#else
-            foreach (ForgeTypeId displayUnitType in UnitUtils.GetValidUnits(SpecTypeId.Length))
-            {
-                frm.DisplayUnitTypecomboBox.Items.AddRange(new object[] { displayUnitType });
-                frm.DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelForUnit(displayUnitType));
-            }
-#endif
-            frm.DisplayUnitTypecomboBox.SelectedItem = _docDisplayUnits;
-            frm.DisplayUnitcomboBox.SelectedIndex = frm.DisplayUnitTypecomboBox.SelectedIndex;
-
-            if (frm.ShowDialog() == DialogResult.OK)
-            {
-#if REVIT2018 || REVIT2019 || REVIT2020
-                _useDisplayUnits = (DisplayUnitType)frm.DisplayUnitTypecomboBox.SelectedItem;
-                _divide = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)frm.nudDivide.Value, _useDisplayUnits));
-#else
-                _useDisplayUnits = (ForgeTypeId)frm.DisplayUnitTypecomboBox.SelectedItem;
-                _divide = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)frm.nudDivide.Value, _useDisplayUnits));
-#endif
-
-                //first save the settings for next time
-                cSettings.DivideEdgeDistance = _divide;
-                cSettings.SaveSettings();
-
-                if (PointsOnSurfaceAtIntersection() == false)
-                {
-                    return Result.Failed;
-                }
-            }
-        }
-        **/
-
         if (PointsOnSurfaceAtIntersection() == false)
         {
             return Result.Failed;
@@ -149,9 +91,14 @@ public class cmdPointsAtIntersection : IExternalCommand
         try
         {
             var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, new TopoPickFilter(), "Select a topographic surface");
+
+#if REVIT2024_OR_GREATER
+            _topoSolid = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Toposolid;
+#else
             _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
+#endif
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }
@@ -164,45 +111,84 @@ public class cmdPointsAtIntersection : IExternalCommand
             geoObjFace = _doc.GetElement(refFace).GetGeometryObjectFromReference(refFace);
             _face = geoObjFace as Face;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }
 
-        List<g3.Triangle3d> topoTriangles = TriTriIntersect.TrianglesFromTopo(_topoSurface);
+        List<g3.Triangle3d> topoTriangles = new();
+        
+#if REVIT2024_OR_GREATER
+        if(_topoSolid != null)
+        {
+            topoTriangles = TriTriIntersect.TrianglesFromTopo(_topoSolid);
+        }
+#else
+        if(_topoSurface != null)
+        {
+            topoTriangles = TriTriIntersect.TrianglesFromTopo(_topoSurface);
+        }
+#endif
+
         List<g3.Triangle3d> faceTriangles = TriTriIntersect.TrianglesFromGeoObj(_face);
 
         var intersections = TriTriIntersect.IntersectTriangleLists(topoTriangles, faceTriangles, (double)_divide);
 
+        List<XYZ> points = PointsUtils.GetPointsFromVector3ds(intersections);
+
+        if (points.Count == 0)
+        {
+            TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the faces selected.", TaskDialogCommonButtons.Ok);
+            return false;
+        }
+
+        // delete duplicate points
+        var comparer = new XyzEqualityComparer(); // (0.01)
+        var uniquePoints = points.Distinct(comparer).ToList();
+
         try
         {
-            using (var tes = new Autodesk.Revit.DB.Architecture.TopographyEditScope(_doc, "Align topo"))
+#if REVIT2024_OR_GREATER
+            if(_topoSolid != null)
             {
-                tes.Start(_topoSurface.Id);
-
-                List<XYZ> points = PointsUtils.GetPointsFromVector3ds(intersections);
-
-                if (points.Count == 0)
-                {
-                    TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the faces selected.", TaskDialogCommonButtons.Ok);
-                    tes.Cancel();
-                    return false;
-                }
-
-                // delete duplicate points
-                var comparer = new XyzEqualityComparer(); // (0.01)
                 using (var t = new Transaction(_doc, "add points"))
                 {
                     t.Start();
-                    _topoSurface.AddPoints(points.Distinct(comparer).ToList());
+
+                    foreach (var point in uniquePoints)
+                    {
+                        _topoSolid.GetSlabShapeEditor().DrawPoint(point);
+                    }
+
                     t.Commit();
                 }
-
-                tes.Commit(fh);
             }
-                
+#else
+        if(_topoSurface != null)
+            {
+                using (var tes = new Autodesk.Revit.DB.Architecture.TopographyEditScope(_doc, "Align topo"))
+                {
+                    tes.Start(_topoSurface.Id);
+              
+                    using (var t = new Transaction(_doc, "add points"))
+                    {
+                        t.Start();
+                        if(_topoSurface != null)
+                        {
+                            _topoSurface.AddPoints(uniquePoints);
+                        }
+
+
+                        t.Commit();
+                    }
+
+                    tes.Commit(fh);
+                }
+            }
+#endif
+
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }

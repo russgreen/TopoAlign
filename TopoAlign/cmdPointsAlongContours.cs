@@ -22,10 +22,14 @@ public class cmdPointsAlongContours : IExternalCommand
     private decimal _divide;
     private Element _element;
     private Edge _edge;
-    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
-    private Autodesk.Revit.DB.Toposolid _topoSolid;
     private View3D _v3d;
     private Units _docUnits;
+
+#if REVIT2024_OR_GREATER
+    private Autodesk.Revit.DB.Toposolid _topoSolid;
+#else
+    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+#endif
 
 #if REVIT2018 || REVIT2019 || REVIT2020
     private DisplayUnitType _docDisplayUnits; 
@@ -107,10 +111,18 @@ public class cmdPointsAlongContours : IExternalCommand
                 cSettings.DivideEdgeDistance = _divide;
                 cSettings.SaveSettings();
 
+#if REVIT2024_OR_GREATER
+                if (PointsUtils.PointsAlongLines(_uidoc, _doc, _topoSolid, (double)_divide, (double)_offset) == false)
+                {
+                    return Result.Failed;
+                }
+#else
                 if (PointsUtils.PointsAlongLines(_uidoc, _doc, _topoSurface, (double)_divide, (double)_offset) == false)
                 {
                     return Result.Failed;
                 }
+#endif
+
             }
         }
 
