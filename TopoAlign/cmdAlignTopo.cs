@@ -2,14 +2,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
-//using Microsoft.AppCenter.Crashes;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace TopoAlign;
 
@@ -25,7 +18,13 @@ public class cmdAlignTopo : IExternalCommand
     private decimal _divide;
     private Element _element;
     private Edge _edge;
+
+#if REVIT2024_OR_GREATER
+    private Autodesk.Revit.DB.Toposolid _topoSolid;
+#else
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+#endif
+
     private Units _docUnits;
 
 #if REVIT2018 || REVIT2019 || REVIT2020
@@ -40,22 +39,6 @@ public class cmdAlignTopo : IExternalCommand
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
-
-#if REVIT2018
-        var revitVersion = "2018";
-#elif REVIT2019
-        var revitVersion = "2019";
-#elif REVIT2020
-        var revitVersion = "2020";
-#elif REVIT2021
-        var revitVersion = "2021";
-#elif REVIT2022
-        var revitVersion = "2022";
-#elif REVIT2023
-        var revitVersion = "2023";
-#endif
-        //Analytics.TrackEvent($"Revit Version {revitVersion}");
-
         cSettings = new Models.Settings();
         cSettings.LoadSettings();
 
@@ -169,7 +152,12 @@ public class cmdAlignTopo : IExternalCommand
         try
         {
             var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
+
+#if REVIT2024_OR_GREATER
+            _topoSolid = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Toposolid;
+#else
             _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
+#endif
         }
         catch (Exception)
         {
@@ -223,50 +211,81 @@ public class cmdAlignTopo : IExternalCommand
 
         try
         {
-            using (var tes = new Autodesk.Revit.DB.Architecture.TopographyEditScope(_doc, "Align topo"))
+
+            var opt = new Options
             {
-                tes.Start(_topoSurface.Id);
-                var opt = new Options
+                ComputeReferences = true
+            };
+            if (UseEdge == false)
+            {
+                if (_element is FamilyInstance fi)
                 {
-                    ComputeReferences = true
-                };
-                if (UseEdge == false)
-                {
-                    if (_element is FamilyInstance fi)
-                    {
-                        points = GetPointsFromFamily(fi.get_Geometry(opt), TopFace);
-                    }
-                    else
-                    {
-                        if (cSettings.CleanTopoPoints == true)
-                            CleanupTopoPoints(_element);
+                    if (cSettings.CleanTopoPoints == true)
+                        CleanupTopoPoints(fi);
 
-                        points = GetPointsFromElement(_element, TopFace);
-                    }
-
-                    if (points.Count == 0)
-                    {
-                        TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the object. Try picking edges", TaskDialogCommonButtons.Ok);
-                        tes.Cancel();
-                        return false;
-                    }
+                    points = GetPointsFromFamily(fi.get_Geometry(opt), TopFace);
                 }
                 else
                 {
-                    points = PointsUtils.GetPointsFromCurves(curves, (double)_divide, -(double)_offset);
+                    if (cSettings.CleanTopoPoints == true)
+                        CleanupTopoPoints(_element);
+
+                    points = GetPointsFromElement(_element, TopFace);
                 }
 
-                // delete duplicate points
-                var comparer = new XyzEqualityComparer(); // (0.01)
+                if (points.Count == 0)
+                {
+                    TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the object. Try picking edges", TaskDialogCommonButtons.Ok);
+                    return false;
+                }
+            }
+            else
+            {
+                points = PointsUtils.GetPointsFromCurves(curves, (double)_divide, -(double)_offset);
+            }
+
+            // delete duplicate points
+            var comparer = new XyzEqualityComparer(); // (0.01)
+            var uniquePoints = points.Distinct(comparer).ToList();
+
+#if REVIT2024_OR_GREATER
+            if (_topoSolid != null)
+            {
                 using (var t = new Transaction(_doc, "add points"))
                 {
                     t.Start();
-                    _topoSurface.AddPoints(points.Distinct(comparer).ToList());
+
+                    FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
+                    failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+                    t.SetFailureHandlingOptions(failureHandlingOptions);
+
+                    foreach (var point in uniquePoints)
+                    {
+                        _topoSolid.GetSlabShapeEditor().DrawPoint(point);
+                    }
+
                     t.Commit();
                 }
-
-                tes.Commit(fh);
             }
+#else
+            if (_topoSurface != null)
+            {
+                using (var tes = new Autodesk.Revit.DB.Architecture.TopographyEditScope(_doc, "Align topo"))
+                {
+                    tes.Start(_topoSurface.Id);
+                    
+                    using (var t = new Transaction(_doc, "add points"))
+                    {
+                        t.Start();
+                        _topoSurface.AddPoints(uniquePoints);
+                        t.Commit();
+                    }
+
+                    tes.Commit(fh);
+                }
+            }
+#endif
+
         }
         catch (Exception ex)
         {
@@ -404,8 +423,8 @@ public class cmdAlignTopo : IExternalCommand
                         }
                     }
 
-                    if (cSettings.CleanTopoPoints == true)
-                        CleanupTopoPoints(solid);
+                    //if (cSettings.CleanTopoPoints == true)
+                    //    CleanupTopoPoints(solid);
                 }
             }
         }
@@ -455,49 +474,216 @@ public class cmdAlignTopo : IExternalCommand
 
     private void CleanupTopoPoints(Element element)
     {
-        // try and get boundary and cleanup topo
-        switch (element.Category.Name ?? "")
-        {
-            case "Floors":
-                break;
-            case "Roofs":
-                break;
-            case "Walls":
-                break;
-            case "Pads":
-                break;
-            default:
-            {
-                // don't cleanup
-                return;
-            }
-        }
+        ////try and get boundary and cleanup topo
+        //switch (element.Category.Name ?? "")
+        //{
+        //    case "Floors":
+        //        break;
+        //    case "Roofs":
+        //        break;
+        //    case "Walls":
+        //        break;
+        //    case "Pads":
+        //        break;
+        //    default:
+        //        {
+        //            // don't cleanup
+        //            return;
+        //        }
+        //}
 
-        var polygons = new List<List<XYZ>>();
+
         var opt = new Options
         {
             ComputeReferences = true
         };
-        var m_GeometryElement = element.get_Geometry(opt);
-        foreach (GeometryObject m_GeometryObject in m_GeometryElement)
+        var geometryElement = element.get_Geometry(opt);
+
+        var polygons = new List<List<XYZ>>();
+        polygons = GetPolygonsFromGeometryElement(geometryElement);
+
+        UVArray polygon = GetPolygon(polygons);
+
+        // Get topo points withing bounding box of element
+        Autodesk.Revit.DB.View v = null;
+        var bb = element.get_BoundingBox(v);
+
+        XYZ min = new();
+        XYZ max = new();
+
+#if REVIT2024_OR_GREATER
+        if (_topoSolid != null)
         {
-            Solid m_Solid = m_GeometryObject as Solid;
-            var m_Faces = new List<Face>();
-            if (m_Solid == null)
+            min = new XYZ(bb.Min.X - 1d, bb.Min.Y - 1d, _topoSolid.get_BoundingBox(v).Min.Z);
+            max = new XYZ(bb.Max.X + 1d, bb.Max.Y + 1d, _topoSolid.get_BoundingBox(v).Max.Z);
+        }
+#else
+        if(_topoSurface != null)
+        {
+            min = new XYZ(bb.Min.X - 1d, bb.Min.Y - 1d, _topoSurface.get_BoundingBox(v).Min.Z);
+            max = new XYZ(bb.Max.X + 1d, bb.Max.Y + 1d, _topoSurface.get_BoundingBox(v).Max.Z);
+        }
+#endif
+
+        var outline = new Outline(min, max);
+        var topoPoints = new List<XYZ>();
+        var topoPointsInBoundingBox = new List<XYZ>();
+
+#if REVIT2024_OR_GREATER
+        if (_topoSolid != null)
+        {
+            var vts = _topoSolid.GetSlabShapeEditor().SlabShapeVertices;
+            foreach (SlabShapeVertex shv in vts)
             {
+                XYZ p = new XYZ(shv.Position.X, shv.Position.Y, shv.Position.Z);
+                topoPoints.Add(p);
+            }
+        }
+#else
+        if (_topoSurface != null)
+        {
+            topoPoints = _topoSurface.GetInteriorPoints() as List<XYZ>;
+        }
+#endif
+
+        foreach (XYZ pt in topoPoints)
+        {
+            if (outline.Contains(pt, 0.000000001d))
+            {
+                topoPointsInBoundingBox.Add(pt);
+            }
+        }
+
+        // Check each point to see if point is with 2D boundary
+        var pointsInPolygon = new List<XYZ>();
+        using (var pf = new ProgressForm("Analyzing topo points.", "{0} points of " + topoPointsInBoundingBox.Count + " processed...", topoPointsInBoundingBox.Count))
+        {
+            foreach (XYZ pt in topoPointsInBoundingBox)
+            {
+                if (PointInPoly.PointInPolygon(polygon, Util.Flatten(pt)) == true)
+                {
+                    pointsInPolygon.Add(pt);
+                }
+
+                pf.Increment();
+            }
+        }
+
+        // Remove topo points if any are found within the polygon
+        if (pointsInPolygon.Count > 0)
+        {
+#if REVIT2024_OR_GREATER
+
+            if (_topoSolid != null)
+            {
+                using (var t = new Transaction(_doc, "removing points"))
+                {
+                    t.Start();
+
+                    foreach (XYZ p in pointsInPolygon)
+                    {
+                        topoPoints.Remove(p);
+                    }
+
+                    _topoSolid.GetSlabShapeEditor().ResetSlabShape();
+
+                    foreach (XYZ p in topoPoints)
+                    {
+                        _topoSolid.GetSlabShapeEditor().DrawPoint(p);
+                    }
+
+                    t.Commit();
+                }
+            }
+#else
+            var fh = new FailureHandler();            
+            if(_topoSurface != null)
+            {
+                using (var tes = new Autodesk.Revit.DB.Architecture.TopographyEditScope(_doc, "Align topo"))
+                {
+                    tes.Start(_topoSurface.Id);
+                    using (var t = new Transaction(_doc, "removing points"))
+                    {
+                        t.Start();
+
+                        if (_topoSurface != null)
+                        {
+                            _topoSurface.DeletePoints(pointsInPolygon);
+                        }
+
+                        t.Commit();
+                    }
+                    tes.Commit(fh);
+                }
+            }
+#endif
+
+        }
+    }
+
+    private static UVArray GetPolygon(List<List<XYZ>> polygons)
+    {
+        var flat_polygons = Util.Flatten(polygons);
+        var xyzs = new List<XYZ>();
+        foreach (List<XYZ> polygon in polygons)
+        {
+            foreach (XYZ pt in polygon)
+                xyzs.Add(pt);
+        }
+
+        var uvArr = new UVArray(xyzs);
+        var poly = new List<UV>();
+        foreach (List<UV> polygon in flat_polygons)
+        {
+            foreach (UV pt in polygon)
+                poly.Add(pt);
+        }
+
+        return uvArr;
+    }
+
+    private List<List<XYZ>> GetPolygonsFromGeometryElement(GeometryElement geometryElement)
+    {
+        var polygons = new List<List<XYZ>>();
+
+        foreach (GeometryObject geometryObject in geometryElement)
+        {
+            Solid solid = geometryObject as Solid;
+            var faces = new List<Face>();
+            if (solid == null)
+            {
+                //check if we can get SymbolGeometry from GeometryObject
+                var geometryInstance = geometryObject as GeometryInstance;
+                var geometryInstanceElement = geometryInstance.GetInstanceGeometry();
+
+                foreach (GeometryObject geometryInstanceObject in geometryInstanceElement)
+                {
+                        solid = geometryInstanceObject as Solid;
+                        if (solid != null)
+                        {
+                            foreach (Face f in solid.Faces)
+                            {
+                                if (Util.IsBottomFace(f) == true)
+                                {
+                                    faces.Add(f);
+                                }
+                            }
+                        }
+                    
+                }
             }
             else
             {
-                foreach (Face f in m_Solid.Faces)
+                foreach (Face f in solid.Faces)
                 {
                     if (Util.IsBottomFace(f) == true)
                     {
-                        m_Faces.Add(f);
+                        faces.Add(f);
                     }
                 }
             }
 
-            foreach (Face f in m_Faces)
+            foreach (Face f in faces)
             {
                 var polygon = new List<XYZ>();
                 foreach (EdgeArray ea in f.EdgeLoops)
@@ -528,72 +714,7 @@ public class cmdAlignTopo : IExternalCommand
             }
         }
 
-        var flat_polygons = Util.Flatten(polygons);
-        var xyzs = new List<XYZ>();
-        foreach (List<XYZ> polygon in polygons)
-        {
-            foreach (XYZ pt in polygon)
-                xyzs.Add(pt);
-        }
-
-        var uvArr = new UVArray(xyzs);
-        var poly = new List<UV>();
-        foreach (List<UV> polygon in flat_polygons)
-        {
-            foreach (UV pt in polygon)
-                poly.Add(pt);
-        }
-
-        // Get topopoints withing bounding box of element
-        Autodesk.Revit.DB.View v = null;
-        var bb = element.get_BoundingBox(v);
-        var min = new XYZ(bb.Min.X - 1d, bb.Min.Y - 1d, _topoSurface.get_BoundingBox(v).Min.Z);
-        var max = new XYZ(bb.Max.X + 1d, bb.Max.Y + 1d, _topoSurface.get_BoundingBox(v).Max.Z);
-        var outline = new Outline(min, max);
-        var points = new List<XYZ>();
-        // intPoints = TryCast(m_TopoSurface.FindPoints(outline), List(Of XYZ))
-        var pts = new List<XYZ>();
-        pts = _topoSurface.GetInteriorPoints() as List<XYZ>;
-        foreach (XYZ pt in pts)
-        {
-            if (outline.Contains(pt, 0.000000001d))
-            {
-                points.Add(pt);
-            }
-        }
-
-        // Check each point to see if point is with 2D boundary
-        var points1 = new List<XYZ>();
-        using (var pf = new ProgressForm("Analyzing topo points.", "{0} points of " + points.Count + " processed...", points.Count))
-        {
-            foreach (XYZ pt in points)
-            {
-                // If PointInPoly.PolygonContains(poly, Util.Flatten(pt)) = True Then
-                // If PointInPoly.PolygonContains(uvArr, Util.Flatten(pt)) = True Then
-                if (PointInPoly.PointInPolygon(uvArr, Util.Flatten(pt)) == true)
-                {
-                    points1.Add(pt);
-                }
-
-                pf.Increment();
-            }
-        }
-
-        // Remove topo points if answer is true
-        if (points1.Count > 0)
-        {
-            using (var t = new Transaction(_doc, "removing points"))
-            {
-                t.Start();
-                _topoSurface.DeletePoints(points1);
-                t.Commit();
-            }
-        }
-    }
-
-    private void CleanupTopoPoints(Solid solid)
-    {
-        throw new NotImplementedException();
+        return polygons;
     }
 
     #region Slab Boundary Debug

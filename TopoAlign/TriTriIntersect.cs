@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Security.Cryptography;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using g3;
 
 namespace TopoAlign;
@@ -11,6 +6,7 @@ namespace TopoAlign;
 public class TriTriIntersect
 {
 
+#if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
     public static List<Triangle3d> TrianglesFromTopo(Autodesk.Revit.DB.Architecture.TopographySurface topoSurface)
     {
         Options op = new Options
@@ -50,6 +46,32 @@ public class TriTriIntersect
 
         return topoTriangles;
     }
+#endif
+
+#if REVIT2024_OR_GREATER
+    public static List<Triangle3d> TrianglesFromTopo(Autodesk.Revit.DB.Toposolid topoSolid)
+    {
+        Options op = new Options
+        {
+            ComputeReferences = true
+        };
+        var geoObjects = topoSolid.get_Geometry(op).GetEnumerator();
+
+        List<Triangle3d> topoTriangles = new List<Triangle3d>();
+
+        while (geoObjects.MoveNext())
+        {
+           Solid geoObj = geoObjects.Current as Solid;
+
+            foreach (Face face in geoObj.Faces)
+            {
+                topoTriangles.AddRange(TrianglesFromGeoObj(face));
+            }
+        }
+
+        return topoTriangles;
+    }
+#endif
 
     public static List<Triangle3d> TrianglesFromGeoObj(Face face)
     {
@@ -84,7 +106,9 @@ public class TriTriIntersect
             Vector3d[] normals = new Vector3d[mesh.Vertices.Count];
             Index3i[] triangles = new Index3i[faceTriangles.Count];
             int tid = 0;
+#if REVIT2019
             int nid = 0;
+#endif
             foreach (var t in faceTriangles)
             {
                 //get the vertices from the triangle

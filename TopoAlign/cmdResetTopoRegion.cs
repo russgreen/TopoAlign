@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
-using Autodesk.Revit.Attributes;
+﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
-
+using System.Diagnostics;
 
 namespace TopoAlign;
 
@@ -47,10 +43,20 @@ public class cmdResetTopoRegion : IExternalCommand
 
         var frm = new FormProjectPhases();
 
+#if REVIT2024_OR_GREATER
+        // load phases to combo
+        var comboPhases = new Dictionary<long, string>();
+
+        foreach (Phase phase in _doc.Phases)
+            comboPhases.Add(phase.Id.Value, phase.Name);
+#else
         // load phases to combo
         var comboPhases = new Dictionary<int, string>();
+
         foreach (Phase phase in _doc.Phases)
             comboPhases.Add(phase.Id.IntegerValue, phase.Name);
+#endif
+
         if (comboPhases.Count > 0)
         {
             frm.cboPhaseSource.DisplayMember = "Value";
@@ -68,16 +74,71 @@ public class cmdResetTopoRegion : IExternalCommand
         {
             _sourcePhaseName = frm.cboPhaseSource.SelectedValue.ToString();
             _targetPhaseName = frm.cboPhaseTarget.SelectedValue.ToString();
-            var sourcePhase = new FilteredElementCollector(_doc).OfClass(typeof(Phase)).Cast<Phase>().FirstOrDefault(q => (q.Name ?? "") == (_sourcePhaseName ?? ""));
-            var targetPhase = new FilteredElementCollector(_doc).OfClass(typeof(Phase)).Cast<Phase>().FirstOrDefault(q => (q.Name ?? "") == (_targetPhaseName ?? ""));
-            IList<Element> topoList = new FilteredElementCollector(_doc).OfCategory(BuiltInCategory.OST_Topography).ToList();
+
+            var sourcePhase = new FilteredElementCollector(_doc)
+                .OfClass(typeof(Phase))
+                .Cast<Phase>()
+                .FirstOrDefault(q => (q.Name ?? "") == (_sourcePhaseName ?? ""));
+
+            var targetPhase = new FilteredElementCollector(_doc)
+                .OfClass(typeof(Phase))
+                .Cast<Phase>()
+                .FirstOrDefault(q => (q.Name ?? "") == (_targetPhaseName ?? ""));
+
+#if REVIT2024_OR_GREATER
+            IList<Toposolid> topoList = new FilteredElementCollector(_doc)
+                .OfCategory(BuiltInCategory.OST_Toposolid)
+                .OfType<Toposolid>()
+                .ToList();
+#else
+            IList<Element> topoList = new FilteredElementCollector(_doc)
+                .OfCategory(BuiltInCategory.OST_Topography)
+                .ToList();
+#endif
+
             var fh = new FailureHandler();
             var frm1 = new FormResetTopo();
+            
             try
             {
+
                 // load existing topo(s) to combo
+#if REVIT2024_OR_GREATER
+                var comboSource = new Dictionary<long, string>();
+                var comboTarget = new Dictionary<long, string>();
+#else
+                
                 var comboSource = new Dictionary<int, string>();
                 var comboTarget = new Dictionary<int, string>();
+#endif
+
+
+#if REVIT2024_OR_GREATER
+                foreach (Toposolid topo in topoList)
+                {
+                    if (topo.HostTopoId.IsInvalid()  == true)
+                    {
+                        try
+                        {
+                            var phaseParam = topo.GetParameters("Phase Created")[0]; // clsUtil.FindParameterByName(m_Topo, "Phase Created")
+                            var nameParam = topo.GetParameters("Name")[0]; // clsUtil.FindParameterByName(m_Topo, "Name")
+
+                            if ((phaseParam.AsValueString() ?? "") == (_sourcePhaseName ?? ""))
+                            {
+                                comboSource.Add(topo.Id.Value, "Toposolid (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
+                            }
+
+                            if ((phaseParam.AsValueString() ?? "") == (_targetPhaseName ?? ""))
+                            {
+                                comboTarget.Add(topo.Id.Value, "Toposolid (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                }
+#else
                 foreach (TopographySurface topo in topoList)
                 {
                     if (topo.IsSiteSubRegion == false)
@@ -86,6 +147,7 @@ public class cmdResetTopoRegion : IExternalCommand
                         {
                             var phaseParam = topo.GetParameters("Phase Created")[0]; // clsUtil.FindParameterByName(m_Topo, "Phase Created")
                             var nameParam = topo.GetParameters("Name")[0]; // clsUtil.FindParameterByName(m_Topo, "Name")
+
                             if ((phaseParam.AsValueString() ?? "") == (_sourcePhaseName ?? ""))
                             {
                                 comboSource.Add(topo.Id.IntegerValue, "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
@@ -96,11 +158,12 @@ public class cmdResetTopoRegion : IExternalCommand
                                 comboTarget.Add(topo.Id.IntegerValue, "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                         }
                     }
                 }
+#endif
 
                 // load topos to source combo
                 if (comboSource.Count > 0)
@@ -158,10 +221,22 @@ public class cmdResetTopoRegion : IExternalCommand
                     var p1 = new XYZ(llX, llY, pb.Min.Z); // = pb.Min
                     var p2 = new XYZ(urX, urY, pb.Max.Z); // = pb.Max
 
-                    // If p2.X < p1.X Or p2.Y < p1.Y Then
-                    // p2 = uidoc.Selection.PickPoint("Pick UPPER RIGHT corner of rectangle area to reset")
-                    // End If
-
+#if REVIT2024_OR_GREATER
+                    // established the bounding box of the source and target topos to get min max Z values
+                    Toposolid topoSource = null;
+                    Toposolid topoTarget = null;
+                    foreach (Element topo in topoList)
+                    {
+                        if ((topo.Id.ToString() ?? "") == (frm1.cboTopoSource.SelectedValue.ToString() ?? ""))
+                        {
+                            topoSource = (Toposolid)topo;
+                        }
+                        else if ((topo.Id.ToString() ?? "") == (frm1.cboTopoTarget.SelectedValue.ToString() ?? ""))
+                        {
+                            topoTarget = (Toposolid)topo;
+                        }
+                    }
+#else
                     // established the bounding box of the source and target topos to get min max Z values
                     TopographySurface topoSource = null;
                     TopographySurface topoTarget = null;
@@ -176,6 +251,7 @@ public class cmdResetTopoRegion : IExternalCommand
                             topoTarget = (TopographySurface)topo;
                         }
                     }
+#endif
 
                     if (topoSource is null | topoTarget is null)
                     {
@@ -185,6 +261,121 @@ public class cmdResetTopoRegion : IExternalCommand
                     var v = _doc.ActiveView; // Nothing
                     var ptsExisting = new List<XYZ>();
                     var bb = topoSource.get_BoundingBox(v);
+
+
+#if REVIT2024_OR_GREATER
+                    var opt = new Options
+                    {
+                        ComputeReferences = true
+                    };
+
+                    // get points in region from topoSource
+                    var min = new XYZ(p1.X, p1.Y, topoSource.get_BoundingBox(v).Min.Z - 10d);
+                    var max = new XYZ(p2.X, p2.Y, topoSource.get_BoundingBox(v).Max.Z + 10d);
+                    bb.Min = min;
+                    bb.Max = max;
+
+                    var m_Outline = new Outline(min, max);
+
+                    var ptsSource = new List<XYZ>();
+
+                    var vts = topoSource.GetSlabShapeEditor().SlabShapeVertices;
+                    foreach (SlabShapeVertex shv in vts)
+                    {
+                        XYZ p = new XYZ(shv.Position.X, shv.Position.Y, shv.Position.Z);
+                        ptsSource.Add(p);
+                    }
+
+                    foreach (XYZ pt in ptsSource)
+                    {
+                        if (m_Outline.Contains(pt, 0.000000001d))
+                        {
+                            ptsExisting.Add(pt);
+                        }
+                    }
+
+                    min = new XYZ(p1.X, p1.Y, topoTarget.get_BoundingBox(v).Min.Z - 10d);
+                    max = new XYZ(p2.X, p2.Y, topoTarget.get_BoundingBox(v).Max.Z + 10d);
+                    bb.Min = min;
+                    bb.Max = max;
+                    var ptsToDelete = new List<XYZ>();
+                    var outline = new Outline(min, max);
+
+                    var ptsTarget = new List<XYZ>();
+
+                    vts = topoTarget.GetSlabShapeEditor().SlabShapeVertices;
+                    foreach (SlabShapeVertex shv in vts)
+                    {
+                        XYZ p = new XYZ(shv.Position.X, shv.Position.Y, shv.Position.Z);
+                        ptsTarget.Add(p);
+                    }
+
+                    foreach (XYZ pt in ptsTarget)
+                    {
+                        if (outline.Contains(pt, 0.000000001d))
+                        {
+                            ptsToDelete.Add(pt);
+                        }
+                    }
+
+                    if (ptsToDelete.Count > 0)
+                    {
+                        using (var t = new Transaction(_doc, "removing points"))
+                        {
+                            t.Start();
+
+                            FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
+                            failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+                            t.SetFailureHandlingOptions(failureHandlingOptions);
+
+                            //topoTarget.DeletePoints(ptsToDelete);
+
+                            Debug.WriteLine($"Points in list {ptsTarget.Count}");
+                            foreach (var p in ptsToDelete)
+                            {
+                                ptsTarget.Remove(p);
+                            }
+                            Debug.WriteLine($"Points in list after clean {ptsTarget.Count}");
+
+                            topoTarget.GetSlabShapeEditor().ResetSlabShape();
+
+                            foreach (var p in ptsTarget)
+                            {
+                                topoTarget.GetSlabShapeEditor().DrawPoint(p);
+                            }
+
+                            t.Commit();
+                        }
+                    }
+
+
+                    // add points to topoTarget
+                    if (ptsExisting.Count > 0)
+                    {
+                        var comparer = new XyzEqualityComparer(); // (0.01)
+                        using (var t = new Transaction(_doc, "add points"))
+                        {
+                            t.Start();
+
+                            FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
+                            failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+                            t.SetFailureHandlingOptions(failureHandlingOptions);
+
+                            foreach (var p in ptsExisting)
+                            {
+                                ptsTarget.Add(p);
+                            }
+                            ptsTarget = ptsTarget.Distinct(comparer).ToList();
+
+                            foreach (var p in ptsTarget)
+                            {
+                                topoTarget.GetSlabShapeEditor().DrawPoint(p);
+                            }
+
+                            t.Commit();
+                        }
+                    }
+#else
                     using (var tes = new TopographyEditScope(_doc, "Reset topo"))
                     {
                         tes.Start(topoSource.Id);
@@ -250,7 +441,7 @@ public class cmdResetTopoRegion : IExternalCommand
                                 t.Commit();
                             }
                         }
-
+                          
 
                         // add points to topoTarget
                         if (ptsExisting.Count > 0)
@@ -266,12 +457,13 @@ public class cmdResetTopoRegion : IExternalCommand
 
                         tes.Commit(fh);
                     }
+#endif
                 }
             }
-            catch (Autodesk.Revit.Exceptions.OperationCanceledException generatedExceptionName)
+            catch (Autodesk.Revit.Exceptions.OperationCanceledException)
             {
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Result.Failed;
             }
