@@ -134,6 +134,12 @@ public class cmdPointsAtIntersection : IExternalCommand
 
         var intersections = TriTriIntersect.IntersectTriangleLists(topoTriangles, faceTriangles, (double)_divide);
 
+        if(intersections is null || intersections.Count == 0)
+        {
+            TaskDialog.Show("Topo Align", "Unable to get a suitable list of intersections from the faces selected.", TaskDialogCommonButtons.Ok);
+            return false;
+        }
+
         List<XYZ> points = PointsUtils.GetPointsFromVector3ds(intersections);
 
         if (points.Count == 0)

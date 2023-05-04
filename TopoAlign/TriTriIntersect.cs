@@ -6,7 +6,30 @@ namespace TopoAlign;
 public class TriTriIntersect
 {
 
-#if REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
+#if REVIT2024_OR_GREATER
+    public static List<Triangle3d> TrianglesFromTopo(Autodesk.Revit.DB.Toposolid topoSolid)
+    {
+        Options op = new Options
+        {
+            ComputeReferences = true
+        };
+        var geoObjects = topoSolid.get_Geometry(op).GetEnumerator();
+
+        List<Triangle3d> topoTriangles = new List<Triangle3d>();
+
+        while (geoObjects.MoveNext())
+        {
+           Solid geoObj = geoObjects.Current as Solid;
+
+            foreach (Face face in geoObj.Faces)
+            {
+                topoTriangles.AddRange(TrianglesFromGeoObj(face));
+            }
+        }
+
+        return topoTriangles;
+    }
+#else
     public static List<Triangle3d> TrianglesFromTopo(Autodesk.Revit.DB.Architecture.TopographySurface topoSurface)
     {
         Options op = new Options
@@ -35,37 +58,12 @@ public class TriTriIntersect
                     Vector3d v1 = new Vector3d(T11.X, T11.Y, T11.Z);
                     Vector3d v2 = new Vector3d(T12.X, T12.Y, T12.Z);
                     Vector3d v3 = new Vector3d(T13.X, T13.Y, T13.Z);
-                    
+
                     Triangle3d triangle3D = new Triangle3d(v1, v2, v3);
 
 
                     topoTriangles.Add(triangle3D);
                 }
-            }
-        }
-
-        return topoTriangles;
-    }
-#endif
-
-#if REVIT2024_OR_GREATER
-    public static List<Triangle3d> TrianglesFromTopo(Autodesk.Revit.DB.Toposolid topoSolid)
-    {
-        Options op = new Options
-        {
-            ComputeReferences = true
-        };
-        var geoObjects = topoSolid.get_Geometry(op).GetEnumerator();
-
-        List<Triangle3d> topoTriangles = new List<Triangle3d>();
-
-        while (geoObjects.MoveNext())
-        {
-           Solid geoObj = geoObjects.Current as Solid;
-
-            foreach (Face face in geoObj.Faces)
-            {
-                topoTriangles.AddRange(TrianglesFromGeoObj(face));
             }
         }
 
