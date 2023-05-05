@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace TopoAlign.Models;
 
-namespace TopoAlign.Models;
-
-public class Settings //: INotifyPropertyChanged
+public class Settings
 {
     public bool SingleElement { get; set; } = true;
     public bool CleanTopoPoints { get; set; } = true;
@@ -28,11 +21,8 @@ public class Settings //: INotifyPropertyChanged
                     _ = decimal.TryParse(key.GetValue("DivideEdgeDistance", DivideEdgeDistance).ToString(), out decimal divideEdgeDistance);
                     _ = decimal.TryParse(key.GetValue("VerticalOffset", VerticalOffset).ToString(), out decimal verticalOffset);
 
-                    //DivideEdgeDistance = Convert.ToDecimal(key.GetValue("DivideEdgeDistance", DivideEdgeDistance));
-                    //VerticalOffset = Convert.ToDecimal(key.GetValue("VerticalOffset", VerticalOffset));
                     DivideEdgeDistance = divideEdgeDistance;
                     VerticalOffset = verticalOffset;
-
                 }
             }
     }
