@@ -137,7 +137,7 @@ public class TriTriIntersect
             DMesh3 dMesh = DMesh3Builder.Build(vertices, triangles, normals);
 
             Remesher r = new Remesher(dMesh);
-            r.SetTargetEdgeLength(.7);
+            r.SetTargetEdgeLength(5);
             for (int i = 0; i < 10 ; i++)
             {
                 r.BasicRemeshPass();
