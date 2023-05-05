@@ -24,8 +24,15 @@ public class Settings //: INotifyPropertyChanged
                     SingleElement = Convert.ToBoolean(key.GetValue("SingleElement", SingleElement));
                     CleanTopoPoints = Convert.ToBoolean(key.GetValue("CleanTopoPoints", CleanTopoPoints));
                     TopFace = Convert.ToBoolean(key.GetValue("TopFace", TopFace));
-                    DivideEdgeDistance = Convert.ToDecimal(key.GetValue("DivideEdgeDistance", DivideEdgeDistance));
-                    VerticalOffset = Convert.ToDecimal(key.GetValue("VerticalOffset", VerticalOffset));
+
+                    _ = decimal.TryParse(key.GetValue("DivideEdgeDistance", DivideEdgeDistance).ToString(), out decimal divideEdgeDistance);
+                    _ = decimal.TryParse(key.GetValue("VerticalOffset", VerticalOffset).ToString(), out decimal verticalOffset);
+
+                    //DivideEdgeDistance = Convert.ToDecimal(key.GetValue("DivideEdgeDistance", DivideEdgeDistance));
+                    //VerticalOffset = Convert.ToDecimal(key.GetValue("VerticalOffset", VerticalOffset));
+                    DivideEdgeDistance = divideEdgeDistance;
+                    VerticalOffset = verticalOffset;
+
                 }
             }
     }
