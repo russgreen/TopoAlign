@@ -3,11 +3,11 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 
-namespace TopoAlign;
+namespace TopoAlign.Commands;
 
 [Transaction(TransactionMode.Manual)]
 [Regeneration(RegenerationOption.Manual)]
-public class cmdPointsAtIntersection : IExternalCommand
+public class CommandPointsAtIntersection : IExternalCommand
 {
     private UIApplication _uiapp;
     private UIDocument _uidoc;
@@ -23,7 +23,7 @@ public class cmdPointsAtIntersection : IExternalCommand
     private Units _docUnits;
 
 #if REVIT2024_OR_GREATER
-    private Autodesk.Revit.DB.Toposolid _topoSolid;
+    private Toposolid _topoSolid;
 #else
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
 #endif
@@ -93,7 +93,7 @@ public class cmdPointsAtIntersection : IExternalCommand
             var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, new TopoPickFilter(), "Select a topographic surface");
 
 #if REVIT2024_OR_GREATER
-            _topoSolid = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Toposolid;
+            _topoSolid = _doc.GetElement(refToposurface) as Toposolid;
 #else
             _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
 #endif
@@ -102,7 +102,7 @@ public class cmdPointsAtIntersection : IExternalCommand
         {
             return false;
         }
-                    
+
         GeometryObject geoObjFace;
 
         try
@@ -117,9 +117,9 @@ public class cmdPointsAtIntersection : IExternalCommand
         }
 
         List<g3.Triangle3d> topoTriangles = new();
-        
+
 #if REVIT2024_OR_GREATER
-        if(_topoSolid != null)
+        if (_topoSolid != null)
         {
             topoTriangles = TriTriIntersect.TrianglesFromTopo(_topoSolid);
         }
@@ -134,7 +134,7 @@ public class cmdPointsAtIntersection : IExternalCommand
 
         var intersections = TriTriIntersect.IntersectTriangleLists(topoTriangles, faceTriangles, (double)_divide);
 
-        if(intersections is null || intersections.Count == 0)
+        if (intersections is null || intersections.Count == 0)
         {
             TaskDialog.Show("Topo Align", "Unable to get a suitable list of intersections from the faces selected.", TaskDialogCommonButtons.Ok);
             return false;
@@ -155,7 +155,7 @@ public class cmdPointsAtIntersection : IExternalCommand
         try
         {
 #if REVIT2024_OR_GREATER
-            if(_topoSolid != null)
+            if (_topoSolid != null)
             {
                 using (var t = new Transaction(_doc, "add points"))
                 {

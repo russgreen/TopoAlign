@@ -4,10 +4,10 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using System.Diagnostics;
 
-namespace TopoAlign;
+namespace TopoAlign.Commands;
 
 [Transaction(TransactionMode.Manual)]
-public class cmdAlignTopo : IExternalCommand
+public class CommandAlignTopo : IExternalCommand
 {
     private UIApplication _uiapp;
     private UIDocument _uidoc;
@@ -20,7 +20,7 @@ public class cmdAlignTopo : IExternalCommand
     private Edge _edge;
 
 #if REVIT2024_OR_GREATER
-    private Autodesk.Revit.DB.Toposolid _topoSolid;
+    private Toposolid _topoSolid;
 #else
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
 #endif
@@ -127,7 +127,7 @@ public class cmdAlignTopo : IExternalCommand
                 cSettings.TopFace = frm.rdoTop.Checked;
                 cSettings.SaveSettings();
 
-                if(AlignTopo(frm.rdoTop.Checked, frm.rdoEdge.Checked) == false)
+                if (AlignTopo(frm.rdoTop.Checked, frm.rdoEdge.Checked) == false)
                 {
                     return Result.Failed;
                 }
@@ -154,7 +154,7 @@ public class cmdAlignTopo : IExternalCommand
             var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
 
 #if REVIT2024_OR_GREATER
-            _topoSolid = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Toposolid;
+            _topoSolid = _doc.GetElement(refToposurface) as Toposolid;
 #else
             _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
 #endif
@@ -166,7 +166,7 @@ public class cmdAlignTopo : IExternalCommand
 
         List<Edge> edges = new List<Edge>();
         List<Curve> curves = new List<Curve>();
-        if(UseEdge == false)
+        if (UseEdge == false)
         {
             //we're using elements rather than edges
             try
@@ -256,7 +256,7 @@ public class cmdAlignTopo : IExternalCommand
                     t.Start();
 
                     FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-                    failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+                    failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
                     t.SetFailureHandlingOptions(failureHandlingOptions);
 
                     foreach (var point in uniquePoints)
@@ -466,8 +466,8 @@ public class cmdAlignTopo : IExternalCommand
                         }
                     }
                 }
-            } 
-        } 
+            }
+        }
 
         return points;
     }
@@ -658,18 +658,18 @@ public class cmdAlignTopo : IExternalCommand
 
                 foreach (GeometryObject geometryInstanceObject in geometryInstanceElement)
                 {
-                        solid = geometryInstanceObject as Solid;
-                        if (solid != null)
+                    solid = geometryInstanceObject as Solid;
+                    if (solid != null)
+                    {
+                        foreach (Face f in solid.Faces)
                         {
-                            foreach (Face f in solid.Faces)
+                            if (Util.IsBottomFace(f) == true)
                             {
-                                if (Util.IsBottomFace(f) == true)
-                                {
-                                    faces.Add(f);
-                                }
+                                faces.Add(f);
                             }
                         }
-                    
+                    }
+
                 }
             }
             else

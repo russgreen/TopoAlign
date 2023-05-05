@@ -7,13 +7,13 @@
     <rule pattern="namespace('TopoAlign') and match-name('App')">
       <protection id="rename" action="remove" />
     </rule>
-    <rule pattern="namespace('TopoAlign') and match-name('cmdAlignTopo')">
+    <rule pattern="namespace('TopoAlign') and match-name('CommandAlignTopo')">
       <protection id="rename" action="remove" />
     </rule>
-    <rule pattern="namespace('TopoAlign') and match-name('cmdPointsAlongContours')">
+    <rule pattern="namespace('TopoAlign') and match-name('CommandPointsAlongContours')">
       <protection id="rename" action="remove" />
     </rule>
-    <rule pattern="namespace('TopoAlign') and match-name('cmdPointsOnSurface')">
+    <rule pattern="namespace('TopoAlign') and match-name('CommandPointsOnSurface')">
       <protection id="rename" action="remove" />
     </rule>
   </module>

@@ -7,11 +7,11 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 
-namespace TopoAlign;
+namespace TopoAlign.Commands;
 
 [Transaction(TransactionMode.Manual)]
 [Regeneration(RegenerationOption.Manual)]
-public class cmdPointsAlongContours : IExternalCommand
+public class CommandPointsAlongContours : IExternalCommand
 {
     private UIApplication _uiapp;
     private UIDocument _uidoc;
@@ -26,7 +26,7 @@ public class cmdPointsAlongContours : IExternalCommand
     private Units _docUnits;
 
 #if REVIT2024_OR_GREATER
-    private Autodesk.Revit.DB.Toposolid _topoSolid;
+    private Toposolid _topoSolid;
 #else
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
 #endif

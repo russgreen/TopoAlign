@@ -4,21 +4,21 @@ using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 
-namespace TopoAlign;
+namespace TopoAlign.Commands;
 
 [Transaction(TransactionMode.Manual)]
-public class cmdAlignFloor : IExternalCommand
+public class CommndAlignFloor : IExternalCommand
 {
     private UIApplication _uiapp;
     private UIDocument _uidoc;
     private Autodesk.Revit.ApplicationServices.Application _app;
-    private Autodesk.Revit.DB.Document _doc;
+    private Document _doc;
     private Selection _sel;
     private decimal _offset;
     private Floor _floor;
 
 #if REVIT2024_OR_GREATER
-    private Autodesk.Revit.DB.Toposolid _topoSolid;
+    private Toposolid _topoSolid;
 #else
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
 #endif
@@ -118,7 +118,7 @@ public class cmdAlignFloor : IExternalCommand
         try
         {
             var refElement = _uidoc.Selection.PickObject(ObjectType.Element, elemFilter, "Select an object to align to");
-            _floor = _doc.GetElement(refElement) as Autodesk.Revit.DB.Floor;
+            _floor = _doc.GetElement(refElement) as Floor;
         }
         catch (Exception)
         {
@@ -131,7 +131,7 @@ public class cmdAlignFloor : IExternalCommand
             var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
 
 #if REVIT2024_OR_GREATER
-            _topoSolid = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Toposolid;
+            _topoSolid = _doc.GetElement(refToposurface) as Toposolid;
 #else
             _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
 #endif
@@ -146,7 +146,7 @@ public class cmdAlignFloor : IExternalCommand
         {
             t.Start();
             FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-            failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
 #if REVIT2024_OR_GREATER
@@ -157,7 +157,7 @@ public class cmdAlignFloor : IExternalCommand
             t.Commit();
         }
 
-        
+
         var options = new Options();
         var geometryElement = _floor.get_Geometry(options);
         IList<CurveLoop> floorBoundaryCurves = GetGeometryOutline(geometryElement);
@@ -170,7 +170,7 @@ public class cmdAlignFloor : IExternalCommand
         {
             t.Start();
             FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-            failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
             siteSubDivision = _topoSolid.CreateSubDivision(_doc, floorBoundaryCurves);
@@ -211,7 +211,7 @@ public class cmdAlignFloor : IExternalCommand
         {
             t.Start();
             FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-            failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
             foreach (XYZ pt in points)
@@ -272,9 +272,9 @@ public class cmdAlignFloor : IExternalCommand
 
         foreach (GeometryObject geometryObject in geometryElement)
         {
-            if(geometryObject is Solid)
+            if (geometryObject is Solid)
             {
-                foreach(Face face in (geometryObject as Solid).Faces)
+                foreach (Face face in (geometryObject as Solid).Faces)
                 {
                     if (Util.IsTopFace(face))
                     {
@@ -287,7 +287,7 @@ public class cmdAlignFloor : IExternalCommand
         return faces;
     }
 
-    private IList<CurveLoop> GetGeometryOutline(GeometryElement geometryElement) 
+    private IList<CurveLoop> GetGeometryOutline(GeometryElement geometryElement)
     {
         //get the outline of the floor to make a sub-region on the topo
         //curveLoops = (IList<CurveLoop>)new List<CurveLoop>();
@@ -305,7 +305,7 @@ public class cmdAlignFloor : IExternalCommand
             }
         }
 
-        return (IList<CurveLoop>)face1.GetEdgesAsCurveLoops().ToList<CurveLoop>();
+        return face1.GetEdgesAsCurveLoops().ToList();
     }
 
 

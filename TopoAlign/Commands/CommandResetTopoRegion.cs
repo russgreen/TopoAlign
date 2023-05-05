@@ -5,11 +5,11 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using System.Diagnostics;
 
-namespace TopoAlign;
+namespace TopoAlign.Commands;
 
 [Transaction(TransactionMode.Manual)]
 [Regeneration(RegenerationOption.Manual)]
-public class cmdResetTopoRegion : IExternalCommand
+public class CommandResetTopoRegion : IExternalCommand
 {
     private UIApplication _uiapp;
     private UIDocument _uidoc;
@@ -98,7 +98,7 @@ public class cmdResetTopoRegion : IExternalCommand
 
             var fh = new FailureHandler();
             var frm1 = new FormResetTopo();
-            
+
             try
             {
 
@@ -116,7 +116,7 @@ public class cmdResetTopoRegion : IExternalCommand
 #if REVIT2024_OR_GREATER
                 foreach (Toposolid topo in topoList)
                 {
-                    if (topo.HostTopoId.IsInvalid()  == true)
+                    if (topo.HostTopoId.IsInvalid() == true)
                     {
                         try
                         {
@@ -325,7 +325,7 @@ public class cmdResetTopoRegion : IExternalCommand
                             t.Start();
 
                             FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-                            failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+                            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
                             t.SetFailureHandlingOptions(failureHandlingOptions);
 
                             //topoTarget.DeletePoints(ptsToDelete);
@@ -358,7 +358,7 @@ public class cmdResetTopoRegion : IExternalCommand
                             t.Start();
 
                             FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-                            failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+                            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
                             t.SetFailureHandlingOptions(failureHandlingOptions);
 
                             foreach (var p in ptsExisting)

@@ -83,33 +83,51 @@ class App : IExternalApplication
             }
         }
 
-        PushButtonData pbDataTopoAlign = new PushButtonData("Align to Element", $"Align to{System.Environment.NewLine}Element", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdAlignTopo");
-        PushButton pbTopoAlign  = (PushButton)panel.AddItem(pbDataTopoAlign);
+        PushButton pbTopoAlign = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(TopoAlign.Commands.CommandAlignTopo), 
+            $"Align to{System.Environment.NewLine}Element",
+            Assembly.GetExecutingAssembly().Location, 
+            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandAlignTopo)}"));
         pbTopoAlign.ToolTip = "Adjust topo to edge or floor geometry";
         pbTopoAlign.LargeImage = PngImageSource("TopoAlign.Images.TopoAlign32.png");
 
-        PushButtonData pbDataFloorAlign = new PushButtonData("Align to Topo", $"Align to{System.Environment.NewLine}Topo", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdAlignFloor");
-        PushButton pbFloorAlign = (PushButton)panel.AddItem(pbDataFloorAlign);
+        PushButton pbFloorAlign = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(TopoAlign.Commands.CommndAlignFloor), 
+            $"Align to{System.Environment.NewLine}Topo",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommndAlignFloor)}"));
         pbFloorAlign.ToolTip = "Adjust a floor to follow the topography";
         pbFloorAlign.LargeImage = PngImageSource("TopoAlign.Images.FloorToTopo32.png");
 
-        PushButtonData pbDataPointsFromLines  = new PushButtonData("Points from Lines", $"Points from{System.Environment.NewLine}Lines", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsOnSurface");
-        PushButton pbPointsFromLines = (PushButton)panel.AddItem(pbDataPointsFromLines);
+        PushButton pbPointsFromLines = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(TopoAlign.Commands.CommandPointsOnSurface), 
+            $"Points from{System.Environment.NewLine}Lines",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandPointsOnSurface)}"));
         pbPointsFromLines.ToolTip = "Add points on the surface along selected model lines. Model lines must be lines and arcs and be placed BELOW the topo surface.";
         pbPointsFromLines.LargeImage = PngImageSource("TopoAlign.Images.PointsFromLines32.png");
 
-        PushButtonData pbDataPointsAlongContours = new PushButtonData("Points along Contours", $"Points along{System.Environment.NewLine}Contours", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAlongContours");
-        PushButton pbPointsAlongContours  = (PushButton)panel.AddItem(pbDataPointsAlongContours);
+        PushButton pbPointsAlongContours  = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(TopoAlign.Commands.CommandPointsAlongContours), 
+            $"Points along{System.Environment.NewLine}Contours",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandPointsAlongContours)}"));
         pbPointsAlongContours.ToolTip = "Add points on surface along selected contour model lines. Model lines can be placed on zero datum BELOW the topo surface and projected up a set distance using an offset value.";
         pbPointsAlongContours.LargeImage = PngImageSource("TopoAlign.Images.PointsFromContours32.png");
 
-        PushButtonData pbDataPointsAtIntersection = new PushButtonData("Points at Intersection", $"Points at{System.Environment.NewLine}Intersection", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdPointsAtIntersection");
-        PushButton pbPointsAtIntersection = (PushButton)panel.AddItem(pbDataPointsAtIntersection);
+        PushButton pbPointsAtIntersection = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(TopoAlign.Commands.CommandPointsAtIntersection), 
+            $"Points at{System.Environment.NewLine}Intersection",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandPointsAtIntersection)}"));
         pbPointsAtIntersection.ToolTip = "Add points on the surface at the intersection with a selected face.";
         pbPointsAtIntersection.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
 
-        PushButtonData pbDataResetRegion = new PushButtonData("Reset region", $"Reset{System.Environment.NewLine}region", Assembly.GetExecutingAssembly().Location, "TopoAlign.cmdResetTopoRegion");
-        PushButton pbResetRegion  = (PushButton)panel.AddItem(pbDataResetRegion);
+        PushButton pbResetRegion  = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(TopoAlign.Commands.CommandResetTopoRegion), 
+            $"Reset{System.Environment.NewLine}region",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandResetTopoRegion)}"));
         pbResetRegion.ToolTip = "Copy points from existing topo surface to new topo surface within a region to undo changes made.";
         pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
 
