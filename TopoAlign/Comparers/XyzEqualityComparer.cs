@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Autodesk.Revit.DB;
 
-namespace TopoAlign;
+namespace TopoAlign.Comparers;
 
 class XyzEqualityComparer : IEqualityComparer<XYZ>
 {

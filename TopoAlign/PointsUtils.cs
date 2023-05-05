@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 //using GeometRi;
 using g3;
+using TopoAlign.Comparers;
 
 namespace TopoAlign;
 
