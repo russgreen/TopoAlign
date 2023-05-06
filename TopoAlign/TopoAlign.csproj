@@ -73,6 +73,17 @@
     <ConfuserReplaceOutput>false</ConfuserReplaceOutput>
     <ConfuserProject>$(MSBuildProjectDirectory)\$(MSBuildProjectName)$(RevitVersion).crproj</ConfuserProject>
   </PropertyGroup>
+   
+  <ItemGroup>
+    <Compile Remove="ViewModels\**" />
+    <Compile Remove="Views\**" />
+    <EmbeddedResource Remove="ViewModels\**" />
+    <EmbeddedResource Remove="Views\**" />
+    <None Remove="ViewModels\**" />
+    <None Remove="Views\**" />
+    <Page Remove="ViewModels\**" />
+    <Page Remove="Views\**" />
+  </ItemGroup>
   
    <ItemGroup>
      <Compile Remove="AppCenterHelper.cs" />
@@ -132,11 +143,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ViewModels\" />
-    <Folder Include="Views\" />
   </ItemGroup>
 
 	<!-- Build debug manifest at build time -->
