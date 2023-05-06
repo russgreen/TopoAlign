@@ -1,21 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Autodesk.Revit.DB;
 using System.Diagnostics;
-using Autodesk.Revit.DB;
 
 namespace TopoAlign;
-
-sealed class CurveGetEnpointExtension
-{
-    private CurveGetEnpointExtension()
-    {
-    }
-
-    public static XYZ GetEndPoint(Curve curve, int i)
-    {
-        return curve.GetEndPoint(i);
-    }
-}
 
 
 /// <summary>
@@ -23,39 +9,32 @@ sealed class CurveGetEnpointExtension
 /// orientation of curves to form a contiguous
 /// closed loop.
 /// </summary>
-class CurveUtils
+internal class CurveUtils
 {
     private const double _inch = 1.0d / 12.0d;
     private const double _sixteenth = _inch / 16.0d;
 
-    public enum FailureCondition
-    {
-        Success,
-        CurvesNotContigous,
-        CurveLoopAboveTarget,
-        NoIntersection
-    }
 
     /// <summary>
-/// Predicate to report whether the given curve
-/// type is supported by this utility class.
-/// </summary>
-/// <param name="curve">The curve.</param>
-/// <returns>True if the curve type is supported,
-/// false otherwise.</returns>
+    /// Predicate to report whether the given curve
+    /// type is supported by this utility class.
+    /// </summary>
+    /// <param name="curve">The curve.</param>
+    /// <returns>True if the curve type is supported,
+    /// false otherwise.</returns>
     public static bool IsSupported(Curve curve)
     {
         return curve is Line || curve is Arc;
     }
 
     /// <summary>
-/// Create a new curve with the same
-/// geometry in the reverse direction.
-/// </summary>
-/// <param name="orig">The original curve.</param>
-/// <returns>The reversed curve.</returns>
-/// <throws cref="NotImplementedException">If the
-/// curve type is not supported by this utility.</throws>
+    /// Create a new curve with the same
+    /// geometry in the reverse direction.
+    /// </summary>
+    /// <param name="orig">The original curve.</param>
+    /// <returns>The reversed curve.</returns>
+    /// <throws cref="NotImplementedException">If the
+    /// curve type is not supported by this utility.</throws>
     private static Curve CreateReversedCurve(Autodesk.Revit.Creation.Application creapp, Curve orig)
     {
         if (!IsSupported(orig))
@@ -101,9 +80,9 @@ class CurveUtils
     }
 
     /// <summary>
-/// Sort a list of curves to make them correctly
-/// ordered and oriented to form a closed loop.
-/// </summary>
+    /// Sort a list of curves to make them correctly
+    /// ordered and oriented to form a closed loop.
+    /// </summary>
     public static void SortCurvesContiguous(Autodesk.Revit.Creation.Application creapp, IList<Curve> curves, bool debug_output)
     {
         int n = curves.Count;
