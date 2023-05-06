@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Autodesk.Revit.DB;
+using TopoAlign.Helpers;
 
 namespace TopoAlign.Comparers;
 
@@ -14,6 +15,7 @@ class XyzEqualityComparer : IEqualityComparer<XYZ>
 
     public int GetHashCode(XYZ p)
     {
-        return Util.PointString(p).GetHashCode();
+        return StringFormatting.PointString(p).GetHashCode();
     }
+
 }

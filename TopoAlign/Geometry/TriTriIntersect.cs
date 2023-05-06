@@ -1,7 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using g3;
 
-namespace TopoAlign;
+namespace TopoAlign.Geometry;
 
 public class TriTriIntersect
 {
@@ -42,7 +42,7 @@ public class TriTriIntersect
 
         while (geoObjects.MoveNext())
         {
-            GeometryObject geoObj = geoObjects.Current as GeometryObject;
+            GeometryObject geoObj = geoObjects.Current;
 
             if (geoObj is Mesh)
             {
@@ -92,7 +92,7 @@ public class TriTriIntersect
             faceTriangles.Add(triangle3D);
         }
 
-        if(faceTriangles.Count == 2)
+        if (faceTriangles.Count == 2)
         {
             // we have a flat face and should try to sub-divide
             var vertices = new List<Vector3f>();
@@ -133,12 +133,12 @@ public class TriTriIntersect
                 triangles[tid] = new Index3i(vID0, vID1, vID2);
                 tid++;
             }
-                
+
             DMesh3 dMesh = DMesh3Builder.Build(vertices, triangles, normals);
 
             Remesher r = new Remesher(dMesh);
             r.SetTargetEdgeLength(5);
-            for (int i = 0; i < 10 ; i++)
+            for (int i = 0; i < 10; i++)
             {
                 r.BasicRemeshPass();
             }
@@ -174,15 +174,15 @@ public class TriTriIntersect
             {
                 IntrTriangle3Triangle3 tritri = new IntrTriangle3Triangle3(topoTriangle, faceTriangle);
 
-                if (tritri.Test() == true)
+                if (tritri.Test())
                 {
                     tritri.Find();
 
-                    if(tritri.Result == g3.IntersectionResult.Intersects)
+                    if (tritri.Result == g3.IntersectionResult.Intersects)
                     {
                         points.Add(tritri.Points.V0);
 
-                        if(tritri.Type == IntersectionType.Segment)
+                        if (tritri.Type == IntersectionType.Segment)
                         {
                             points.Add(tritri.Points.V1);
 
@@ -202,11 +202,11 @@ public class TriTriIntersect
             }
         }
 
-        if(points.Count == 0)
+        if (points.Count == 0)
         {
             points = null;
         }
-                    
+
         return points;
     }
 

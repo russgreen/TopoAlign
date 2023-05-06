@@ -11,7 +11,7 @@ public static class CheckEntitlement
     //App ID
     public const string appId = @"7412914718855875408";
 
-    private static string _domain = Environment.UserDomainName;
+    private static readonly string _domain = Environment.UserDomainName;
     private static string _userId = string.Empty;
     private static bool _isValid;
 
@@ -135,13 +135,17 @@ public static class CheckEntitlement
         //REST API call for the entitlement API.
 
         //(1) Build request
-        var client = new RestClient();
-        client.BaseUrl = new Uri(baseApiUrl);
+        var client = new RestClient
+        {
+            BaseUrl = new Uri(baseApiUrl)
+        };
 
         //Set resource/end point
-        var request = new RestRequest();
-        request.Resource = "webservices/checkentitlement";
-        request.Method = Method.GET;
+        var request = new RestRequest
+        {
+            Resource = "webservices/checkentitlement",
+            Method = Method.GET
+        };
 
         //Add parameters
         request.AddParameter("userid", userId);

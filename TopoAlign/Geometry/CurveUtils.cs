@@ -1,7 +1,8 @@
 ﻿using Autodesk.Revit.DB;
 using System.Diagnostics;
+using TopoAlign.Helpers;
 
-namespace TopoAlign;
+namespace TopoAlign.Geometry;
 
 
 /// <summary>
@@ -96,7 +97,7 @@ internal class CurveUtils
             var endPoint = curve.GetEndPoint(1);
             if (debug_output)
             {
-                Debug.Print("{0} endPoint {1}", i, Util.PointString(endPoint));
+                Debug.Print("{0} endPoint {1}", i, StringFormatting.PointString(endPoint));
             }
 
             XYZ p;
@@ -254,12 +255,12 @@ internal class CurveUtils
     }
 
     /// <summary>
-/// Return a list of curves which are correctly
-/// ordered and oriented to form a closed loop.
-/// </summary>
-/// <param name="doc">The document.</param>
-/// <param name="boundaries">The list of curve element references which are the boundaries.</param>
-/// <returns>The list of curves.</returns>
+    /// Return a list of curves which are correctly
+    /// ordered and oriented to form a closed loop.
+    /// </summary>
+    /// <param name="doc">The document.</param>
+    /// <param name="boundaries">The list of curve element references which are the boundaries.</param>
+    /// <returns>The list of curves.</returns>
     public static IList<Curve> GetContiguousCurvesFromSelectedCurveElements(Document doc, IList<Reference> boundaries, bool debug_output)
     {
         var curves = new List<Curve>();
@@ -277,10 +278,10 @@ internal class CurveUtils
     }
 
     /// <summary>
-/// Identifies if the curve lies entirely in an XY plane (Z = constant)
-/// </summary>
-/// <param name="curve">The curve.</param>
-/// <returns>True if the curve lies in an XY plane, false otherwise.</returns>
+    /// Identifies if the curve lies entirely in an XY plane (Z = constant)
+    /// </summary>
+    /// <param name="curve">The curve.</param>
+    /// <returns>True if the curve lies in an XY plane, false otherwise.</returns>
     public static bool IsCurveInXYPlane(Curve curve)
     {
         // quick reject - are endpoints at same Z
@@ -296,8 +297,10 @@ internal class CurveUtils
             // Create curve loop from curve and 
             // connecting line to get plane
 
-            var curves = new List<Curve>();
-            curves.Add(curve);
+            var curves = new List<Curve>
+            {
+                curve
+            };
 
             // curves.Add(Line.CreateBound(curve.GetEndPoint(1), curve.GetEndPoint(0)));
 

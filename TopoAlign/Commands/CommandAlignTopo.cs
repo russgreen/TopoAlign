@@ -4,6 +4,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using System.Diagnostics;
 using TopoAlign.Comparers;
+using TopoAlign.Geometry;
 
 namespace TopoAlign.Commands;
 
@@ -318,12 +319,12 @@ public class CommandAlignTopo : IExternalCommand
                 {
                     if (topFace == true)
                     {
-                        if (Util.IsTopFace(f) == true)
+                        if (GeometryCalculation.IsTopFace(f) == true)
                         {
                             m_Faces.Add(f);
                         }
                     }
-                    else if (Util.IsBottomFace(f) == true)
+                    else if (GeometryCalculation.IsBottomFace(f) == true)
                     {
                         m_Faces.Add(f);
                     }
@@ -352,7 +353,7 @@ public class CommandAlignTopo : IExternalCommand
                             {
                                 var pt0 = new XYZ(m_edge.Tessellate()[0].X, m_edge.Tessellate()[0].Y, m_edge.Tessellate()[0].Z);
                                 var pt1 = new XYZ(m_edge.Tessellate()[1].X, m_edge.Tessellate()[1].Y, m_edge.Tessellate()[1].Z);
-                                foreach (XYZ pt in Util.DividePoints(pt0, pt1, len, (double)_divide))
+                                foreach (XYZ pt in GeometryCalculation.DividePoints(pt0, pt1, len, (double)_divide))
                                 {
                                     var p = new XYZ(pt.X, pt.Y, pt.Z - (double)_offset);
                                     points.Add(p);
@@ -400,12 +401,12 @@ public class CommandAlignTopo : IExternalCommand
                     {
                         if (topFace == true)
                         {
-                            if (Util.IsTopFace(f) == true)
+                            if (GeometryCalculation.IsTopFace(f) == true)
                             {
                                 faces.Add(f);
                             }
                         }
-                        else if (Util.IsBottomFace(f) == true)
+                        else if (GeometryCalculation.IsBottomFace(f) == true)
                         {
                             faces.Add(f);
                         }
@@ -430,35 +431,16 @@ public class CommandAlignTopo : IExternalCommand
             }
         }
 
-        // For Each lf As Face In m_LowestFaces
-        foreach (EdgeArray ea in face.EdgeLoops)
+        if(face != null)
         {
-            // For Each ea As EdgeArray In lf.EdgeLoops
-            foreach (Edge m_edge in ea)
+            // For Each lf As Face In m_LowestFaces
+            foreach (EdgeArray ea in face.EdgeLoops)
             {
-                int i = m_edge.Tessellate().Count;
-                if (i > 2)
+                // For Each ea As EdgeArray In lf.EdgeLoops
+                foreach (Edge m_edge in ea)
                 {
-                    foreach (XYZ pt in m_edge.Tessellate())
-                    {
-                        var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)_offset);
-                        points.Add(pt1);
-                    }
-                }
-                else
-                {
-                    double len = m_edge.ApproximateLength;
-                    if (len > (double)_divide)
-                    {
-                        var pt0 = new XYZ(m_edge.Tessellate()[0].X, m_edge.Tessellate()[0].Y, m_edge.Tessellate()[0].Z);
-                        var pt1 = new XYZ(m_edge.Tessellate()[1].X, m_edge.Tessellate()[1].Y, m_edge.Tessellate()[1].Z);
-                        foreach (XYZ pt in Util.DividePoints(pt0, pt1, len, (double)_divide))
-                        {
-                            var p = new XYZ(pt.X, pt.Y, pt.Z - (double)_offset);
-                            points.Add(p);
-                        }
-                    }
-                    else
+                    int i = m_edge.Tessellate().Count;
+                    if (i > 2)
                     {
                         foreach (XYZ pt in m_edge.Tessellate())
                         {
@@ -466,9 +448,32 @@ public class CommandAlignTopo : IExternalCommand
                             points.Add(pt1);
                         }
                     }
+                    else
+                    {
+                        double len = m_edge.ApproximateLength;
+                        if (len > (double)_divide)
+                        {
+                            var pt0 = new XYZ(m_edge.Tessellate()[0].X, m_edge.Tessellate()[0].Y, m_edge.Tessellate()[0].Z);
+                            var pt1 = new XYZ(m_edge.Tessellate()[1].X, m_edge.Tessellate()[1].Y, m_edge.Tessellate()[1].Z);
+                            foreach (XYZ pt in GeometryCalculation.DividePoints(pt0, pt1, len, (double)_divide))
+                            {
+                                var p = new XYZ(pt.X, pt.Y, pt.Z - (double)_offset);
+                                points.Add(p);
+                            }
+                        }
+                        else
+                        {
+                            foreach (XYZ pt in m_edge.Tessellate())
+                            {
+                                var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)_offset);
+                                points.Add(pt1);
+                            }
+                        }
+                    }
                 }
             }
         }
+
 
         return points;
     }
@@ -561,7 +566,7 @@ public class CommandAlignTopo : IExternalCommand
         {
             foreach (XYZ pt in topoPointsInBoundingBox)
             {
-                if (PointInPoly.PointInPolygon(polygon, Util.Flatten(pt)) == true)
+                if (PointInPoly.PointInPolygon(polygon, PointsUtils.Flatten(pt)) == true)
                 {
                     pointsInPolygon.Add(pt);
                 }
@@ -624,7 +629,7 @@ public class CommandAlignTopo : IExternalCommand
 
     private static UVArray GetPolygon(List<List<XYZ>> polygons)
     {
-        var flat_polygons = Util.Flatten(polygons);
+        var flat_polygons = PointsUtils.Flatten(polygons);
         var xyzs = new List<XYZ>();
         foreach (List<XYZ> polygon in polygons)
         {
@@ -664,7 +669,7 @@ public class CommandAlignTopo : IExternalCommand
                     {
                         foreach (Face f in solid.Faces)
                         {
-                            if (Util.IsBottomFace(f) == true)
+                            if (GeometryCalculation.IsBottomFace(f) == true)
                             {
                                 faces.Add(f);
                             }
@@ -677,7 +682,7 @@ public class CommandAlignTopo : IExternalCommand
             {
                 foreach (Face f in solid.Faces)
                 {
-                    if (Util.IsBottomFace(f) == true)
+                    if (GeometryCalculation.IsBottomFace(f) == true)
                     {
                         faces.Add(f);
                     }

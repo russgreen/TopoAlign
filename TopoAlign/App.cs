@@ -12,7 +12,7 @@ class App : IExternalApplication
     public static UIControlledApplication cachedUiCtrApp;
 
     //public static Autodesk.Revit.DB.Document revitDocument;
-    private static string _domain = Environment.UserDomainName;
+    private static readonly string _domain = Environment.UserDomainName;
     private string _tabName = "RG Tools";
     private bool _useAddinsTab = true;
 
@@ -25,8 +25,7 @@ class App : IExternalApplication
         }
 
         cachedUiCtrApp = a;
-
-        var ribbonPanel = CreateRibbonPanel();
+        _ = CreateRibbonPanel();
 
         return Result.Succeeded;
     }
@@ -124,7 +123,7 @@ class App : IExternalApplication
         pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
 
         //set help document
-        ContextualHelp contextHelp = new ContextualHelp(ContextualHelpType.Url, @"C:\ProgramData\Autodesk\ApplicationPlugins\rg tools Topo Align.bundle\Contents\help.html");
+        var contextHelp = new ContextualHelp(ContextualHelpType.Url, @"C:\ProgramData\Autodesk\ApplicationPlugins\rg tools Topo Align.bundle\Contents\help.html");
 
         pbTopoAlign.SetContextualHelp(contextHelp);
         pbFloorAlign.SetContextualHelp(contextHelp);

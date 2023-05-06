@@ -135,11 +135,6 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-    <Folder Include="Geometry\" />
-  </ItemGroup>
-
 	<!-- Build debug manifest at build time -->
 	<Target Name="CreateAddinManifest" AfterTargets="AfterBuild">
 		<ItemGroup>

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TopoAlign.Comparers;
+using TopoAlign.Geometry;
 
 namespace TopoAlign.Commands;
 

@@ -4,6 +4,7 @@ using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using TopoAlign.Comparers;
+using TopoAlign.Geometry;
 
 namespace TopoAlign.Commands;
 
@@ -277,7 +278,7 @@ public class CommndAlignFloor : IExternalCommand
             {
                 foreach (Face face in (geometryObject as Solid).Faces)
                 {
-                    if (Util.IsTopFace(face))
+                    if (GeometryCalculation.IsTopFace(face))
                     {
                         faces.Add(face);
                     }

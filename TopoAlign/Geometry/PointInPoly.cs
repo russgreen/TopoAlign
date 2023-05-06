@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Autodesk.Revit.DB;
 using System.Diagnostics;
-using Autodesk.Revit.DB;
 
-namespace TopoAlign;
+namespace TopoAlign.Geometry;
 
 public class PointInPoly
 {
@@ -33,27 +31,27 @@ public class PointInPoly
         {
             // make quadrant deltas wrap around:
             case 3:
-            {
-                delta = -1;
-                break;
-            }
+                {
+                    delta = -1;
+                    break;
+                }
 
             case -3:
-            {
-                delta = 1;
-                break;
-            }
+                {
+                    delta = 1;
+                    break;
+                }
             // check if went around point cw or ccw:
             case 2:
             case -2:
-            {
-                if (X_intercept(vertex, next_vertex, p.V) > p.U)
                 {
-                    delta = -delta;
-                }
+                    if (X_intercept(vertex, next_vertex, p.V) > p.U)
+                    {
+                        delta = -delta;
+                    }
 
-                break;
-            }
+                    break;
+                }
         }
     }
 
@@ -131,7 +129,7 @@ public class PointInPoly
     }
 
     // Return True if the point is in the polygon.
-    public static bool PointInPolygon1(System.Drawing.PointF[] points, float X, float Y)
+    public static bool PointInPolygon1(PointF[] points, float X, float Y)
     {
         // Get the angle between the point and the
         // first and last vertices.
@@ -253,7 +251,7 @@ public class UVArray
     {
         arrayPoints = new List<UV>();
         foreach (XYZ p in XYZArray)
-            arrayPoints.Add(Util.Flatten(p));
+            arrayPoints.Add(PointsUtils.Flatten(p));
     }
 
     public UV Item(int i)

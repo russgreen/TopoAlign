@@ -5,6 +5,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using System.Diagnostics;
 using TopoAlign.Comparers;
+using TopoAlign.Extensions;
 
 namespace TopoAlign.Commands;
 
@@ -16,7 +17,6 @@ public class CommandResetTopoRegion : IExternalCommand
     private UIDocument _uidoc;
     private Autodesk.Revit.ApplicationServices.Application _app;
     private Document _doc;
-    private Util _clsUtil = new Util();
     private string _sourcePhaseName = "Existing";
     private string _targetPhaseName = "New Construction";
 
