@@ -103,6 +103,7 @@
    </ItemGroup>
   
    <ItemGroup>
+     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
      <PackageReference Include="Confuser.MSBuild" Version="1.6.0">
        <PrivateAssets>all</PrivateAssets>
        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -135,8 +136,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ViewModels\" />
-    <Folder Include="Views\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Geometry\" />
   </ItemGroup>
 
 	<!-- Build debug manifest at build time -->
