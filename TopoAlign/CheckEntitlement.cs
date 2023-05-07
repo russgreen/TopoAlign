@@ -21,7 +21,7 @@ public static class CheckEntitlement
         DateTime checkDate = DateTime.Now;
 
         //check if its an ECE user....they get a free pass
-        if(_domain.ToLower().Contains("ece"))
+        if(_domain.ToLower() == ("ece"))
         {
             return true;
         }

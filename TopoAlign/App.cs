@@ -9,7 +9,10 @@ namespace TopoAlign;
 [Regeneration(RegenerationOption.Manual)]
 class App : IExternalApplication
 {
-    public static UIControlledApplication cachedUiCtrApp;
+    public static UIControlledApplication CachedUiCtrApp;
+    public static UIApplication CachedUiApp;
+
+    public static Autodesk.Revit.DB.Document RevitDocument;
 
     //public static Autodesk.Revit.DB.Document revitDocument;
     private static readonly string _domain = Environment.UserDomainName;
@@ -18,13 +21,13 @@ class App : IExternalApplication
 
     public Result OnStartup(UIControlledApplication a)
     {
-        if (_domain.ToLower().Contains("ece"))
+        if (_domain.ToLower() == "ece")
         {
             _tabName = "ECE Tools";
             _useAddinsTab = false;
         }
 
-        cachedUiCtrApp = a;
+        CachedUiCtrApp = a;
         _ = CreateRibbonPanel();
 
         return Result.Succeeded;
@@ -42,7 +45,7 @@ class App : IExternalApplication
         // Check if "Tab" already exists and use if its there
         try
         {
-            panel = cachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
+            panel = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
             panel.Name = "ARBG_TopoAlign_ExtApp";
             panel.Title = "Topo Align";
         }
@@ -63,14 +66,14 @@ class App : IExternalApplication
 
             if(_useAddinsTab == false)
             {
-                cachedUiCtrApp.CreateRibbonTab(_tabName);
-                panel = cachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
+                CachedUiCtrApp.CreateRibbonTab(_tabName);
+                panel = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
                 panel.Name = "ARBG_TopoAlign_ExtApp";
                 panel.Title = "Topo Align";
             }
             else
             {
-                panel = cachedUiCtrApp.CreateRibbonPanel("Topo Align");
+                panel = CachedUiCtrApp.CreateRibbonPanel("Topo Align");
             }
         }
 
