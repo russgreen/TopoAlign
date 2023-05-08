@@ -64,7 +64,7 @@
             </interactivity:Interaction.Behaviors>
         </TextBox>
 
-        <TextBlock Grid.Row="4" Text="Divide edge distance"/>
+        <TextBlock Grid.Row="4" Text="Vertical offset"/>
         <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,0,5"
                  HorizontalContentAlignment="Right"
                  Text="{Binding Offset}" >
