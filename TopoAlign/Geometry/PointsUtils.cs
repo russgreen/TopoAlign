@@ -692,12 +692,20 @@ public class PointsUtils
     }
 #endif
 
-  /// <summary>
+    /// <summary>
     /// Eliminate the Z coordinate.
     /// </summary>
     public static UV Flatten(XYZ point)
     {
         return new UV(point.X, point.Y);
+    }
+
+    /// <summary>
+    /// Eliminate the Z coordinate.
+    /// </summary>
+    public static XYZ FlattenXYZ(XYZ point)
+    {
+        return new XYZ(point.X, point.Y, 0);
     }
 
     /// <summary>

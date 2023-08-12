@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using System.Diagnostics;
+using TopoAlign.Extensions;
 
 namespace TopoAlign.Geometry;
 
@@ -112,20 +113,47 @@ public class PointInPoly
 
     public static bool PointInPolygon(UVArray polygon, UV point)
     {
-        // Get the angle between the point and the
-        // first and last vertices.
-        int max_point = polygon.Size - 1;
-        float total_angle = GetAngle((float)polygon.Item(max_point).U, (float)polygon.Item(max_point).V, (float)point.U, (float)point.V, (float)polygon.Item(0).U, (float)polygon.Item(0).V);
+        //// Get the angle between the point and the
+        //// first and last vertices.
+        //int max_point = polygon.Size - 1;
+        //float total_angle = GetAngle((float)polygon.Item(max_point).U, (float)polygon.Item(max_point).V, (float)point.U, (float)point.V, (float)polygon.Item(0).U, (float)polygon.Item(0).V);
 
-        // Add the angles from the point
-        // to each other pair of vertices.
-        for (int i = 0, loopTo = max_point - 1; i <= loopTo; i++)
-            total_angle += GetAngle((float)polygon.Item(i).U, (float)polygon.Item(i).V, (float)point.U, (float)point.V, (float)polygon.Item(i + 1).U, (float)polygon.Item(i + 1).V);
+        //// Add the angles from the point
+        //// to each other pair of vertices.
+        //for (int i = 0, loopTo = max_point - 1; i <= loopTo; i++)
+        //    total_angle += GetAngle((float)polygon.Item(i).U, (float)polygon.Item(i).V, (float)point.U, (float)point.V, (float)polygon.Item(i + 1).U, (float)polygon.Item(i + 1).V);
 
-        // The total angle should be 2 * PI or -2 * PI if
-        // the point is in the polygon and close to zero
-        // if the point is outside the polygon.
-        return Math.Abs(total_angle) > 0.000001d;
+        //// The total angle should be 2 * PI or -2 * PI if
+        //// the point is in the polygon and close to zero
+        //// if the point is outside the polygon.
+        //return Math.Abs(total_angle) > 0.000001d;
+
+        bool inside = false;
+
+        // Loop through all edges of the polygon
+        for (int i = 0, j = polygon.Size - 1; i < polygon.Size; j = i++)
+        {
+            // Check if point is on a vertex of the polygon
+            if (polygon.Item(i).IsAlmostEqualTo(point) || polygon.Item(j).IsAlmostEqualTo(point))
+            {
+                return true;
+            }
+
+            // Check if point is on edge of polygon
+            if (point.IsOnLine(polygon.Item(i), polygon.Item(j)))
+            {
+                return true;
+            }
+
+            // Check if point is inside polygon
+            if (((polygon.Item(i).V <= point.V && point.V < polygon.Item(j).V) || (polygon.Item(j).V <= point.V && point.V < polygon.Item(i).V)) &&
+                (point.U < (polygon.Item(j).U - polygon.Item(i).U) * (point.V - polygon.Item(i).V) / (polygon.Item(j).V - polygon.Item(i).V) + polygon.Item(i).U))
+            {
+                inside = !inside;
+            }
+        }
+
+        return inside;
     }
 
     // Return True if the point is in the polygon.
