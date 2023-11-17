@@ -1,15 +1,8 @@
-﻿#region Namespaces
-using Autodesk.Revit.ApplicationServices;
-using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
-//using Microsoft.AppCenter;
-//using Microsoft.AppCenter.Crashes;
-using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Media.Imaging;
-#endregion
 
 namespace TopoAlign;
 
@@ -17,24 +10,27 @@ namespace TopoAlign;
 [Regeneration(RegenerationOption.Manual)]
 class App : IExternalApplication
 {
-    public static UIControlledApplication cachedUiCtrApp;
+    public static UIControlledApplication CachedUiCtrApp;
+    public static UIApplication CachedUiApp;
+
+    public static Autodesk.Revit.DB.Document RevitDocument;
 
     //public static Autodesk.Revit.DB.Document revitDocument;
-    private static string _domain = System.Environment.UserDomainName;
-    private string _tabName = "RG Tools";
+    private static readonly string _domain = Environment.UserDomainName;
+    private string _tabName = "Topo Align";
     private bool _useAddinsTab = true;
 
     public Result OnStartup(UIControlledApplication a)
     {
-        if (_domain.ToLower().Contains("ece"))
+        if (_domain.ToLower() == "ece")
         {
             _tabName = "ECE Tools";
             _useAddinsTab = false;
         }
 
-        cachedUiCtrApp = a;
+        CachedUiCtrApp = a;
 
-        var ribbonPanel = CreateRibbonPanel();
+        _ = CreateRibbonPanel();
 
         return Result.Succeeded;
     }
@@ -51,88 +47,88 @@ class App : IExternalApplication
         // Check if "Tab" already exists and use if its there
         try
         {
-            panel = cachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
+            panel = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
             panel.Name = "ARBG_TopoAlign_ExtApp";
             panel.Title = "Topo Align";
         }
         catch
         {
-            var pluginPath = @"C:\ProgramData\Autodesk\ApplicationPlugins";
-            if (System.IO.Directory.Exists(pluginPath) == true)
-            {
-                foreach (var folder in System.IO.Directory.GetDirectories(pluginPath))
-                {
-                    if(folder.ToLower().Contains("rg") == true & folder.ToLower().Contains("rg tools topo align") == false)
-                    {
-                        _useAddinsTab = false;
-                        break;
-                    }                    
-                }
-            }
+            //var pluginPath = @"C:\ProgramData\Autodesk\ApplicationPlugins";
+            //if (System.IO.Directory.Exists(pluginPath))
+            //{
+            //    foreach (var folder in System.IO.Directory.GetDirectories(pluginPath))
+            //    {
+            //        if(folder.ToLower().Contains("rg") & folder.ToLower().Contains("rg tools topo align") == false)
+            //        {
+            //            _useAddinsTab = false;
+            //            break;
+            //        }                    
+            //    }
+            //}
 
             if(_useAddinsTab == false)
             {
-                cachedUiCtrApp.CreateRibbonTab(_tabName);
-                panel = cachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
+                CachedUiCtrApp.CreateRibbonTab(_tabName);
+                panel = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
                 panel.Name = "ARBG_TopoAlign_ExtApp";
                 panel.Title = "Topo Align";
             }
             else
             {
-                panel = cachedUiCtrApp.CreateRibbonPanel("Topo Align");
+                panel = CachedUiCtrApp.CreateRibbonPanel("Topo Align");
             }
         }
 
         PushButton pbTopoAlign = (PushButton)panel.AddItem(new PushButtonData(
-            nameof(TopoAlign.Commands.CommandAlignTopo), 
-            $"Align to{System.Environment.NewLine}Element",
-            Assembly.GetExecutingAssembly().Location, 
-            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandAlignTopo)}"));
+        nameof(Commands.CommandAlignTopo),
+        $"Align to{Environment.NewLine}Element",
+        Assembly.GetExecutingAssembly().Location,
+        $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandAlignTopo)}"));
         pbTopoAlign.ToolTip = "Adjust topo to edge or floor geometry";
         pbTopoAlign.LargeImage = PngImageSource("TopoAlign.Images.TopoAlign32.png");
 
         PushButton pbFloorAlign = (PushButton)panel.AddItem(new PushButtonData(
-            nameof(TopoAlign.Commands.CommndAlignFloor), 
-            $"Align to{System.Environment.NewLine}Topo",
+            nameof(Commands.CommndAlignFloor),
+            $"Align to{Environment.NewLine}Topo",
             Assembly.GetExecutingAssembly().Location,
-            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommndAlignFloor)}"));
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommndAlignFloor)}"));
         pbFloorAlign.ToolTip = "Adjust a floor to follow the topography";
         pbFloorAlign.LargeImage = PngImageSource("TopoAlign.Images.FloorToTopo32.png");
 
         PushButton pbPointsFromLines = (PushButton)panel.AddItem(new PushButtonData(
-            nameof(TopoAlign.Commands.CommandPointsOnSurface), 
-            $"Points from{System.Environment.NewLine}Lines",
+            nameof(Commands.CommandPointsOnSurface),
+            $"Points from{Environment.NewLine}Lines",
             Assembly.GetExecutingAssembly().Location,
-            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandPointsOnSurface)}"));
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandPointsOnSurface)}"));
         pbPointsFromLines.ToolTip = "Add points on the surface along selected model lines. Model lines must be lines and arcs and be placed BELOW the topo surface.";
         pbPointsFromLines.LargeImage = PngImageSource("TopoAlign.Images.PointsFromLines32.png");
 
-        PushButton pbPointsAlongContours  = (PushButton)panel.AddItem(new PushButtonData(
-            nameof(TopoAlign.Commands.CommandPointsAlongContours), 
-            $"Points along{System.Environment.NewLine}Contours",
+        PushButton pbPointsAlongContours = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandPointsAlongContours),
+            $"Points along{Environment.NewLine}Contours",
             Assembly.GetExecutingAssembly().Location,
-            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandPointsAlongContours)}"));
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandPointsAlongContours)}"));
         pbPointsAlongContours.ToolTip = "Add points on surface along selected contour model lines. Model lines can be placed on zero datum BELOW the topo surface and projected up a set distance using an offset value.";
         pbPointsAlongContours.LargeImage = PngImageSource("TopoAlign.Images.PointsFromContours32.png");
 
         PushButton pbPointsAtIntersection = (PushButton)panel.AddItem(new PushButtonData(
-            nameof(TopoAlign.Commands.CommandPointsAtIntersection), 
-            $"Points at{System.Environment.NewLine}Intersection",
+            nameof(Commands.CommandPointsAtIntersection),
+            $"Points at{Environment.NewLine}Intersection",
             Assembly.GetExecutingAssembly().Location,
-            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandPointsAtIntersection)}"));
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandPointsAtIntersection)}"));
         pbPointsAtIntersection.ToolTip = "Add points on the surface at the intersection with a selected face.";
         pbPointsAtIntersection.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
 
-        PushButton pbResetRegion  = (PushButton)panel.AddItem(new PushButtonData(
-            nameof(TopoAlign.Commands.CommandResetTopoRegion), 
-            $"Reset{System.Environment.NewLine}region",
+        PushButton pbResetRegion = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandResetTopoRegion),
+            $"Reset{Environment.NewLine}region",
             Assembly.GetExecutingAssembly().Location,
-            $"{nameof(TopoAlign)}.{nameof(TopoAlign.Commands)}.{nameof(TopoAlign.Commands.CommandResetTopoRegion)}"));
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandResetTopoRegion)}"));
         pbResetRegion.ToolTip = "Copy points from existing topo surface to new topo surface within a region to undo changes made.";
         pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
 
         //set help document
-        ContextualHelp contextHelp = new ContextualHelp(ContextualHelpType.Url, @"C:\ProgramData\Autodesk\ApplicationPlugins\rg tools Topo Align.bundle\Contents\help.html");
+        var contextHelp = new ContextualHelp(ContextualHelpType.Url, @"C:\ProgramData\Autodesk\ApplicationPlugins\rg tools Topo Align.bundle\Contents\help.html");
 
         pbTopoAlign.SetContextualHelp(contextHelp);
         pbFloorAlign.SetContextualHelp(contextHelp);

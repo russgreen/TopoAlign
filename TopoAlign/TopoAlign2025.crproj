@@ -1,0 +1,25 @@
+<project outputDir="D:\Development\Source\Repos\TopoAlign\TopoAlign\bin\x64\Release R25\Confused" baseDir="D:\Development\Source\Repos\TopoAlign\TopoAlign\bin\x64\Release R25" xmlns="http://confuser.codeplex.com">
+  <rule pattern="true">
+    <protection id="anti ildasm" />
+    <protection id="anti tamper" />
+  </rule>
+  <module path="TopoAlign.dll">
+    <rule pattern="namespace('TopoAlign') and match-name('App')">
+      <protection id="rename" action="remove" />
+    </rule>
+    <rule pattern="namespace('TopoAlign') and match-name('CommandAlignTopo')">
+      <protection id="rename" action="remove" />
+    </rule>
+    <rule pattern="namespace('TopoAlign') and match-name('CommandPointsAlongContours')">
+      <protection id="rename" action="remove" />
+    </rule>
+    <rule pattern="namespace('TopoAlign') and match-name('CommandPointsOnSurface')">
+      <protection id="rename" action="remove" />
+    </rule>
+    <rule pattern="namespace('TopoAlign') and match-name('CommandResetTopoRegion')">
+      <protection id="rename" action="remove" />
+    </rule>
+  </module>
+  <probePath>C:\Program Files\Autodesk\Revit 2025</probePath>
+  <probePath>D:\Development\Source\Repos\RevitAPI\2025</probePath>
+</project>

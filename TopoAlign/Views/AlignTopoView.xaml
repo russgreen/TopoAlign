@@ -1,0 +1,93 @@
+﻿<Window x:Class="TopoAlign.Views.AlignTopoView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TopoAlign.Views"
+        xmlns:viewModels="clr-namespace:TopoAlign.ViewModels"
+        xmlns:behaviours="clr-namespace:TopoAlign.Behaviours"   
+        xmlns:interactivity="http://schemas.microsoft.com/xaml/behaviors"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance {x:Type viewModels:AlignTopoViewModel}, IsDesignTimeCreatable=True}"
+        Title="{Binding WindowTitle}"  
+        Visibility="{Binding IsWindowVisible, Mode=TwoWay}"
+        FontSize="12" FontFamily="Segoe UI Light" 
+        WindowStartupLocation="CenterScreen" 
+        Height="320" Width="250" 
+        WindowStyle="ToolWindow" ResizeMode="NoResize">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
+    
+    <Window.DataContext>
+        <viewModels:AlignTopoViewModel />
+    </Window.DataContext>
+    
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="130" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="45"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="45"/>
+            <RowDefinition Height="*"/>
+
+        </Grid.RowDefinitions>
+
+        <GroupBox Grid.ColumnSpan="2" Header="Pick method" Margin="0,0,0,5">
+            <StackPanel Orientation="Horizontal">
+                <RadioButton Content="Single element" IsChecked="{Binding SingleElement}" />
+                <RadioButton Content="Edge(s)" Margin="30,0,0,0"
+                             IsChecked="{Binding Edge, Mode=OneWay}"/>
+            </StackPanel>
+        </GroupBox>
+        
+        <TextBlock Grid.Row="1" Text="Units used"/>
+        <ComboBox Grid.Row="2" Grid.ColumnSpan="2" Margin="0,0,0,5"
+                  ItemsSource="{Binding DisplayUnits}"
+                  DisplayMemberPath="Label"
+                  SelectedValue="{Binding SelectedDisplayUnit, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Grid.Row="3" Text="Divide edge distance"/>
+        <TextBox Grid.Row="3" Grid.Column="1" Margin="0,0,0,5"
+                 HorizontalContentAlignment="Right" 
+                 Text="{Binding Divide}" >
+            <interactivity:Interaction.Behaviors>
+                <behaviours:AllowableCharactersTextBoxBehavior  RegularExpression="^[0-9\.\,]?$" MaxLength="20" />
+            </interactivity:Interaction.Behaviors>
+        </TextBox>
+
+        <TextBlock Grid.Row="4" Text="Vertical offset"/>
+        <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,0,5"
+                 HorizontalContentAlignment="Right"
+                 Text="{Binding Offset}" >
+            <interactivity:Interaction.Behaviors>
+                <behaviours:AllowableCharactersTextBoxBehavior  RegularExpression="^[0-9\.\,]?$" MaxLength="20" />
+            </interactivity:Interaction.Behaviors>
+        </TextBox>
+        
+        <CheckBox Grid.Row="5" Grid.ColumnSpan="2" 
+                  Content="Remove inside topo points"
+                  IsChecked="{Binding CleanTopoPoints}"/>
+
+        <GroupBox Grid.Row="6" Grid.ColumnSpan="2" Header="Face to use" Margin="0,0,0,5"
+                  IsEnabled="{Binding SingleElement}">
+            <StackPanel Orientation="Horizontal">
+                <RadioButton Content="Top face" IsChecked="{Binding TopFace}"  />
+                <RadioButton Content="Bottom face" Margin="60,0,0,0"
+                             IsChecked="{Binding BottomFace, Mode=OneWay}"/>
+            </StackPanel>
+        </GroupBox>
+        
+        <Button Grid.Row="7" Grid.ColumnSpan="2" Content="Align Topo"
+                Command="{Binding AlignTopoCommand}" />
+
+    </Grid>
+</Window>

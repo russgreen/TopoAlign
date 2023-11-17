@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConfuserProjects", "Confuse
 		TopoAlign\TopoAlign2022.crproj = TopoAlign\TopoAlign2022.crproj
 		TopoAlign\TopoAlign2023.crproj = TopoAlign\TopoAlign2023.crproj
 		TopoAlign\TopoAlign2024.crproj = TopoAlign\TopoAlign2024.crproj
+		TopoAlign\TopoAlign2025.crproj = TopoAlign\TopoAlign2025.crproj
 	EndProjectSection
 EndProject
 Global
@@ -29,12 +30,14 @@ Global
 		Debug 2022|x64 = Debug 2022|x64
 		Debug 2023|x64 = Debug 2023|x64
 		Debug 2024|x64 = Debug 2024|x64
+		Debug 2025|x64 = Debug 2025|x64
 		Release 2019|x64 = Release 2019|x64
 		Release 2020|x64 = Release 2020|x64
 		Release 2021|x64 = Release 2021|x64
 		Release 2022|x64 = Release 2022|x64
 		Release 2023|x64 = Release 2023|x64
 		Release 2024|x64 = Release 2024|x64
+		Release 2025|x64 = Release 2025|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Debug 2019|x64.ActiveCfg = Debug R19|x64
@@ -49,6 +52,8 @@ Global
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Debug 2023|x64.Build.0 = Debug R23|x64
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Debug 2024|x64.ActiveCfg = Debug R24|x64
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Debug 2024|x64.Build.0 = Debug R24|x64
+		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Debug 2025|x64.ActiveCfg = Debug R25|x64
+		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Debug 2025|x64.Build.0 = Debug R25|x64
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Release 2019|x64.ActiveCfg = Release R19|x64
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Release 2019|x64.Build.0 = Release R19|x64
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Release 2020|x64.ActiveCfg = Release R20|x64
@@ -61,6 +66,8 @@ Global
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Release 2023|x64.Build.0 = Release R23|x64
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Release 2024|x64.ActiveCfg = Release R24|x64
 		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Release 2024|x64.Build.0 = Release R24|x64
+		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Release 2025|x64.ActiveCfg = Release R25|x64
+		{9AFE0E41-EAE2-43AC-8D6E-766E53416335}.Release 2025|x64.Build.0 = Release R25|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

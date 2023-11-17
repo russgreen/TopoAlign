@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Autodesk.Revit.DB;
 
-namespace TopoAlign;
+namespace TopoAlign.Geometry;
 
 /// <summary>
 /// A bounding box for a collection of XYZ instances.
@@ -15,7 +15,7 @@ public class JtBoundingBoxXyz
     /// Array of six doubles, first three for
     /// minimum, last three for maximum values.
     /// </summary>
-    private double[] _a;
+    private readonly double[] _a;
 
     /// <summary>
     /// Initialise to infinite values.

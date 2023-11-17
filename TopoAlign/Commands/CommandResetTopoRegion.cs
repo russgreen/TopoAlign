@@ -5,6 +5,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using System.Diagnostics;
 using TopoAlign.Comparers;
+using TopoAlign.Extensions;
 
 namespace TopoAlign.Commands;
 
@@ -16,7 +17,6 @@ public class CommandResetTopoRegion : IExternalCommand
     private UIDocument _uidoc;
     private Autodesk.Revit.ApplicationServices.Application _app;
     private Document _doc;
-    private Util _clsUtil = new Util();
     private string _sourcePhaseName = "Existing";
     private string _targetPhaseName = "New Construction";
 
@@ -338,12 +338,10 @@ public class CommandResetTopoRegion : IExternalCommand
                             }
                             Debug.WriteLine($"Points in list after clean {ptsTarget.Count}");
 
-                            topoTarget.GetSlabShapeEditor().ResetSlabShape();
-
-                            foreach (var p in ptsTarget)
-                            {
-                                topoTarget.GetSlabShapeEditor().DrawPoint(p);
-                            }
+                            var editor = topoTarget.GetSlabShapeEditor();
+                            editor.ResetSlabShape();
+                            editor.Enable();
+                            editor.AddPoints(ptsTarget);
 
                             t.Commit();
                         }
@@ -368,10 +366,7 @@ public class CommandResetTopoRegion : IExternalCommand
                             }
                             ptsTarget = ptsTarget.Distinct(comparer).ToList();
 
-                            foreach (var p in ptsTarget)
-                            {
-                                topoTarget.GetSlabShapeEditor().DrawPoint(p);
-                            }
+                            topoTarget.GetSlabShapeEditor().AddPoints(ptsTarget);
 
                             t.Commit();
                         }

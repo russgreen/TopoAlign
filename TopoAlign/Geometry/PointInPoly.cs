@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Autodesk.Revit.DB;
 using System.Diagnostics;
-using Autodesk.Revit.DB;
+using TopoAlign.Extensions;
 
-namespace TopoAlign;
+namespace TopoAlign.Geometry;
 
 public class PointInPoly
 {
@@ -33,27 +32,27 @@ public class PointInPoly
         {
             // make quadrant deltas wrap around:
             case 3:
-            {
-                delta = -1;
-                break;
-            }
+                {
+                    delta = -1;
+                    break;
+                }
 
             case -3:
-            {
-                delta = 1;
-                break;
-            }
+                {
+                    delta = 1;
+                    break;
+                }
             // check if went around point cw or ccw:
             case 2:
             case -2:
-            {
-                if (X_intercept(vertex, next_vertex, p.V) > p.U)
                 {
-                    delta = -delta;
-                }
+                    if (X_intercept(vertex, next_vertex, p.V) > p.U)
+                    {
+                        delta = -delta;
+                    }
 
-                break;
-            }
+                    break;
+                }
         }
     }
 
@@ -114,24 +113,98 @@ public class PointInPoly
 
     public static bool PointInPolygon(UVArray polygon, UV point)
     {
-        // Get the angle between the point and the
-        // first and last vertices.
-        int max_point = polygon.Size - 1;
-        float total_angle = GetAngle((float)polygon.Item(max_point).U, (float)polygon.Item(max_point).V, (float)point.U, (float)point.V, (float)polygon.Item(0).U, (float)polygon.Item(0).V);
+        //// Get the angle between the point and the
+        //// first and last vertices.
+        //int max_point = polygon.Size - 1;
+        //float total_angle = GetAngle((float)polygon.Item(max_point).U, (float)polygon.Item(max_point).V, (float)point.U, (float)point.V, (float)polygon.Item(0).U, (float)polygon.Item(0).V);
 
-        // Add the angles from the point
-        // to each other pair of vertices.
-        for (int i = 0, loopTo = max_point - 1; i <= loopTo; i++)
-            total_angle += GetAngle((float)polygon.Item(i).U, (float)polygon.Item(i).V, (float)point.U, (float)point.V, (float)polygon.Item(i + 1).U, (float)polygon.Item(i + 1).V);
+        //// Add the angles from the point
+        //// to each other pair of vertices.
+        //for (int i = 0, loopTo = max_point - 1; i <= loopTo; i++)
+        //    total_angle += GetAngle((float)polygon.Item(i).U, (float)polygon.Item(i).V, (float)point.U, (float)point.V, (float)polygon.Item(i + 1).U, (float)polygon.Item(i + 1).V);
 
-        // The total angle should be 2 * PI or -2 * PI if
-        // the point is in the polygon and close to zero
-        // if the point is outside the polygon.
-        return Math.Abs(total_angle) > 0.000001d;
+        //// The total angle should be 2 * PI or -2 * PI if
+        //// the point is in the polygon and close to zero
+        //// if the point is outside the polygon.
+        //return Math.Abs(total_angle) > 0.000001d;
+
+        bool inside = false;
+
+        // Loop through all edges of the polygon
+        for (int i = 0, j = polygon.Size - 1; i < polygon.Size; j = i++)
+        {
+            // Check if point is on a vertex of the polygon
+            if (polygon.Item(i).IsAlmostEqualTo(point) || polygon.Item(j).IsAlmostEqualTo(point))
+            {
+                return true;
+            }
+
+            // Check if point is on edge of polygon
+            if (point.IsOnLine(polygon.Item(i), polygon.Item(j)))
+            {
+                return true;
+            }
+
+            // Check if point is inside polygon
+            if (((polygon.Item(i).V <= point.V && point.V < polygon.Item(j).V) || (polygon.Item(j).V <= point.V && point.V < polygon.Item(i).V)) &&
+                (point.U < (polygon.Item(j).U - polygon.Item(i).U) * (point.V - polygon.Item(i).V) / (polygon.Item(j).V - polygon.Item(i).V) + polygon.Item(i).U))
+            {
+                inside = !inside;
+            }
+        }
+
+        return inside;
+    }
+
+    public static bool PointInPolygon(int[][] poly, int npoints, int xt, int yt)
+    {
+        int xnew, ynew;
+        int xold, yold;
+        int x1, y1;
+        int x2, y2;
+        int i;
+        bool inside = false;
+
+        if (npoints < 3)
+        {
+            return false;
+        }
+
+        xold = poly[npoints - 1][0];
+        yold = poly[npoints - 1][1];
+
+        for (i = 0; i < npoints; i++)
+        {
+            xnew = poly[i][0];
+            ynew = poly[i][1];
+            if (xnew > xold)
+            {
+                x1 = xold;
+                x2 = xnew;
+                y1 = yold;
+                y2 = ynew;
+            }
+            else
+            {
+                x1 = xnew;
+                x2 = xold;
+                y1 = ynew;
+                y2 = yold;
+            }
+
+            if ((xnew < xt) == (xt <= xold) && ((long)yt - (long)y1) * (long)(x2 - x1) < ((long)y2 - (long)y1) * (long)(xt - x1))
+            {
+                inside = !inside;
+            }
+
+            xold = xnew;
+            yold = ynew;
+        }
+        return inside;
     }
 
     // Return True if the point is in the polygon.
-    public static bool PointInPolygon1(System.Drawing.PointF[] points, float X, float Y)
+    public static bool PointInPolygon1(PointF[] points, float X, float Y)
     {
         // Get the angle between the point and the
         // first and last vertices.
@@ -152,6 +225,8 @@ public class PointInPoly
         // if the point is outside the polygon.
         return Math.Abs(total_angle) > 0.0000001d;
     }
+
+
 
     // Return the angle ABC.
     // Return a value between PI and -PI.
@@ -253,7 +328,7 @@ public class UVArray
     {
         arrayPoints = new List<UV>();
         foreach (XYZ p in XYZArray)
-            arrayPoints.Add(Util.Flatten(p));
+            arrayPoints.Add(PointsUtils.Flatten(p));
     }
 
     public UV Item(int i)

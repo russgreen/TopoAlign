@@ -3,6 +3,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using TopoAlign.Comparers;
+using TopoAlign.Geometry;
 
 namespace TopoAlign.Commands;
 
@@ -162,10 +163,7 @@ public class CommandPointsAtIntersection : IExternalCommand
                 {
                     t.Start();
 
-                    foreach (var point in uniquePoints)
-                    {
-                        _topoSolid.GetSlabShapeEditor().DrawPoint(point);
-                    }
+                    _topoSolid.GetSlabShapeEditor().AddPoints(uniquePoints);
 
                     t.Commit();
                 }

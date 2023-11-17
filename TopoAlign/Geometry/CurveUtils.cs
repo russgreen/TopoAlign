@@ -1,21 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Autodesk.Revit.DB;
 using System.Diagnostics;
-using Autodesk.Revit.DB;
+using TopoAlign.Helpers;
 
-namespace TopoAlign;
-
-sealed class CurveGetEnpointExtension
-{
-    private CurveGetEnpointExtension()
-    {
-    }
-
-    public static XYZ GetEndPoint(Curve curve, int i)
-    {
-        return curve.GetEndPoint(i);
-    }
-}
+namespace TopoAlign.Geometry;
 
 
 /// <summary>
@@ -23,39 +10,32 @@ sealed class CurveGetEnpointExtension
 /// orientation of curves to form a contiguous
 /// closed loop.
 /// </summary>
-class CurveUtils
+internal class CurveUtils
 {
     private const double _inch = 1.0d / 12.0d;
     private const double _sixteenth = _inch / 16.0d;
 
-    public enum FailureCondition
-    {
-        Success,
-        CurvesNotContigous,
-        CurveLoopAboveTarget,
-        NoIntersection
-    }
 
     /// <summary>
-/// Predicate to report whether the given curve
-/// type is supported by this utility class.
-/// </summary>
-/// <param name="curve">The curve.</param>
-/// <returns>True if the curve type is supported,
-/// false otherwise.</returns>
+    /// Predicate to report whether the given curve
+    /// type is supported by this utility class.
+    /// </summary>
+    /// <param name="curve">The curve.</param>
+    /// <returns>True if the curve type is supported,
+    /// false otherwise.</returns>
     public static bool IsSupported(Curve curve)
     {
         return curve is Line || curve is Arc;
     }
 
     /// <summary>
-/// Create a new curve with the same
-/// geometry in the reverse direction.
-/// </summary>
-/// <param name="orig">The original curve.</param>
-/// <returns>The reversed curve.</returns>
-/// <throws cref="NotImplementedException">If the
-/// curve type is not supported by this utility.</throws>
+    /// Create a new curve with the same
+    /// geometry in the reverse direction.
+    /// </summary>
+    /// <param name="orig">The original curve.</param>
+    /// <returns>The reversed curve.</returns>
+    /// <throws cref="NotImplementedException">If the
+    /// curve type is not supported by this utility.</throws>
     private static Curve CreateReversedCurve(Autodesk.Revit.Creation.Application creapp, Curve orig)
     {
         if (!IsSupported(orig))
@@ -101,9 +81,9 @@ class CurveUtils
     }
 
     /// <summary>
-/// Sort a list of curves to make them correctly
-/// ordered and oriented to form a closed loop.
-/// </summary>
+    /// Sort a list of curves to make them correctly
+    /// ordered and oriented to form a closed loop.
+    /// </summary>
     public static void SortCurvesContiguous(Autodesk.Revit.Creation.Application creapp, IList<Curve> curves, bool debug_output)
     {
         int n = curves.Count;
@@ -117,7 +97,7 @@ class CurveUtils
             var endPoint = curve.GetEndPoint(1);
             if (debug_output)
             {
-                Debug.Print("{0} endPoint {1}", i, Util.PointString(endPoint));
+                Debug.Print("{0} endPoint {1}", i, StringFormatting.PointString(endPoint));
             }
 
             XYZ p;
@@ -275,12 +255,12 @@ class CurveUtils
     }
 
     /// <summary>
-/// Return a list of curves which are correctly
-/// ordered and oriented to form a closed loop.
-/// </summary>
-/// <param name="doc">The document.</param>
-/// <param name="boundaries">The list of curve element references which are the boundaries.</param>
-/// <returns>The list of curves.</returns>
+    /// Return a list of curves which are correctly
+    /// ordered and oriented to form a closed loop.
+    /// </summary>
+    /// <param name="doc">The document.</param>
+    /// <param name="boundaries">The list of curve element references which are the boundaries.</param>
+    /// <returns>The list of curves.</returns>
     public static IList<Curve> GetContiguousCurvesFromSelectedCurveElements(Document doc, IList<Reference> boundaries, bool debug_output)
     {
         var curves = new List<Curve>();
@@ -298,10 +278,10 @@ class CurveUtils
     }
 
     /// <summary>
-/// Identifies if the curve lies entirely in an XY plane (Z = constant)
-/// </summary>
-/// <param name="curve">The curve.</param>
-/// <returns>True if the curve lies in an XY plane, false otherwise.</returns>
+    /// Identifies if the curve lies entirely in an XY plane (Z = constant)
+    /// </summary>
+    /// <param name="curve">The curve.</param>
+    /// <returns>True if the curve lies in an XY plane, false otherwise.</returns>
     public static bool IsCurveInXYPlane(Curve curve)
     {
         // quick reject - are endpoints at same Z
@@ -317,8 +297,10 @@ class CurveUtils
             // Create curve loop from curve and 
             // connecting line to get plane
 
-            var curves = new List<Curve>();
-            curves.Add(curve);
+            var curves = new List<Curve>
+            {
+                curve
+            };
 
             // curves.Add(Line.CreateBound(curve.GetEndPoint(1), curve.GetEndPoint(0)));
 

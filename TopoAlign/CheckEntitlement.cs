@@ -1,26 +1,19 @@
 ﻿using Autodesk.Revit.UI;
 using RestSharp;
-using RestSharp.Serialization.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TopoAlign;
 
 public static class CheckEntitlement
 {
     //Set values specific to the environment
-    public const string baseApiUrl = @"https://apps.autodesk.com"; 
-        
-    //App ID
-    public const string appId = @"7412914718855875408";  
+    public const string baseApiUrl = @"https://apps.autodesk.com";
 
-    private static string _domain = System.Environment.UserDomainName;
+    //App ID
+    public const string appId = @"7412914718855875408";
+
+    private static readonly string _domain = Environment.UserDomainName;
     private static string _userId = string.Empty;
-    private static bool _isValid = false;
+    private static bool _isValid;
 
     public static bool LicenseCheck(Autodesk.Revit.ApplicationServices.Application app)
     {
@@ -28,7 +21,7 @@ public static class CheckEntitlement
         DateTime checkDate = DateTime.Now;
 
         //check if its an ECE user....they get a free pass
-        if(_domain.ToLower().Contains("ece"))
+        if(_domain.ToLower() == ("ece"))
         {
             return true;
         }
@@ -56,12 +49,12 @@ public static class CheckEntitlement
             }
                           
 
-            if (_isValid == true)
+            if (_isValid)
             {
                 // check if we need to re-validate (every 30days)
                 if (DateTime.Now.Subtract(checkDate).Days > 30)
                 {
-                    if (CheckLogin( app) == true)
+                    if (CheckLogin( app))
                     {
                         // record in the details in the registry
                         key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
@@ -74,7 +67,7 @@ public static class CheckEntitlement
                     }
                 }
             }
-            else if (CheckLogin(app) == true)
+            else if (CheckLogin(app))
             {
                 // record in the details in the registry
                 key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
@@ -86,7 +79,7 @@ public static class CheckEntitlement
                 return false;
             }
         }
-        else if (CheckLogin(app) == true)
+        else if (CheckLogin(app))
         {
             // record in the details in the registry
             key.SetValue("UserID", _userId, Microsoft.Win32.RegistryValueKind.String);
@@ -142,13 +135,17 @@ public static class CheckEntitlement
         //REST API call for the entitlement API.
 
         //(1) Build request
-        var client = new RestClient();
-        client.BaseUrl = new System.Uri(baseApiUrl);
+        var client = new RestClient
+        {
+            BaseUrl = new Uri(baseApiUrl)
+        };
 
         //Set resource/end point
-        var request = new RestRequest();
-        request.Resource = "webservices/checkentitlement";
-        request.Method = Method.GET;
+        var request = new RestRequest
+        {
+            Resource = "webservices/checkentitlement",
+            Method = Method.GET
+        };
 
         //Add parameters
         request.AddParameter("userid", userId);

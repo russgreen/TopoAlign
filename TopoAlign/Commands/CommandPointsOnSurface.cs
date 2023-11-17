@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TopoAlign.Comparers;
+using TopoAlign.Geometry;
 
 namespace TopoAlign.Commands;
 
@@ -271,10 +272,7 @@ public class CommandPointsOnSurface : IExternalCommand
             {
                 t.Start();
 
-                foreach (XYZ p in points1)
-                {
-                    _topoSolid.GetSlabShapeEditor().DrawPoint(p);
-                }
+                _topoSolid.GetSlabShapeEditor().AddPoints(points1);
 
                 t.Commit();
             }

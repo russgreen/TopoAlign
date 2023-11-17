@@ -4,6 +4,7 @@ using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using TopoAlign.Comparers;
+using TopoAlign.Geometry;
 
 namespace TopoAlign.Commands;
 
@@ -215,18 +216,22 @@ public class CommndAlignFloor : IExternalCommand
             failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
+#if REVIT2024_OR_GREATER
             foreach (XYZ pt in points)
             {
-
-#if REVIT2024_OR_GREATER
                 //don't add the offset.  We already added it to the sub-division
                 var pt1 = new XYZ(pt.X, pt.Y, pt.Z);
-                _floor.GetSlabShapeEditor().DrawPoint(pt1);
+                _floor.GetSlabShapeEditor().DrawPoint(pt1); 
+             }
+            //_floor.GetSlabShapeEditor().AddPoints(points);
 #else
+            foreach (XYZ pt in points)
+            {
                 var pt1 = new XYZ(pt.X, pt.Y, pt.Z + offset);
                 _floor.SlabShapeEditor.DrawPoint(pt1);                
-#endif
             }
+#endif
+
 
 #if REVIT2024_OR_GREATER
             _doc.Delete(siteSubDivision.Id);
@@ -277,7 +282,7 @@ public class CommndAlignFloor : IExternalCommand
             {
                 foreach (Face face in (geometryObject as Solid).Faces)
                 {
-                    if (Util.IsTopFace(face))
+                    if (GeometryCalculation.IsTopFace(face))
                     {
                         faces.Add(face);
                     }

@@ -1,17 +1,18 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
-//using GeometRi;
 using g3;
 using TopoAlign.Comparers;
 
-namespace TopoAlign;
+namespace TopoAlign.Geometry;
 
 public class PointsUtils
 {
     private static View3D _v3d;
 
 #if REVIT2024_OR_GREATER
+
+
     public static bool PointsAlongLines(UIDocument uidoc, Document doc, Autodesk.Revit.DB.Toposolid topoSolid, double divide, double offset = 0)
     {
         //check the active view is a 3D view
@@ -130,10 +131,12 @@ public class PointsUtils
                 {
                     t.Start();
                                         
-                    foreach (XYZ p in points)
-                    {
-                        topoSolid.GetSlabShapeEditor().DrawPoint(p);
-                    }
+                    //foreach (XYZ p in points)
+                    //{
+                    //    topoSolid.GetSlabShapeEditor().DrawPoint(p);
+                    //}
+
+                    topoSolid.GetSlabShapeEditor().AddPoints(points);
 
                     t.Commit();
                 }
@@ -246,7 +249,7 @@ public class PointsUtils
                 tes.Start(topoSurface.Id);
                 var opt = new Options();
                 opt.ComputeReferences = true;
-                points = PointsUtils.GetPointsFromCurves(curves, divide, offset);
+                points = GetPointsFromCurves(curves, divide, offset);
 
                 if (points.Count == 0)
                 {
@@ -257,7 +260,7 @@ public class PointsUtils
 
                 if (CleanupTopoPoints == true)
                 {
-                    DeleteTopoPointsWithinCurves(curves, doc,topoSurface);
+                    DeleteTopoPointsWithinCurves(curves, doc, topoSurface);
                 }
 
                 // we now have points with correct Z values.
@@ -295,41 +298,41 @@ public class PointsUtils
 
         foreach (GeometryObject geometryObject in geometryElements)
         {
-               Solid solid = geometryObject as Solid;
-                if (solid == null)
+            Solid solid = geometryObject as Solid;
+            if (solid == null)
+            {
+                return points;
+            }
+            else
+            {
+                foreach (Face f in solid.Faces)
                 {
-                    return points;
-                }
-                else
-                {
-                    foreach (Face f in solid.Faces)
+                    if (topFace == true)
                     {
-                        if (topFace == true)
-                        {
-                            if (Util.IsTopFace(f) == true)
-                            {
-                                faces.Add(f);
-                            }
-                        }
-                        else if (Util.IsBottomFace(f) == true)
+                        if (GeometryCalculation.IsTopFace(f) == true)
                         {
                             faces.Add(f);
                         }
                     }
-
-                    foreach (Face f in faces)
+                    else if (GeometryCalculation.IsBottomFace(f) == true)
                     {
-                        if (f is PlanarFace pf)
+                        faces.Add(f);
+                    }
+                }
+
+                foreach (Face f in faces)
+                {
+                    if (f is PlanarFace pf)
+                    {
+                        if (face == null)
+                            face = pf;
+                        if (pf.Origin.Z < face.Origin.Z)
                         {
-                            if (face == null)
-                                face = pf;
-                            if (pf.Origin.Z < face.Origin.Z)
-                            {
-                                face = pf;
-                            }
+                            face = pf;
                         }
                     }
                 }
+            }
 
             //GeometryInstance geometryInstance = geometryObject as GeometryInstance;
             //var geometryInstanceElement = geometryInstance.GetInstanceGeometry();
@@ -395,7 +398,7 @@ public class PointsUtils
                     {
                         var pt0 = new XYZ(m_edge.Tessellate()[0].X, m_edge.Tessellate()[0].Y, m_edge.Tessellate()[0].Z);
                         var pt1 = new XYZ(m_edge.Tessellate()[1].X, m_edge.Tessellate()[1].Y, m_edge.Tessellate()[1].Z);
-                        foreach (XYZ pt in Util.DividePoints(pt0, pt1, len, (double)divide))
+                        foreach (XYZ pt in GeometryCalculation.DividePoints(pt0, pt1, len, (double)divide))
                         {
                             var p = new XYZ(pt.X, pt.Y, pt.Z - (double)offset);
                             points.Add(p);
@@ -439,7 +442,7 @@ public class PointsUtils
                 {
                     var pt0 = new XYZ(curve.Tessellate()[0].X, curve.Tessellate()[0].Y, curve.Tessellate()[0].Z);
                     var pt1 = new XYZ(curve.Tessellate()[1].X, curve.Tessellate()[1].Y, curve.Tessellate()[1].Z);
-                    foreach (XYZ pt in Util.DividePoints(pt0, pt1, len, divide))
+                    foreach (XYZ pt in GeometryCalculation.DividePoints(pt0, pt1, len, divide))
                     {
                         var p = new XYZ(pt.X, pt.Y, pt.Z + offset);
                         points.Add(p);
@@ -458,7 +461,7 @@ public class PointsUtils
 
         return points;
     }
-    
+
     public static List<XYZ> GetPointsFromVector3ds(List<Vector3d> Vector3ds, double offset = 0)
     {
         var points = new List<XYZ>();
@@ -513,7 +516,7 @@ public class PointsUtils
             polygons.Add(polygon);
         }
 
-        var flat_polygons = Util.Flatten(polygons);
+        var flat_polygons = PointsUtils.Flatten(polygons);
         var xyzs = new List<XYZ>();
         foreach (List<XYZ> polygon in polygons)
         {
@@ -564,7 +567,7 @@ public class PointsUtils
             {
                 // If PointInPoly.PolygonContains(poly, Util.Flatten(pt)) = True Then
                 // If PointInPoly.PolygonContains(uvArr, Util.Flatten(pt)) = True Then
-                if (PointInPoly.PointInPolygon(uvArr, Util.Flatten(pt)) == true)
+                if (PointInPoly.PointInPolygon(uvArr, PointsUtils.Flatten(pt)) == true)
                 {
                     points1.Add(pt);
                 }
@@ -586,8 +589,10 @@ public class PointsUtils
                     points.Remove(p);
                 }
 
-                topoSolid.GetSlabShapeEditor().ResetSlabShape();
-
+                var editor = topoSolid.GetSlabShapeEditor();
+                editor.ResetSlabShape();
+                editor.Enable();
+                editor.AddPoints(points);
                 foreach (XYZ p in points)
                 {
                     topoSolid.GetSlabShapeEditor().DrawPoint(p);
@@ -625,7 +630,7 @@ public class PointsUtils
             polygons.Add(polygon);
         }
 
-        var flat_polygons = Util.Flatten(polygons);
+        var flat_polygons = PointsUtils.Flatten(polygons);
         var xyzs = new List<XYZ>();
         foreach (List<XYZ> polygon in polygons)
         {
@@ -642,8 +647,8 @@ public class PointsUtils
         }
 
         // bounding box of curves and topo for elevation
-        var bb = new JtBoundingBoxXyz();
-        bb = JtBoundingBoxXyz.GetBoundingBoxOf(polygons);
+        //var bb = new JtBoundingBoxXyz();
+        var bb = JtBoundingBoxXyz.GetBoundingBoxOf(polygons);
         Autodesk.Revit.DB.View v = null;
         var min = new XYZ(bb.Min.X, bb.Min.Y, topoSurface.get_BoundingBox(v).Min.Z);
         var max = new XYZ(bb.Max.X, bb.Max.Y, topoSurface.get_BoundingBox(v).Max.Z);
@@ -669,7 +674,7 @@ public class PointsUtils
             {
                 // If PointInPoly.PolygonContains(poly, Util.Flatten(pt)) = True Then
                 // If PointInPoly.PolygonContains(uvArr, Util.Flatten(pt)) = True Then
-                if (PointInPoly.PointInPolygon(uvArr, Util.Flatten(pt)) == true)
+                if (PointInPoly.PointInPolygon(uvArr, Flatten(pt)) == true)
                 {
                     points1.Add(pt);
                 }
@@ -691,5 +696,51 @@ public class PointsUtils
     }
 #endif
 
+    /// <summary>
+    /// Eliminate the Z coordinate.
+    /// </summary>
+    public static UV Flatten(XYZ point)
+    {
+        return new UV(point.X, point.Y);
+    }
 
+    /// <summary>
+    /// Eliminate the Z coordinate.
+    /// </summary>
+    public static XYZ FlattenXYZ(XYZ point)
+    {
+        return new XYZ(point.X, point.Y, 0);
+    }
+
+    /// <summary>
+    /// Eliminate the Z coordinate.
+    /// </summary>
+    public static List<UV> Flatten(List<XYZ> polygon)
+    {
+        double z = polygon[0].Z;
+        var a = new List<UV>(polygon.Count);
+        foreach (XYZ p in polygon)
+        {
+            //Debug.Assert(IsEqual(p.Z, z), "expected horizontal polygon");
+            a.Add(Flatten(p));
+        }
+
+        return a;
+    }
+
+    /// <summary>
+    /// Eliminate the Z coordinate.
+    /// </summary>
+    public static List<List<UV>> Flatten(List<List<XYZ>> polygons)
+    {
+        double z = polygons[0][0].Z;
+        var a = new List<List<UV>>(polygons.Count);
+        foreach (List<XYZ> polygon in polygons)
+        {
+            //Debug.Assert(IsEqual(polygon[0].Z, z), "expected horizontal polygons");
+            a.Add(Flatten(polygon));
+        }
+
+        return a;
+    }
 }
