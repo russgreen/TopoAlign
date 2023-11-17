@@ -163,10 +163,7 @@ public class CommandPointsAtIntersection : IExternalCommand
                 {
                     t.Start();
 
-                    foreach (var point in uniquePoints)
-                    {
-                        _topoSolid.GetSlabShapeEditor().DrawPoint(point);
-                    }
+                    _topoSolid.GetSlabShapeEditor().AddPoints(uniquePoints);
 
                     t.Commit();
                 }

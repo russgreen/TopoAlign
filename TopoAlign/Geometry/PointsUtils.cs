@@ -131,10 +131,12 @@ public class PointsUtils
                 {
                     t.Start();
                                         
-                    foreach (XYZ p in points)
-                    {
-                        topoSolid.GetSlabShapeEditor().DrawPoint(p);
-                    }
+                    //foreach (XYZ p in points)
+                    //{
+                    //    topoSolid.GetSlabShapeEditor().DrawPoint(p);
+                    //}
+
+                    topoSolid.GetSlabShapeEditor().AddPoints(points);
 
                     t.Commit();
                 }
@@ -587,8 +589,10 @@ public class PointsUtils
                     points.Remove(p);
                 }
 
-                topoSolid.GetSlabShapeEditor().ResetSlabShape();
-
+                var editor = topoSolid.GetSlabShapeEditor();
+                editor.ResetSlabShape();
+                editor.Enable();
+                editor.AddPoints(points);
                 foreach (XYZ p in points)
                 {
                     topoSolid.GetSlabShapeEditor().DrawPoint(p);

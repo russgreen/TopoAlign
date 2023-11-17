@@ -338,12 +338,10 @@ public class CommandResetTopoRegion : IExternalCommand
                             }
                             Debug.WriteLine($"Points in list after clean {ptsTarget.Count}");
 
-                            topoTarget.GetSlabShapeEditor().ResetSlabShape();
-
-                            foreach (var p in ptsTarget)
-                            {
-                                topoTarget.GetSlabShapeEditor().DrawPoint(p);
-                            }
+                            var editor = topoTarget.GetSlabShapeEditor();
+                            editor.ResetSlabShape();
+                            editor.Enable();
+                            editor.AddPoints(ptsTarget);
 
                             t.Commit();
                         }
@@ -368,10 +366,7 @@ public class CommandResetTopoRegion : IExternalCommand
                             }
                             ptsTarget = ptsTarget.Distinct(comparer).ToList();
 
-                            foreach (var p in ptsTarget)
-                            {
-                                topoTarget.GetSlabShapeEditor().DrawPoint(p);
-                            }
+                            topoTarget.GetSlabShapeEditor().AddPoints(ptsTarget);
 
                             t.Commit();
                         }

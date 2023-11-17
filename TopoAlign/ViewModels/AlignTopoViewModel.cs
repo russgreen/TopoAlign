@@ -218,10 +218,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
                     failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
                     t.SetFailureHandlingOptions(failureHandlingOptions);
 
-                    foreach (var point in uniquePoints)
-                    {
-                        _topoSolid.GetSlabShapeEditor().DrawPoint(point);
-                    }
+                    _topoSolid.GetSlabShapeEditor().AddPoints(uniquePoints);
 
                     t.Commit();
                 }
@@ -517,7 +514,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
         //            return;
         //        }
         //}
-
+                   
 
         var opt = new Options
         {
@@ -611,12 +608,14 @@ internal partial class AlignTopoViewModel : BaseViewModel
                         topoPoints.Remove(p);
                     }
 
-                    _topoSolid.GetSlabShapeEditor().ResetSlabShape();
+                    var editor = _topoSolid.GetSlabShapeEditor();
 
-                    foreach (XYZ p in topoPoints)
-                    {
-                        _topoSolid.GetSlabShapeEditor().DrawPoint(p);
-                    }
+                    editor.ResetSlabShape();
+                    editor.Enable();
+
+                    App.RevitDocument.Regenerate();
+
+                    editor.AddPoints(topoPoints);
 
                     t.Commit();
                 }

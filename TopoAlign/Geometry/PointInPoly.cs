@@ -156,6 +156,53 @@ public class PointInPoly
         return inside;
     }
 
+    public static bool PointInPolygon(int[][] poly, int npoints, int xt, int yt)
+    {
+        int xnew, ynew;
+        int xold, yold;
+        int x1, y1;
+        int x2, y2;
+        int i;
+        bool inside = false;
+
+        if (npoints < 3)
+        {
+            return false;
+        }
+
+        xold = poly[npoints - 1][0];
+        yold = poly[npoints - 1][1];
+
+        for (i = 0; i < npoints; i++)
+        {
+            xnew = poly[i][0];
+            ynew = poly[i][1];
+            if (xnew > xold)
+            {
+                x1 = xold;
+                x2 = xnew;
+                y1 = yold;
+                y2 = ynew;
+            }
+            else
+            {
+                x1 = xnew;
+                x2 = xold;
+                y1 = ynew;
+                y2 = yold;
+            }
+
+            if ((xnew < xt) == (xt <= xold) && ((long)yt - (long)y1) * (long)(x2 - x1) < ((long)y2 - (long)y1) * (long)(xt - x1))
+            {
+                inside = !inside;
+            }
+
+            xold = xnew;
+            yold = ynew;
+        }
+        return inside;
+    }
+
     // Return True if the point is in the polygon.
     public static bool PointInPolygon1(PointF[] points, float X, float Y)
     {
@@ -178,6 +225,8 @@ public class PointInPoly
         // if the point is outside the polygon.
         return Math.Abs(total_angle) > 0.0000001d;
     }
+
+
 
     // Return the angle ABC.
     // Return a value between PI and -PI.
