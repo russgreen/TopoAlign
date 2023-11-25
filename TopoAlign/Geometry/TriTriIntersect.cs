@@ -32,13 +32,13 @@ public class TriTriIntersect
 #else
     public static List<Triangle3d> TrianglesFromTopo(Autodesk.Revit.DB.Architecture.TopographySurface topoSurface)
     {
-        Options op = new Options
+        Options op = new()
         {
             ComputeReferences = true
         };
         var geoObjects = topoSurface.get_Geometry(op).GetEnumerator();
 
-        List<Triangle3d> topoTriangles = new List<Triangle3d>();
+        List<Triangle3d> topoTriangles = new();
 
         while (geoObjects.MoveNext())
         {
@@ -55,11 +55,11 @@ public class TriTriIntersect
                     XYZ T12 = meshTriangle.get_Vertex(1);
                     XYZ T13 = meshTriangle.get_Vertex(2);
 
-                    Vector3d v1 = new Vector3d(T11.X, T11.Y, T11.Z);
-                    Vector3d v2 = new Vector3d(T12.X, T12.Y, T12.Z);
-                    Vector3d v3 = new Vector3d(T13.X, T13.Y, T13.Z);
+                    Vector3d v1 = new(T11.X, T11.Y, T11.Z);
+                    Vector3d v2 = new(T12.X, T12.Y, T12.Z);
+                    Vector3d v3 = new(T13.X, T13.Y, T13.Z);
 
-                    Triangle3d triangle3D = new Triangle3d(v1, v2, v3);
+                    Triangle3d triangle3D = new(v1, v2, v3);
 
 
                     topoTriangles.Add(triangle3D);
@@ -73,7 +73,7 @@ public class TriTriIntersect
 
     public static List<Triangle3d> TrianglesFromGeoObj(Face face)
     {
-        List<Triangle3d> faceTriangles = new List<Triangle3d>();
+        List<Triangle3d> faceTriangles = new();
         Mesh mesh = face.Triangulate();
 
         for (int i = 0; i < mesh.NumTriangles; i++)
@@ -83,11 +83,11 @@ public class TriTriIntersect
             XYZ T12 = meshTriangle.get_Vertex(1);
             XYZ T13 = meshTriangle.get_Vertex(2);
 
-            Vector3d v1 = new Vector3d(T11.X, T11.Y, T11.Z);
-            Vector3d v2 = new Vector3d(T12.X, T12.Y, T12.Z);
-            Vector3d v3 = new Vector3d(T13.X, T13.Y, T13.Z);
+            Vector3d v1 = new(T11.X, T11.Y, T11.Z);
+            Vector3d v2 = new(T12.X, T12.Y, T12.Z);
+            Vector3d v3 = new(T13.X, T13.Y, T13.Z);
 
-            Triangle3d triangle3D = new Triangle3d(v1, v2, v3);
+            Triangle3d triangle3D = new(v1, v2, v3);
 
             faceTriangles.Add(triangle3D);
         }
@@ -136,7 +136,7 @@ public class TriTriIntersect
 
             DMesh3 dMesh = DMesh3Builder.Build(vertices, triangles, normals);
 
-            Remesher r = new Remesher(dMesh);
+            Remesher r = new(dMesh);
             r.SetTargetEdgeLength(5);
             for (int i = 0; i < 10; i++)
             {
@@ -155,7 +155,7 @@ public class TriTriIntersect
                 Vector3d v2 = dMesh.GetVertex(t.b);
                 Vector3d v3 = dMesh.GetVertex(t.c);
 
-                Triangle3d triangle3D = new Triangle3d(v1, v2, v3);
+                Triangle3d triangle3D = new(v1, v2, v3);
 
                 faceTriangles.Add(triangle3D);
             }
@@ -172,7 +172,7 @@ public class TriTriIntersect
         {
             foreach (var faceTriangle in faceTriangles)
             {
-                IntrTriangle3Triangle3 tritri = new IntrTriangle3Triangle3(topoTriangle, faceTriangle);
+                IntrTriangle3Triangle3 tritri = new(topoTriangle, faceTriangle);
 
                 if (tritri.Test())
                 {

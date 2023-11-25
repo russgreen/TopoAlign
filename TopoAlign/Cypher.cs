@@ -11,10 +11,12 @@ public static class Cypher
         var UTF8 = new System.Text.UTF8Encoding();
         var HashProvider = new MD5CryptoServiceProvider();
         var TDESKey = HashProvider.ComputeHash(UTF8.GetBytes(passphrase));
-        var TDESAlgorithm = new TripleDESCryptoServiceProvider();
-        TDESAlgorithm.Key = TDESKey;
-        TDESAlgorithm.Mode = CipherMode.ECB;
-        TDESAlgorithm.Padding = PaddingMode.PKCS7;
+        var TDESAlgorithm = new TripleDESCryptoServiceProvider
+        {
+            Key = TDESKey,
+            Mode = CipherMode.ECB,
+            Padding = PaddingMode.PKCS7
+        };
         var DataToEncrypt = UTF8.GetBytes(Message);
         try
         {
@@ -36,10 +38,12 @@ public static class Cypher
         var UTF8 = new System.Text.UTF8Encoding();
         var HashProvider = new MD5CryptoServiceProvider();
         var TDESKey = HashProvider.ComputeHash(UTF8.GetBytes(passphrase));
-        var TDESAlgorithm = new TripleDESCryptoServiceProvider();
-        TDESAlgorithm.Key = TDESKey;
-        TDESAlgorithm.Mode = CipherMode.ECB;
-        TDESAlgorithm.Padding = PaddingMode.PKCS7;
+        var TDESAlgorithm = new TripleDESCryptoServiceProvider
+        {
+            Key = TDESKey,
+            Mode = CipherMode.ECB,
+            Padding = PaddingMode.PKCS7
+        };
         var DataToDecrypt = Convert.FromBase64String(Message);
         try
         {

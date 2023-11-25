@@ -52,7 +52,7 @@ public class PointsUtils
                 Curve curve = null;
                 ModelLine modelLine = doc.GetElement(r) as ModelLine;
                 ModelCurve modelCurve = doc.GetElement(r) as ModelCurve;
-                if (modelLine is object)
+                if (modelLine is not null)
                 {
                     try
                     {
@@ -63,7 +63,7 @@ public class PointsUtils
                     }
                 }
 
-                if (modelCurve is object)
+                if (modelCurve is not null)
                 {
                     try
                     {
@@ -74,7 +74,7 @@ public class PointsUtils
                     }
                 }
 
-                if (curve is object)
+                if (curve is not null)
                 {
                     curves.Add(curve);
                 }
@@ -189,7 +189,7 @@ public class PointsUtils
                 Curve curve = null;
                 ModelLine modelLine = doc.GetElement(r) as ModelLine;
                 ModelCurve modelCurve = doc.GetElement(r) as ModelCurve;
-                if (modelLine is object)
+                if (modelLine is not null)
                 {
                     try
                     {
@@ -200,7 +200,7 @@ public class PointsUtils
                     }
                 }
 
-                if (modelCurve is object)
+                if (modelCurve is not null)
                 {
                     try
                     {
@@ -211,7 +211,7 @@ public class PointsUtils
                     }
                 }
 
-                if (curve is object)
+                if (curve is not null)
                 {
                     curves.Add(curve);
                 }

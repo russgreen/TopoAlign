@@ -61,7 +61,7 @@ public class CommndAlignFloor : IExternalCommand
         _docUnits = _doc.GetUnits();
         _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
 #endif
-        using (FormDivideLines frm = new FormDivideLines())
+        using (FormDivideLines frm = new())
         {
 
             frm.nudVertOffset.Value = 0;

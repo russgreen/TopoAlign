@@ -156,8 +156,8 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
         GetTopoSurface(topoFilter);
 
-        List<Edge> edges = new List<Edge>();
-        List<Curve> curves = new List<Curve>();
+        List<Edge> edges = new();
+        List<Curve> curves = new();
         GetElementOrEdges(elemFilter, ref edges, ref curves);
 
         IList<XYZ> points = new List<XYZ>();

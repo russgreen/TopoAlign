@@ -94,7 +94,7 @@ internal static class GeometryCalculation
       List<XYZ> pts)
     {
         int n = pts.Count;
-        CurveLoop curveLoop = new CurveLoop();
+        CurveLoop curveLoop = new();
         for (int i = 1; i < n; ++i)
         {
             curveLoop.Append(Line.CreateBound(
@@ -189,13 +189,13 @@ internal static class GeometryCalculation
     public static BoundingBoxXYZ GetBoundingBox(
       CurveLoop curveLoop)
     {
-        List<XYZ> pts = new List<XYZ>();
+        List<XYZ> pts = new();
         foreach (Curve c in curveLoop)
         {
             pts.AddRange(c.Tessellate());
         }
 
-        BoundingBoxXYZ bb = new BoundingBoxXYZ();
+        BoundingBoxXYZ bb = new();
         bb.Clear();
         bb.ExpandToContain(pts);
         return bb;

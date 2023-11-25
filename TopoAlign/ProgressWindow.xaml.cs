@@ -35,7 +35,7 @@ public partial class ProgressWindow : Window, IDisposable
     {
         this.Progress.Value++;
 
-        if (_format is object)
+        if (_format is not null)
         {
             this.ProgressLabel.Text = string.Format(_format, this.Progress.Value);
         }
@@ -50,7 +50,7 @@ public partial class ProgressWindow : Window, IDisposable
         System.Windows.Forms.Application.DoEvents();
     }
 
-    public bool getAbortFlag()
+    public bool GetAbortFlag()
     {
         return _abortFlag;
     }

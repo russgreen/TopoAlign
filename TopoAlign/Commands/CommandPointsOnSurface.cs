@@ -68,7 +68,7 @@ public class CommandPointsOnSurface : IExternalCommand
         _docUnits = _doc.GetUnits();
         _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
 #endif
-        using (FormDivideLines frm = new FormDivideLines())
+        using (FormDivideLines frm = new())
         {
             _divide = Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)cSettings.DivideEdgeDistance, _docDisplayUnits));
 
@@ -169,7 +169,7 @@ public class CommandPointsOnSurface : IExternalCommand
                 Curve curve = null;
                 ModelLine modelLine = _doc.GetElement(r) as ModelLine;
                 ModelCurve modelCurve = _doc.GetElement(r) as ModelCurve;
-                if (modelLine is object)
+                if (modelLine is not null)
                 {
                     try
                     {
@@ -180,7 +180,7 @@ public class CommandPointsOnSurface : IExternalCommand
                     }
                 }
 
-                if (modelCurve is object)
+                if (modelCurve is not null)
                 {
                     try
                     {
@@ -191,7 +191,7 @@ public class CommandPointsOnSurface : IExternalCommand
                     }
                 }
 
-                if (curve is object)
+                if (curve is not null)
                 {
                     curves.Add(curve);
                 }
@@ -227,8 +227,10 @@ public class CommandPointsOnSurface : IExternalCommand
 
 #if REVIT2024_OR_GREATER
 
-            var opt = new Options();
-            opt.ComputeReferences = true;
+            var opt = new Options
+            {
+                ComputeReferences = true
+            };
             points = PointsUtils.GetPointsFromCurves(curves, (double)_divide);
 
             if (points.Count == 0)
