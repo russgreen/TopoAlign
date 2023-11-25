@@ -16,10 +16,10 @@ public class CommandPointsAtIntersection : IExternalCommand
     private Autodesk.Revit.ApplicationServices.Application _app;
     private Document _doc;
     private Selection _sel;
-    private decimal _offset;
+    //private decimal _offset;
     private decimal _divide;
-    private Element _element;
-    private Edge _edge;
+    //private Element _element;
+    //private Edge _edge;
     private Face _face;
     private View3D _v3d;
     private Units _docUnits;
@@ -84,7 +84,7 @@ public class CommandPointsAtIntersection : IExternalCommand
         }
         else
         {
-            TaskDialog.Show("Points at intersection", "You must be in a 3D view", TaskDialogCommonButtons.Ok);
+            Autodesk.Revit.UI.TaskDialog.Show("Points at intersection", "You must be in a 3D view", TaskDialogCommonButtons.Ok);
             return false;
         }
 
@@ -138,7 +138,7 @@ public class CommandPointsAtIntersection : IExternalCommand
 
         if (intersections is null || intersections.Count == 0)
         {
-            TaskDialog.Show("Topo Align", "Unable to get a suitable list of intersections from the faces selected.", TaskDialogCommonButtons.Ok);
+            Autodesk.Revit.UI.TaskDialog.Show("Topo Align", "Unable to get a suitable list of intersections from the faces selected.", TaskDialogCommonButtons.Ok);
             return false;
         }
 
@@ -146,7 +146,7 @@ public class CommandPointsAtIntersection : IExternalCommand
 
         if (points.Count == 0)
         {
-            TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the faces selected.", TaskDialogCommonButtons.Ok);
+            Autodesk.Revit.UI.TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the faces selected.", TaskDialogCommonButtons.Ok);
             return false;
         }
 

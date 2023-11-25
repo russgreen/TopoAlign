@@ -27,6 +27,10 @@
 		<DebugType>none</DebugType>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<LegacyFrameworks>|net47|net471|net48|</LegacyFrameworks>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="$(Configuration.Contains('R19'))">
 		<TargetFramework>net47</TargetFramework>
 		<RevitVersion>2019</RevitVersion>
@@ -64,7 +68,7 @@
 		<DefineConstants>$(DefineConstants);REVIT2019_OR_GREATER;REVIT2020_OR_GREATER;REVIT2021_OR_GREATER;REVIT2022_OR_GREATER;REVIT2023_OR_GREATER;REVIT2024_OR_GREATER</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="$(Configuration.Contains('R25'))">
-		<TargetFramework>net48</TargetFramework>
+		<TargetFramework>net7.0-windows</TargetFramework>
 		<RevitVersion>2025</RevitVersion>
 		<DefineConstants>$(DefineConstants);REVIT2025</DefineConstants>
 		<DefineConstants>$(DefineConstants);REVIT2019_OR_GREATER;REVIT2020_OR_GREATER;REVIT2021_OR_GREATER;REVIT2022_OR_GREATER;REVIT2023_OR_GREATER;REVIT2024_OR_GREATER;REVIT2025_OR_GREATER</DefineConstants>
@@ -128,7 +132,7 @@
 	</PropertyGroup>
 
 
-	<ItemGroup > <!--Condition="$(Configuration.Contains('R25'))"-->
+	<ItemGroup> 
 		<Reference Include="RevitAPI">
 			<HintPath>$(Path_DLL_API)\$(RevitVersion)\RevitAPI.dll</HintPath>
 			<EmbedInteropTypes>false</EmbedInteropTypes>
@@ -141,7 +145,8 @@
 		</Reference>
 	</ItemGroup>
 
-  <ItemGroup>
+	
+  <ItemGroup Condition="$(LegacyFrameworks.Contains('|$(TargetFramework)|'))">
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System.Printing" />

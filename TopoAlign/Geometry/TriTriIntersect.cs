@@ -182,7 +182,7 @@ public class TriTriIntersect
                     {
                         points.Add(tritri.Points.V0);
 
-                        if (tritri.Type == IntersectionType.Segment)
+                        if (tritri.Type == g3.IntersectionType.Segment)
                         {
                             points.Add(tritri.Points.V1);
 

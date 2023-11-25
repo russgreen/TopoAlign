@@ -22,10 +22,10 @@ public class CommandPointsOnSurface : IExternalCommand
     private Autodesk.Revit.ApplicationServices.Application _app;
     private Document _doc;
     private Selection _sel;
-    private decimal _offset;
+    //private decimal _offset;
     private decimal _divide;
-    private Element _element;
-    private Edge _edge;
+    //private Element _element;
+    //private Edge _edge;
     private View3D _v3d;
     private Units _docUnits;
 
@@ -134,7 +134,7 @@ public class CommandPointsOnSurface : IExternalCommand
         }
         else
         {
-            TaskDialog.Show("Points on surface", "You must be in a 3D view", TaskDialogCommonButtons.Ok);
+            Autodesk.Revit.UI.TaskDialog.Show("Points on surface", "You must be in a 3D view", TaskDialogCommonButtons.Ok);
             return false;
         }
 
@@ -209,14 +209,14 @@ public class CommandPointsOnSurface : IExternalCommand
         }
         catch (Exception)
         {
-            TaskDialog.Show("Points on surface", "The lines selected must all be connected", TaskDialogCommonButtons.Ok);
+            Autodesk.Revit.UI.TaskDialog.Show("Points on surface", "The lines selected must all be connected", TaskDialogCommonButtons.Ok);
             return false;
         }
 
         bool CleanupTopoPoints = false;
         if (PointsUtils.IsLoopClosed(curves) == true)
         {
-            if (TaskDialog.Show("Points on surface", "The lines you selected appear to form a closed loop.  Would you like to remove the topo points within that loop?", TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No, TaskDialogResult.Yes) == TaskDialogResult.Yes)
+            if (Autodesk.Revit.UI.TaskDialog.Show("Points on surface", "The lines you selected appear to form a closed loop.  Would you like to remove the topo points within that loop?", TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No, TaskDialogResult.Yes) == TaskDialogResult.Yes)
             {
                 CleanupTopoPoints = true;
             }
@@ -233,7 +233,7 @@ public class CommandPointsOnSurface : IExternalCommand
 
             if (points.Count == 0)
             {
-                TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the lines selected.", TaskDialogCommonButtons.Ok);
+                Autodesk.Revit.UI.TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the lines selected.", TaskDialogCommonButtons.Ok);
                 return false;
             }
 
