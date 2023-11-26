@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
 	  <Configurations>Debug R19;Debug R20;Debug R21;Debug R22;Debug R23;Debug R24;Debug R25</Configurations>
@@ -14,7 +14,8 @@
 	  <UseWPF>true</UseWPF>
 	  <UseWindowsForms>true</UseWindowsForms>
 	  <!--<ImplicitUsings>true</ImplicitUsings>-->
-	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>  
+	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
 	<PropertyGroup Condition="$(Configuration.Contains('Debug'))">
@@ -25,10 +26,6 @@
 	<PropertyGroup Condition="$(Configuration.Contains('Release'))">
 		<Optimize>true</Optimize>
 		<DebugType>none</DebugType>
-	</PropertyGroup>
-
-	<PropertyGroup>
-		<LegacyFrameworks>|net47|net471|net48|</LegacyFrameworks>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="$(Configuration.Contains('R19'))">
@@ -84,16 +81,7 @@
     <ConfuserReplaceOutput>false</ConfuserReplaceOutput>
     <ConfuserProject>$(MSBuildProjectDirectory)\$(MSBuildProjectName)$(RevitVersion).crproj</ConfuserProject>
   </PropertyGroup>
-  
-   <ItemGroup>
-     <Compile Remove="AppCenterHelper.cs" />
-     <Compile Remove="DialogUserConfirmation.cs" />
-     <Compile Remove="DialogUserConfirmation.Designer.cs" />
-   </ItemGroup>
-  
-   <ItemGroup>
-     <EmbeddedResource Remove="DialogUserConfirmation.resx" />
-   </ItemGroup>
+   
   
    <ItemGroup>
      <None Remove="Images\FloorToTopo32.png" />
@@ -114,7 +102,7 @@
    </ItemGroup>
   
    <ItemGroup>
-     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
+     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
      <PackageReference Include="Confuser.MSBuild" Version="1.6.0">
        <PrivateAssets>all</PrivateAssets>
        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -122,37 +110,10 @@
      <PackageReference Include="geometry3Sharp" Version="1.0.324" />
      <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
      <PackageReference Include="RestSharp" Version="106.12.0" />
-	 <!--<PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
-	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />-->
+	 <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" />
+	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" />
    </ItemGroup>
-
-	<PropertyGroup > <!--Condition="$(Configuration.Contains('R25'))"-->
-		<Path_DLL_API>..\..\MyRevitAPI\</Path_DLL_API>
-		<!--<Path_DLL_API>C:\Program Files\Autodesk\</Path_DLL_API>-->
-	</PropertyGroup>
-
-
-	<ItemGroup> 
-		<Reference Include="RevitAPI">
-			<HintPath>$(Path_DLL_API)\$(RevitVersion)\RevitAPI.dll</HintPath>
-			<EmbedInteropTypes>false</EmbedInteropTypes>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="RevitAPIUI">
-			<HintPath>$(Path_DLL_API)\$(RevitVersion)\RevitAPIUI.dll</HintPath>
-			<EmbedInteropTypes>false</EmbedInteropTypes>
-			<Private>false</Private>
-		</Reference>
-	</ItemGroup>
-
 	
-  <ItemGroup Condition="$(LegacyFrameworks.Contains('|$(TargetFramework)|'))">
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="System.Printing" />
-    <Reference Include="WindowsBase" />
-  </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Update="ProgressForm.resx">
       <DependentUpon>ProgressForm.cs</DependentUpon>
@@ -164,10 +125,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="NewFolder\" />
   </ItemGroup>
 
 	<!-- Build debug manifest at build time -->

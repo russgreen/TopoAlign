@@ -17,7 +17,9 @@ public static class CheckEntitlement
 
     public static bool LicenseCheck(Autodesk.Revit.ApplicationServices.Application app)
     {
-
+#if DEBUG
+        return true;
+#endif
         DateTime checkDate = DateTime.Now;
 
         //check if its an ECE user....they get a free pass

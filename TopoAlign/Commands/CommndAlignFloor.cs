@@ -247,7 +247,12 @@ public class CommndAlignFloor : IExternalCommand
             {
                 //don't add the offset.  We already added it to the sub-division
                 var pt1 = new XYZ(pt.X, pt.Y, pt.Z);
-                _floor.GetSlabShapeEditor().AddPoint(pt1);
+
+                var editor = _floor.GetSlabShapeEditor();
+                //editor.ResetSlabShape();
+                editor.Enable();
+                editor.AddPoint(pt1);
+                //_floor.GetSlabShapeEditor().AddPoint(pt1);
             }
             //_floor.GetSlabShapeEditor().AddPoints(points);
 #elif REVIT2024

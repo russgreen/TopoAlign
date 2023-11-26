@@ -547,7 +547,7 @@ public class PointsUtils
         var vts = topoSolid.GetSlabShapeEditor().SlabShapeVertices;
         foreach (SlabShapeVertex shv in vts)
         {
-            XYZ p = new XYZ(shv.Position.X, shv.Position.Y, shv.Position.Z);
+            XYZ p = new(shv.Position.X, shv.Position.Y, shv.Position.Z);
             pts.Add(p);
         }
 
