@@ -18,16 +18,9 @@ class App : IExternalApplication
     //public static Autodesk.Revit.DB.Document revitDocument;
     private static readonly string _domain = Environment.UserDomainName;
     private string _tabName = "Topo Align";
-    private bool _useAddinsTab = true;
 
     public Result OnStartup(UIControlledApplication a)
     {
-        if (_domain.ToLower() == "ece")
-        {
-            _tabName = "ECE Tools";
-            _useAddinsTab = false;
-        }
-
         CachedUiCtrApp = a;
 
         _ = CreateRibbonPanel();
@@ -44,40 +37,10 @@ class App : IExternalApplication
     {
         RibbonPanel panel;
 
-        // Check if "Tab" already exists and use if its there
-        try
-        {
-            panel = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
-            panel.Name = "ARBG_TopoAlign_ExtApp";
-            panel.Title = "Topo Align";
-        }
-        catch
-        {
-            //var pluginPath = @"C:\ProgramData\Autodesk\ApplicationPlugins";
-            //if (System.IO.Directory.Exists(pluginPath))
-            //{
-            //    foreach (var folder in System.IO.Directory.GetDirectories(pluginPath))
-            //    {
-            //        if(folder.ToLower().Contains("rg") & folder.ToLower().Contains("rg tools topo align") == false)
-            //        {
-            //            _useAddinsTab = false;
-            //            break;
-            //        }                    
-            //    }
-            //}
-
-            if(_useAddinsTab == false)
-            {
-                CachedUiCtrApp.CreateRibbonTab(_tabName);
-                panel = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
-                panel.Name = "ARBG_TopoAlign_ExtApp";
-                panel.Title = "Topo Align";
-            }
-            else
-            {
-                panel = CachedUiCtrApp.CreateRibbonPanel("Topo Align");
-            }
-        }
+        CachedUiCtrApp.CreateRibbonTab(_tabName);
+        panel = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
+        panel.Name = "ARBG_TopoAlign_ExtApp";
+        panel.Title = "Topo Align";
 
         PushButton pbTopoAlign = (PushButton)panel.AddItem(new PushButtonData(
         nameof(Commands.CommandAlignTopo),
