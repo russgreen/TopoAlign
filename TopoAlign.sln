@@ -12,15 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConfuserProjects", "ConfuserProjects", "{7971F957-9EC4-449E-A01C-CC103AA67873}"
-	ProjectSection(SolutionItems) = preProject
-		TopoAlign\TopoAlign2019.crproj = TopoAlign\TopoAlign2019.crproj
-		TopoAlign\TopoAlign2020.crproj = TopoAlign\TopoAlign2020.crproj
-		TopoAlign\TopoAlign2021.crproj = TopoAlign\TopoAlign2021.crproj
-		TopoAlign\TopoAlign2022.crproj = TopoAlign\TopoAlign2022.crproj
-		TopoAlign\TopoAlign2023.crproj = TopoAlign\TopoAlign2023.crproj
-		TopoAlign\TopoAlign2024.crproj = TopoAlign\TopoAlign2024.crproj
-		TopoAlign\TopoAlign2025.crproj = TopoAlign\TopoAlign2025.crproj
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
