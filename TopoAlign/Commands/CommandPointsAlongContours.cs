@@ -21,9 +21,9 @@ public class CommandPointsAlongContours : IExternalCommand
     private Selection _sel;
     private decimal _offset;
     private decimal _divide;
-    private Element _element;
-    private Edge _edge;
-    private View3D _v3d;
+    //private Element _element;
+    //private Edge _edge;
+    //private View3D _v3d;
     private Units _docUnits;
 
 #if REVIT2024_OR_GREATER
@@ -53,10 +53,10 @@ public class CommandPointsAlongContours : IExternalCommand
         _sel = _uidoc.Selection;
 
         //check entitlement
-        if (CheckEntitlement.LicenseCheck(_app) == false)
-        {
-            return Result.Cancelled;
-        }
+        //if (CheckEntitlement.LicenseCheck(_app) == false)
+        //{
+        //    return Result.Cancelled;
+        //}
 
 #if REVIT2018 || REVIT2019 || REVIT2020
         _docUnits = _doc.GetUnits();
@@ -65,7 +65,7 @@ public class CommandPointsAlongContours : IExternalCommand
         _docUnits = _doc.GetUnits();
         _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
 #endif
-        using (FormDivideLines frm = new FormDivideLines())
+        using (FormDivideLines frm = new())
         {
             _divide = Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)cSettings.DivideEdgeDistance, _docDisplayUnits));
 

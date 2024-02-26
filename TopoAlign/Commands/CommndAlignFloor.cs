@@ -49,10 +49,10 @@ public class CommndAlignFloor : IExternalCommand
         _sel = _uidoc.Selection;
 
         //check entitlement
-        if (CheckEntitlement.LicenseCheck(_app) == false)
-        {
-            return Result.Cancelled;
-        }
+        //if (CheckEntitlement.LicenseCheck(_app) == false)
+        //{
+        //    return Result.Cancelled;
+        //}
 
 #if REVIT2018 || REVIT2019 || REVIT2020
         _docUnits = _doc.GetUnits();
@@ -61,7 +61,7 @@ public class CommndAlignFloor : IExternalCommand
         _docUnits = _doc.GetUnits();
         _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
 #endif
-        using (FormDivideLines frm = new FormDivideLines())
+        using (FormDivideLines frm = new())
         {
 
             frm.nudVertOffset.Value = 0;
@@ -164,7 +164,33 @@ public class CommndAlignFloor : IExternalCommand
         var geometryElement = _floor.get_Geometry(options);
         IList<CurveLoop> floorBoundaryCurves = GetGeometryOutline(geometryElement);
 
-#if REVIT2024_OR_GREATER
+#if REVIT2025_OR_GREATER
+        //create a sub-region that matches the floor to get all the topo surface points
+        Toposolid siteSubDivision;
+
+        using (var t = new Transaction(_doc, "Make SubRegion"))
+        {
+            t.Start();
+            FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
+            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
+            t.SetFailureHandlingOptions(failureHandlingOptions);
+
+            siteSubDivision = _topoSolid.CreateSubDivision(_doc, floorBoundaryCurves);
+
+            //set sub-divide height
+            if (offset == 0)
+            {
+                offset = 0.001;
+            }
+
+            siteSubDivision.get_Parameter(BuiltInParameter.TOPOSOLID_SUBDIVIDE_HEIGHT)
+                .Set(offset);
+
+            t.Commit();
+        }
+
+        List<XYZ> points = GetPointsFromSubDivision(siteSubDivision);
+#elif REVIT2024
         //create a sub-region that matches the floor to get all the topo surface points
         Toposolid siteSubDivision;
 
@@ -216,7 +242,20 @@ public class CommndAlignFloor : IExternalCommand
             failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
-#if REVIT2024_OR_GREATER
+#if REVIT2025_OR_GREATER                     
+            foreach (XYZ pt in points)
+            {
+                //don't add the offset.  We already added it to the sub-division
+                var pt1 = new XYZ(pt.X, pt.Y, pt.Z);
+
+                var editor = _floor.GetSlabShapeEditor();
+                //editor.ResetSlabShape();
+                editor.Enable();
+                editor.AddPoint(pt1);
+                //_floor.GetSlabShapeEditor().AddPoint(pt1);
+            }
+            //_floor.GetSlabShapeEditor().AddPoints(points);
+#elif REVIT2024
             foreach (XYZ pt in points)
             {
                 //don't add the offset.  We already added it to the sub-division

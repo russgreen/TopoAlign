@@ -51,7 +51,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
     Models.Settings _settings = new();
 
     private Element _element;
-    private Edge _edge;
+    //private Edge _edge;
 
 #if REVIT2024_OR_GREATER
     private Toposolid _topoSolid;
@@ -59,7 +59,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
 #endif
 
-    private Units _docUnits;
+    //private Units _docUnits;
 
 
     public AlignTopoViewModel()
@@ -156,8 +156,8 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
         GetTopoSurface(topoFilter);
 
-        List<Edge> edges = new List<Edge>();
-        List<Curve> curves = new List<Curve>();
+        List<Edge> edges = new();
+        List<Curve> curves = new();
         GetElementOrEdges(elemFilter, ref edges, ref curves);
 
         IList<XYZ> points = new List<XYZ>();
@@ -194,7 +194,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
                 if (points.Count == 0)
                 {
-                    TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the object. Try picking edges", TaskDialogCommonButtons.Ok);
+                    Autodesk.Revit.UI.TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the object. Try picking edges", TaskDialogCommonButtons.Ok);
                     return;
                 }
             }
@@ -245,7 +245,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            TaskDialog.Show("Align topo", ex.Message);
+            Autodesk.Revit.UI.TaskDialog.Show("Align topo", ex.Message);
             return;
         }
     }

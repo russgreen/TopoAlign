@@ -22,10 +22,10 @@ public class CommandPointsOnSurface : IExternalCommand
     private Autodesk.Revit.ApplicationServices.Application _app;
     private Document _doc;
     private Selection _sel;
-    private decimal _offset;
+    //private decimal _offset;
     private decimal _divide;
-    private Element _element;
-    private Edge _edge;
+    //private Element _element;
+    //private Edge _edge;
     private View3D _v3d;
     private Units _docUnits;
 
@@ -56,10 +56,10 @@ public class CommandPointsOnSurface : IExternalCommand
         _sel = _uidoc.Selection;
 
         //check entitlement
-        if (CheckEntitlement.LicenseCheck(_app) == false)
-        {
-            return Result.Cancelled;
-        }
+        //if (CheckEntitlement.LicenseCheck(_app) == false)
+        //{
+        //    return Result.Cancelled;
+        //}
 
 #if REVIT2018 || REVIT2019 || REVIT2020
         _docUnits = _doc.GetUnits();
@@ -68,7 +68,7 @@ public class CommandPointsOnSurface : IExternalCommand
         _docUnits = _doc.GetUnits();
         _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
 #endif
-        using (FormDivideLines frm = new FormDivideLines())
+        using (FormDivideLines frm = new())
         {
             _divide = Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)cSettings.DivideEdgeDistance, _docDisplayUnits));
 
@@ -134,7 +134,7 @@ public class CommandPointsOnSurface : IExternalCommand
         }
         else
         {
-            TaskDialog.Show("Points on surface", "You must be in a 3D view", TaskDialogCommonButtons.Ok);
+            Autodesk.Revit.UI.TaskDialog.Show("Points on surface", "You must be in a 3D view", TaskDialogCommonButtons.Ok);
             return false;
         }
 
@@ -169,7 +169,7 @@ public class CommandPointsOnSurface : IExternalCommand
                 Curve curve = null;
                 ModelLine modelLine = _doc.GetElement(r) as ModelLine;
                 ModelCurve modelCurve = _doc.GetElement(r) as ModelCurve;
-                if (modelLine is object)
+                if (modelLine is not null)
                 {
                     try
                     {
@@ -180,7 +180,7 @@ public class CommandPointsOnSurface : IExternalCommand
                     }
                 }
 
-                if (modelCurve is object)
+                if (modelCurve is not null)
                 {
                     try
                     {
@@ -191,7 +191,7 @@ public class CommandPointsOnSurface : IExternalCommand
                     }
                 }
 
-                if (curve is object)
+                if (curve is not null)
                 {
                     curves.Add(curve);
                 }
@@ -209,14 +209,14 @@ public class CommandPointsOnSurface : IExternalCommand
         }
         catch (Exception)
         {
-            TaskDialog.Show("Points on surface", "The lines selected must all be connected", TaskDialogCommonButtons.Ok);
+            Autodesk.Revit.UI.TaskDialog.Show("Points on surface", "The lines selected must all be connected", TaskDialogCommonButtons.Ok);
             return false;
         }
 
         bool CleanupTopoPoints = false;
         if (PointsUtils.IsLoopClosed(curves) == true)
         {
-            if (TaskDialog.Show("Points on surface", "The lines you selected appear to form a closed loop.  Would you like to remove the topo points within that loop?", TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No, TaskDialogResult.Yes) == TaskDialogResult.Yes)
+            if (Autodesk.Revit.UI.TaskDialog.Show("Points on surface", "The lines you selected appear to form a closed loop.  Would you like to remove the topo points within that loop?", TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No, TaskDialogResult.Yes) == TaskDialogResult.Yes)
             {
                 CleanupTopoPoints = true;
             }
@@ -227,13 +227,15 @@ public class CommandPointsOnSurface : IExternalCommand
 
 #if REVIT2024_OR_GREATER
 
-            var opt = new Options();
-            opt.ComputeReferences = true;
+            var opt = new Options
+            {
+                ComputeReferences = true
+            };
             points = PointsUtils.GetPointsFromCurves(curves, (double)_divide);
 
             if (points.Count == 0)
             {
-                TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the lines selected.", TaskDialogCommonButtons.Ok);
+                Autodesk.Revit.UI.TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the lines selected.", TaskDialogCommonButtons.Ok);
                 return false;
             }
 

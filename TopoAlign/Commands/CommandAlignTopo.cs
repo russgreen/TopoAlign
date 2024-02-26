@@ -13,10 +13,10 @@ public class CommandAlignTopo : IExternalCommand
         App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
 
         //check entitlement
-        if (CheckEntitlement.LicenseCheck(App.CachedUiApp.Application) == false)
-        {
-            return Result.Cancelled;
-        }
+        //if (CheckEntitlement.LicenseCheck(App.CachedUiApp.Application) == false)
+        //{
+        //    return Result.Cancelled;
+        //}
 
         var newView = new Views.AlignTopoView();
         newView.ShowDialog();

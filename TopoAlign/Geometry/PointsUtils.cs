@@ -22,7 +22,7 @@ public class PointsUtils
         }
         else
         {
-            TaskDialog.Show("Points along lines", "You must be in a 3D view", TaskDialogCommonButtons.Ok);
+            Autodesk.Revit.UI.TaskDialog.Show("Points along lines", "You must be in a 3D view", TaskDialogCommonButtons.Ok);
             return false;
         }
 
@@ -52,7 +52,7 @@ public class PointsUtils
                 Curve curve = null;
                 ModelLine modelLine = doc.GetElement(r) as ModelLine;
                 ModelCurve modelCurve = doc.GetElement(r) as ModelCurve;
-                if (modelLine is object)
+                if (modelLine is not null)
                 {
                     try
                     {
@@ -63,7 +63,7 @@ public class PointsUtils
                     }
                 }
 
-                if (modelCurve is object)
+                if (modelCurve is not null)
                 {
                     try
                     {
@@ -74,7 +74,7 @@ public class PointsUtils
                     }
                 }
 
-                if (curve is object)
+                if (curve is not null)
                 {
                     curves.Add(curve);
                 }
@@ -92,14 +92,14 @@ public class PointsUtils
         }
         catch (Exception)
         {
-            TaskDialog.Show("Points along lines", "The lines selected must all be connected. ", TaskDialogCommonButtons.Ok);
+            Autodesk.Revit.UI.TaskDialog.Show("Points along lines", "The lines selected must all be connected. ", TaskDialogCommonButtons.Ok);
             return false;
         }
 
         bool CleanupTopoPoints = false;
         if (IsLoopClosed(curves) == true)
         {
-            if (TaskDialog.Show("Points along lines", "The lines you selected appear to form a closed loop.  Would you like to remove the topo points within that loop?", TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No, TaskDialogResult.Yes) == TaskDialogResult.Yes)
+            if (Autodesk.Revit.UI.TaskDialog.Show("Points along lines", "The lines you selected appear to form a closed loop.  Would you like to remove the topo points within that loop?", TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No, TaskDialogResult.Yes) == TaskDialogResult.Yes)
             {
                 CleanupTopoPoints = true;
             }
@@ -111,7 +111,7 @@ public class PointsUtils
 
                 if (points.Count == 0)
                 {
-                    TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the lines selected.", TaskDialogCommonButtons.Ok);
+                    Autodesk.Revit.UI.TaskDialog.Show("Topo Align", "Unable to get a suitable list of points from the lines selected.", TaskDialogCommonButtons.Ok);
                     return false;
                 }
 
@@ -189,7 +189,7 @@ public class PointsUtils
                 Curve curve = null;
                 ModelLine modelLine = doc.GetElement(r) as ModelLine;
                 ModelCurve modelCurve = doc.GetElement(r) as ModelCurve;
-                if (modelLine is object)
+                if (modelLine is not null)
                 {
                     try
                     {
@@ -200,7 +200,7 @@ public class PointsUtils
                     }
                 }
 
-                if (modelCurve is object)
+                if (modelCurve is not null)
                 {
                     try
                     {
@@ -211,7 +211,7 @@ public class PointsUtils
                     }
                 }
 
-                if (curve is object)
+                if (curve is not null)
                 {
                     curves.Add(curve);
                 }
@@ -547,7 +547,7 @@ public class PointsUtils
         var vts = topoSolid.GetSlabShapeEditor().SlabShapeVertices;
         foreach (SlabShapeVertex shv in vts)
         {
-            XYZ p = new XYZ(shv.Position.X, shv.Position.Y, shv.Position.Z);
+            XYZ p = new(shv.Position.X, shv.Position.Y, shv.Position.Z);
             pts.Add(p);
         }
 
@@ -593,10 +593,10 @@ public class PointsUtils
                 editor.ResetSlabShape();
                 editor.Enable();
                 editor.AddPoints(points);
-                foreach (XYZ p in points)
-                {
-                    topoSolid.GetSlabShapeEditor().DrawPoint(p);
-                }
+                //foreach (XYZ p in points)
+                //{
+                //    topoSolid.GetSlabShapeEditor().DrawPoint(p);
+                //}
 
                 t.Commit();
             }

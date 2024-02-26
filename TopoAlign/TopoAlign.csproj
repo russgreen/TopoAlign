@@ -1,12 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
 	  <Configurations>Debug R19;Debug R20;Debug R21;Debug R22;Debug R23;Debug R24;Debug R25</Configurations>
 	  <Configurations>$(Configurations);Release R19;Release R20;Release R21;Release R22;Release R23;Release R24;Release R25</Configurations>
 	  <Description>Align topo surface to model elements</Description>
 	  <Copyright>Copyright © Russell Green</Copyright>
-	  <Version>2.5.1 </Version>
-	  <Platforms>x64</Platforms>
+	  <Version>2.5.2 </Version>
+	  <PlatformTarget>x64</PlatformTarget>
+	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	  <LangVersion>latest</LangVersion>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <NeutralLanguage>en</NeutralLanguage>
@@ -14,7 +15,9 @@
 	  <UseWPF>true</UseWPF>
 	  <UseWindowsForms>true</UseWindowsForms>
 	  <!--<ImplicitUsings>true</ImplicitUsings>-->
-	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>  
+	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
 	<PropertyGroup Condition="$(Configuration.Contains('Debug'))">
@@ -64,7 +67,7 @@
 		<DefineConstants>$(DefineConstants);REVIT2019_OR_GREATER;REVIT2020_OR_GREATER;REVIT2021_OR_GREATER;REVIT2022_OR_GREATER;REVIT2023_OR_GREATER;REVIT2024_OR_GREATER</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="$(Configuration.Contains('R25'))">
-		<TargetFramework>net48</TargetFramework>
+		<TargetFramework>net8.0-windows</TargetFramework>
 		<RevitVersion>2025</RevitVersion>
 		<DefineConstants>$(DefineConstants);REVIT2025</DefineConstants>
 		<DefineConstants>$(DefineConstants);REVIT2019_OR_GREATER;REVIT2020_OR_GREATER;REVIT2021_OR_GREATER;REVIT2022_OR_GREATER;REVIT2023_OR_GREATER;REVIT2024_OR_GREATER;REVIT2025_OR_GREATER</DefineConstants>
@@ -75,21 +78,12 @@
 		<AssemblyName>TopoAlign</AssemblyName>
 	</PropertyGroup>
    
-  <PropertyGroup Condition="$(Configuration.Contains('Release'))">
+  <!--<PropertyGroup Condition="$(Configuration.Contains('Release'))">
 	<Obfuscate>true</Obfuscate>
     <ConfuserReplaceOutput>false</ConfuserReplaceOutput>
     <ConfuserProject>$(MSBuildProjectDirectory)\$(MSBuildProjectName)$(RevitVersion).crproj</ConfuserProject>
-  </PropertyGroup>
-  
-   <ItemGroup>
-     <Compile Remove="AppCenterHelper.cs" />
-     <Compile Remove="DialogUserConfirmation.cs" />
-     <Compile Remove="DialogUserConfirmation.Designer.cs" />
-   </ItemGroup>
-  
-   <ItemGroup>
-     <EmbeddedResource Remove="DialogUserConfirmation.resx" />
-   </ItemGroup>
+  </PropertyGroup>-->
+   
   
    <ItemGroup>
      <None Remove="Images\FloorToTopo32.png" />
@@ -110,44 +104,33 @@
    </ItemGroup>
   
    <ItemGroup>
-     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
-     <PackageReference Include="Confuser.MSBuild" Version="1.6.0">
+     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
+     <!--<PackageReference Include="Confuser.MSBuild" Version="1.6.0">
        <PrivateAssets>all</PrivateAssets>
        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-     </PackageReference>
+     </PackageReference>-->
      <PackageReference Include="geometry3Sharp" Version="1.0.324" />
      <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
-     <PackageReference Include="RestSharp" Version="106.12.0" />
-	 <!--<PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
-	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />-->
+     <!--<PackageReference Include="RestSharp" Version="106.12.0" />-->
+	 <!--<PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" />
+	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" />-->
    </ItemGroup>
 
-	<PropertyGroup > <!--Condition="$(Configuration.Contains('R25'))"-->
-		<Path_DLL_API>..\..\MyRevitAPI\</Path_DLL_API>
-		<!--<Path_DLL_API>C:\Program Files\Autodesk\</Path_DLL_API>-->
-	</PropertyGroup>
-
-
-	<ItemGroup > <!--Condition="$(Configuration.Contains('R25'))"-->
-		<Reference Include="RevitAPI">
-			<HintPath>$(Path_DLL_API)\$(RevitVersion)\RevitAPI.dll</HintPath>
-			<EmbedInteropTypes>false</EmbedInteropTypes>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="RevitAPIUI">
-			<HintPath>$(Path_DLL_API)\$(RevitVersion)\RevitAPIUI.dll</HintPath>
-			<EmbedInteropTypes>false</EmbedInteropTypes>
-			<Private>false</Private>
-		</Reference>
-	</ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="System.Printing" />
-    <Reference Include="WindowsBase" />
-  </ItemGroup>
-
+	<Choose>
+		<When Condition="$(Configuration.Contains('R25'))">
+			<ItemGroup>
+				<PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2025.0.0-preview0111" />
+				<PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2025.0.0-preview0111" />
+			</ItemGroup>
+		</When>
+		<Otherwise>
+			<ItemGroup>
+				<PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" />
+				<PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*-*" />
+			</ItemGroup>
+		</Otherwise>
+	</Choose>
+	
   <ItemGroup>
     <EmbeddedResource Update="ProgressForm.resx">
       <DependentUpon>ProgressForm.cs</DependentUpon>
@@ -159,10 +142,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="NewFolder\" />
   </ItemGroup>
 
 	<!-- Build debug manifest at build time -->
