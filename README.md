@@ -18,7 +18,7 @@ Pick a topo surface and a floor.  The points on the topo surface will be added t
 
 ## Points from Lines
 
-Draw model lines and arcs below the topo surface and use this tool to project them onto the topo surface as additional topo points. This is useful when grading regions of the site and you don’t want any topo surface manipulation beyond a given point. If the lines are selected from a closed loop you are asked if you want to remove the existing topo points within the plan shape.
+Draw model lines and arcs below the topo surface and use this tool to project them onto the topo surface as additional topo points. This is useful when grading regions of the site and you donâ€™t want any topo surface manipulation beyond a given point. If the lines are selected from a closed loop you are asked if you want to remove the existing topo points within the plan shape.
 
 ## Points along contours
 
@@ -40,7 +40,7 @@ This works in a plan view and will remove internal topo points from an edited to
 5. Choose if the topo should be aligned to the top or bottom face of the element.
 6. Click Align to Element. Click on the topo to be aligned then click on the element or edges.
 
-To have a floor follow topography Align to Topo.  You’ll be prompted to pick a floor and then a topo and it will add the topo points to the floor to make the floor shape edited.
+To have a floor follow topography Align to Topo.  Youâ€™ll be prompted to pick a floor and then a topo and it will add the topo points to the floor to make the floor shape edited.
 
 To use Points from Lines you must place model lines (lines and curves only) and then must be physically located below the topo surface.
 
