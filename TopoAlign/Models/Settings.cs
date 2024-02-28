@@ -1,12 +1,14 @@
-﻿namespace TopoAlign.Models;
+﻿using Autodesk.Revit.DB;
+
+namespace TopoAlign.Models;
 
 public class Settings
 {
     public bool SingleElement { get; set; } = true;
     public bool CleanTopoPoints { get; set; } = true;
     public bool TopFace { get; set; } = true;
-    public decimal DivideEdgeDistance { get; set; } = Convert.ToDecimal(16.4041994750656d); // 5000
-    public decimal VerticalOffset { get; set; } = Convert.ToDecimal(0.164041994750656d); // 50
+    public decimal DivideEdgeDistance { get; set; } = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(5000, UnitTypeId.Millimeters)); // 5000
+    public decimal VerticalOffset { get; set; } = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(50, UnitTypeId.Millimeters)); // 50
 
     public void LoadSettings()
     {               
