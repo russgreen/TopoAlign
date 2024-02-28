@@ -144,6 +144,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Enums\" />
+  </ItemGroup>
+
 	<!-- Build debug manifest at build time -->
 	<Target Name="CreateAddinManifest" AfterTargets="AfterBuild">
 		<ItemGroup>
