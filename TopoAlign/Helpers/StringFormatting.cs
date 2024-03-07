@@ -73,7 +73,14 @@ public class StringFormatting
     public static string MmString(double length)
     {
         //return RealString( FootToMm( length ) ) + " mm";
-        return Math.Round(UnitHandling.FootToMm(length)) + " mm";
+
+#if REVIT2021_OR_GREATER
+        return $"{Math.Round(UnitUtils.ConvertFromInternalUnits(length, UnitTypeId.Millimeters))} mm";
+#else
+        return $"{Math.Round(UnitUtils.ConvertFromInternalUnits(length, DisplayUnitType.DUT_MILLIMETERS))} mm";
+#endif
+
+
     }
 
 #if REVIT2022_OR_GREATER

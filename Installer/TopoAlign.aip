@@ -8,10 +8,10 @@
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
     <ROW Property="Manufacturer" Value="Russell Green"/>
-    <ROW Property="ProductCode" Value="1033:{509D8227-5FA8-4251-873C-E56011AC931B} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{A73668C5-986A-4505-A758-8DCF0D7744DC} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="Topo Align"/>
-    <ROW Property="ProductVersion" Value="2.5.2" Options="32"/>
+    <ROW Property="ProductVersion" Value="2.5.3" Options="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{F04F085F-5478-481E-B50C-946A19EEF10F}"/>
     <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
@@ -423,6 +423,7 @@
     <ROW File="Microsoft.Xaml.Behaviors.dll_6" Component_="Microsoft.Xaml.Behaviors.dll_6" FileName="MICROS~1.DLL|Microsoft.Xaml.Behaviors.dll" Attributes="0" SourcePath="..\Bundles\RG tools Topo Align.bundle\Contents\2025\Microsoft.Xaml.Behaviors.dll" SelfReg="false"/>
     <ROW File="TopoAlign.addin_6" Component_="TopoAlign.addin_6" FileName="TOPOAL~1.ADD|TopoAlign.addin" Attributes="0" SourcePath="..\Bundles\RG tools Topo Align.bundle\Contents\2025\TopoAlign.addin" SelfReg="false"/>
     <ROW File="TopoAlign.dll_6" Component_="TopoAlign.dll_6" FileName="TOPOAL~1.DLL|TopoAlign.dll" Attributes="0" SourcePath="..\Bundles\RG tools Topo Align.bundle\Contents\2025\TopoAlign.dll" SelfReg="false"/>
+    <ROW File="TopoAlign.deps.json" Component_="TopoAlign.addin_6" FileName="TOPOAL~1.JSO|TopoAlign.deps.json" Attributes="0" SourcePath="..\Bundles\RG tools Topo Align.bundle\Contents\2025\TopoAlign.deps.json" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BootstrOptComponent">
     <ROW BootstrOptKey="GlobalOptions" DownloadFolder="[AppDataFolder][|Manufacturer]\[|ProductName]\prerequisites" Options="2"/>
