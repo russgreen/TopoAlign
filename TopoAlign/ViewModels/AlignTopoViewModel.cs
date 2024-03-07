@@ -558,7 +558,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
             var vts = _topoSolid.GetSlabShapeEditor().SlabShapeVertices;
             foreach (SlabShapeVertex shv in vts)
             {
-                XYZ p = new XYZ(shv.Position.X, shv.Position.Y, shv.Position.Z);
+                var p = new XYZ(shv.Position.X, shv.Position.Y, shv.Position.Z);
                 topoPoints.Add(p);
             }
         }

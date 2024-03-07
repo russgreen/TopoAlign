@@ -46,3 +46,9 @@ To use Points from Lines you must place model lines (lines and curves only) and 
 
 The reset region asked for you to pick an existing topo surface in the existing project phase and a new topo surface (usually created as a graded region). You pick a rectangular region in a plan view and topo points within that region are deleted from the new topo surface and new points are copied across from the existing topo surface. This will not reset boundary points.
 
+# Known Limitations
+While you can select a family the add-in attempts to find the topmost or bottommost face to align the topo surface too. Depending on the complexity of the family this can lead to unexpected results. Families that are joined to other families can also generate errors. A pick edge has been included to allow the topo to be aligned to an individual edge within families or elements.
+
+2024.2 is now the minimum supported 2024 version of this build of TopoAlign
+
+You cannot align an element to a toposurface that cross a sub-region or building pad.  
