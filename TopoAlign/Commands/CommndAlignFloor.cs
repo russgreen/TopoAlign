@@ -219,15 +219,34 @@ public class CommndAlignFloor : IExternalCommand
 #else        
         //create a sub-region that matches the floor to get all the topo surface points
         SiteSubRegion siteSubRegion = (SiteSubRegion)null;
-        using (var t = new Transaction(_doc, "Make SubRegion"))
+        try
         {
-            t.Start();
-            FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-            failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
-            t.SetFailureHandlingOptions(failureHandlingOptions);
-            siteSubRegion = SiteSubRegion.Create(_doc, floorBoundaryCurves, _topoSurface.Id);
-            t.Commit();
-        }       
+            using (var t = new Transaction(_doc, "Make SubRegion"))
+            {
+                t.Start();
+                FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
+                failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+                t.SetFailureHandlingOptions(failureHandlingOptions);
+                siteSubRegion = SiteSubRegion.Create(_doc, floorBoundaryCurves, _topoSurface.Id);
+                t.Commit();
+            }    
+        }
+        catch(Exception ex) 
+        { 
+            if(ex.Message.Contains("existing SiteSubRegions"))
+            {
+                var td = new TaskDialog("Error aligning element")
+                {
+                    MainContent = "You cannot align an element that crosses a subregion",
+                    CommonButtons = TaskDialogCommonButtons.Cancel,
+                };
+                td.Show();
+
+            }
+
+            return false; 
+        }
+
 
         //add the points to the floor     
         var comparer = new XyzEqualityComparer(); // (0.01)
