@@ -9,5 +9,7 @@ public partial class AlignTopoView : Window
     public AlignTopoView()
     {
         InitializeComponent();
+
+        var _ = new Microsoft.Xaml.Behaviors.DefaultTriggerAttribute(typeof(Trigger), typeof(Microsoft.Xaml.Behaviors.TriggerBase), null);
     }
 }
