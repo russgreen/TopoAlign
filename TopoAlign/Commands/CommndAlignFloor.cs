@@ -3,6 +3,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using System.Diagnostics;
 using TopoAlign.Comparers;
 using TopoAlign.Geometry;
 
@@ -262,18 +263,29 @@ public class CommndAlignFloor : IExternalCommand
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
 #if REVIT2025_OR_GREATER                     
+            //foreach (XYZ pt in points)
+            //{
+            //    //don't add the offset.  We already added it to the sub-division
+            //    var pt1 = new XYZ(pt.X, pt.Y, pt.Z);
+
+            //    var editor = _floor.GetSlabShapeEditor();
+            //    //editor.ResetSlabShape();
+            //    editor.Enable();
+            //    editor.AddPoint(pt1);
+            //    //_floor.GetSlabShapeEditor().AddPoint(pt1);
+            //}
+
+            //var editor = _floor.GetSlabShapeEditor();
+            //editor.Enable();
+            //editor.AddPoints(points);
+
             foreach (XYZ pt in points)
             {
                 //don't add the offset.  We already added it to the sub-division
                 var pt1 = new XYZ(pt.X, pt.Y, pt.Z);
-
-                var editor = _floor.GetSlabShapeEditor();
-                //editor.ResetSlabShape();
-                editor.Enable();
-                editor.AddPoint(pt1);
-                //_floor.GetSlabShapeEditor().AddPoint(pt1);
+                _floor.GetSlabShapeEditor().DrawPoint(pt1);
             }
-            //_floor.GetSlabShapeEditor().AddPoints(points);
+
 #elif REVIT2024
             foreach (XYZ pt in points)
             {
