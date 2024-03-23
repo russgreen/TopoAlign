@@ -4,7 +4,6 @@
 ![Revit Version](https://img.shields.io/badge/Revit%20Version-2025-blue.svg) ![.NET](https://img.shields.io/badge/.NET-8-blue.svg)
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/russgreen/topoalign) 
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/russgreen/topoalign/total)
 
 Also available from the App Store https://apps.autodesk.com/RVT/en/Detail/Index?id=7412914718855875408&appLang=en&os=Win64
 
