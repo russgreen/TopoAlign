@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TopoAlign.Views"
         xmlns:viewModels="clr-namespace:TopoAlign.ViewModels"
-        xmlns:behaviours="clr-namespace:TopoAlign.Behaviours"   
+        xmlns:behaviours="clr-namespace:TopoAlign.Behaviours" 
         xmlns:interactivity="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance {x:Type viewModels:AlignTopoViewModel}, IsDesignTimeCreatable=True}"
@@ -60,16 +60,17 @@
                  HorizontalContentAlignment="Right" 
                  Text="{Binding Divide}" >
             <interactivity:Interaction.Behaviors>
-                <behaviours:AllowableCharactersTextBoxBehavior  RegularExpression="^[0-9\.\,]?$" MaxLength="20" />
+                <behaviours:AllowableCharactersTextBoxBehavior  RegularExpression="^[0-9]*\.?[0-9]*$" MaxLength="20" />
             </interactivity:Interaction.Behaviors>
         </TextBox>
 
         <TextBlock Grid.Row="4" Text="Vertical offset"/>
         <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,0,5"
                  HorizontalContentAlignment="Right"
-                 Text="{Binding Offset}" >
+                 Text="{Binding Offset, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                 ToolTip="Enter a negative value to offset points above the topo">
             <interactivity:Interaction.Behaviors>
-                <behaviours:AllowableCharactersTextBoxBehavior  RegularExpression="^[0-9\.\,]?$" MaxLength="20" />
+                <behaviours:AllowableCharactersTextBoxBehavior  RegularExpression="^-?[0-9]*[.,]?[0-9]*$" MaxLength="20" />
             </interactivity:Interaction.Behaviors>
         </TextBox>
         
