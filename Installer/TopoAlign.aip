@@ -8,7 +8,7 @@
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
     <ROW Property="Manufacturer" Value="Russell Green"/>
-    <ROW Property="ProductCode" Value="1033:{1D33791B-3EE5-42FE-9DA6-714F5E01E179} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{E41F40CA-98F4-4596-8AAD-4F13C3CB0A76} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="Topo Align"/>
     <ROW Property="ProductVersion" Value="2.5.6" Options="32"/>
@@ -251,7 +251,7 @@
     <ROW File="geometry3Sharp.dll_4" Component_="geometry3Sharp.dll_4" FileName="GEOMET~1.DLL|geometry3Sharp.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R23\geometry3Sharp.dll" SelfReg="false"/>
     <ROW File="TopoAlign.addin_4" Component_="TopoAlign.addin_4" FileName="TOPOAL~1.ADD|TopoAlign.addin" Attributes="0" SourcePath="..\TopoAlign\bin\Release R23\TopoAlign.addin" SelfReg="false"/>
     <ROW File="TopoAlign.dll_4" Component_="TopoAlign.dll_4" FileName="TOPOAL~1.DLL|TopoAlign.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R23\TopoAlign.dll" SelfReg="false"/>
-    <ROW File="PackageContents.xml" Component_="PackageContents.xml" FileName="PACKAG~1.XML|PackageContents.xml" Attributes="0" SourcePath="..\Bundles\RG tools Topo Align.bundle\PackageContents.xml" SelfReg="false"/>
+    <ROW File="PackageContents.xml" Component_="PackageContents.xml" FileName="PACKAG~1.XML|PackageContents.xml" Attributes="0" SourcePath="..\Bundle\RG tools Topo Align.bundle\PackageContents.xml" SelfReg="false"/>
     <ROW File="geometry3Sharp.dll_5" Component_="geometry3Sharp.dll_5" FileName="GEOMET~1.DLL|geometry3Sharp.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R24\geometry3Sharp.dll" SelfReg="false"/>
     <ROW File="TopoAlign.addin_5" Component_="TopoAlign.addin_5" FileName="TOPOAL~1.ADD|TopoAlign.addin" Attributes="0" SourcePath="..\TopoAlign\bin\Release R24\TopoAlign.addin" SelfReg="false"/>
     <ROW File="TopoAlign.dll_5" Component_="TopoAlign.dll_5" FileName="TOPOAL~1.DLL|TopoAlign.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R24\TopoAlign.dll" SelfReg="false"/>

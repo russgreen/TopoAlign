@@ -64,9 +64,11 @@
           "items": {
             "type": "string",
             "enum": [
+              "Bundle",
               "Clean",
               "Compile",
               "Installer",
+              "Publish",
               "Sign"
             ]
           }
@@ -81,9 +83,11 @@
           "items": {
             "type": "string",
             "enum": [
+              "Bundle",
               "Clean",
               "Compile",
               "Installer",
+              "Publish",
               "Sign"
             ]
           }
