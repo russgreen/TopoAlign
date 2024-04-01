@@ -5,11 +5,13 @@ using System.IO;
 using System;
 using Nuke.Common.ProjectModel;
 using System.Linq;
+using Nuke.Common.Git;
 
 partial class Build
 {
     Target Installer => _ => _
     .DependsOn(Sign)
+    .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
     .Executes(() =>
     {
         var aipProjectPath = Path.Combine(RootDirectory, @"Installer\TopoAlign.aip");
