@@ -7,7 +7,7 @@ using System.IO;
 partial class Build
 {
     Target Bundle => _ => _
-    //.DependsOn(Sign)
+    .TriggeredBy(Sign)
     .Executes(() =>
     {
         var bundleDirectory = RootDirectory / "Bundle" / "RG tools Topo Align.bundle";
