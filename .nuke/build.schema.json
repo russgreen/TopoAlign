@@ -68,7 +68,6 @@
               "Clean",
               "Compile",
               "Installer",
-              "Publish",
               "Sign"
             ]
           }
@@ -87,7 +86,6 @@
               "Clean",
               "Compile",
               "Installer",
-              "Publish",
               "Sign"
             ]
           }

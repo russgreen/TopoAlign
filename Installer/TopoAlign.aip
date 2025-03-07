@@ -5,10 +5,10 @@
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
     <ROW Property="Manufacturer" Value="Russell Green"/>
-    <ROW Property="ProductCode" Value="1033:{E41F40CA-98F4-4596-8AAD-4F13C3CB0A76} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{454CC1D0-462C-4765-BB92-7A06FD9E19CA} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="Topo Align"/>
-    <ROW Property="ProductVersion" Value="2.5.6" Options="32"/>
+    <ROW Property="ProductVersion" Value="2.5.7" Options="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{F04F085F-5478-481E-B50C-946A19EEF10F}"/>
     <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
@@ -33,7 +33,6 @@
     <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
     <ROW Directory="__10_Dir" Directory_Parent="Contents_Dir" DefaultDir="2023"/>
     <ROW Directory="__1_Dir" Directory_Parent="Contents_Dir" DefaultDir="2025"/>
-    <ROW Directory="__8_Dir" Directory_Parent="Contents_Dir" DefaultDir="2021"/>
     <ROW Directory="__9_Dir" Directory_Parent="Contents_Dir" DefaultDir="2022"/>
     <ROW Directory="__Dir" Directory_Parent="Contents_Dir" DefaultDir="2024"/>
   </COMPONENT>
@@ -41,61 +40,49 @@
     <ROW Component="APPDIR" ComponentId="{48AC4B83-41C1-45A2-9320-097631C5DBAA}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="ApplicationPlugins" ComponentId="{C4224770-F75B-4BA4-9BAD-93179124BF74}" Directory_="ApplicationPlugins_Dir" Attributes="0"/>
     <ROW Component="CommunityToolkit.Mvvm.dll" ComponentId="{C00D84F2-A66C-49DF-A8D7-776338E1B00F}" Directory_="NewFolder_Dir" Attributes="0" KeyPath="CommunityToolkit.Mvvm.dll"/>
-    <ROW Component="CommunityToolkit.Mvvm.dll_2" ComponentId="{02DF8B23-35C0-4B44-AA61-A8F19D1A6519}" Directory_="__8_Dir" Attributes="0" KeyPath="CommunityToolkit.Mvvm.dll_2"/>
     <ROW Component="CommunityToolkit.Mvvm.dll_3" ComponentId="{35E376C2-E482-478C-8AFC-977F521E8944}" Directory_="__9_Dir" Attributes="0" KeyPath="CommunityToolkit.Mvvm.dll_3"/>
     <ROW Component="CommunityToolkit.Mvvm.dll_4" ComponentId="{FE699285-E40B-4831-B9BA-C0AB66A0850C}" Directory_="__10_Dir" Attributes="0" KeyPath="CommunityToolkit.Mvvm.dll_4"/>
     <ROW Component="CommunityToolkit.Mvvm.dll_5" ComponentId="{9D4ADCCF-BC9A-4837-8448-030B247BA780}" Directory_="__Dir" Attributes="0" KeyPath="CommunityToolkit.Mvvm.dll_5"/>
     <ROW Component="CommunityToolkit.Mvvm.dll_6" ComponentId="{2B7A6F42-4FE9-4085-918C-A94BB2634810}" Directory_="__1_Dir" Attributes="0" KeyPath="CommunityToolkit.Mvvm.dll_6"/>
-    <ROW Component="Microsoft.Bcl.AsyncInterfaces.dll_2" ComponentId="{C7D6BD9C-0A5C-439A-A149-BC11C6F24A30}" Directory_="__8_Dir" Attributes="0" KeyPath="Microsoft.Bcl.AsyncInterfaces.dll_2"/>
     <ROW Component="Microsoft.Bcl.AsyncInterfaces.dll_3" ComponentId="{087B848B-C3BE-44CA-A519-5B54FF891240}" Directory_="__9_Dir" Attributes="0" KeyPath="Microsoft.Bcl.AsyncInterfaces.dll_3"/>
     <ROW Component="Microsoft.Bcl.AsyncInterfaces.dll_4" ComponentId="{836F7582-E67A-4209-9F38-C7AB7658DD5C}" Directory_="__10_Dir" Attributes="0" KeyPath="Microsoft.Bcl.AsyncInterfaces.dll_4"/>
     <ROW Component="Microsoft.Bcl.AsyncInterfaces.dll_5" ComponentId="{48841BEE-F04E-4114-874F-99D3F31B7BF8}" Directory_="__Dir" Attributes="0" KeyPath="Microsoft.Bcl.AsyncInterfaces.dll_5"/>
     <ROW Component="Microsoft.Xaml.Behaviors.dll" ComponentId="{C6F88F11-170D-4F9F-99A2-388BBC662F80}" Directory_="NewFolder_Dir" Attributes="0" KeyPath="Microsoft.Xaml.Behaviors.dll"/>
-    <ROW Component="Microsoft.Xaml.Behaviors.dll_2" ComponentId="{F89A8418-54AC-451F-BF91-A2DC7F8B49C1}" Directory_="__8_Dir" Attributes="0" KeyPath="Microsoft.Xaml.Behaviors.dll_2"/>
     <ROW Component="Microsoft.Xaml.Behaviors.dll_3" ComponentId="{30330649-B584-4E03-96BC-B64D90BCD747}" Directory_="__9_Dir" Attributes="0" KeyPath="Microsoft.Xaml.Behaviors.dll_3"/>
     <ROW Component="Microsoft.Xaml.Behaviors.dll_4" ComponentId="{79B6711A-676B-45F8-81E5-E80EF62B7996}" Directory_="__10_Dir" Attributes="0" KeyPath="Microsoft.Xaml.Behaviors.dll_4"/>
     <ROW Component="Microsoft.Xaml.Behaviors.dll_5" ComponentId="{19A4DAD5-7353-4298-9425-9654C36344F1}" Directory_="__Dir" Attributes="0" KeyPath="Microsoft.Xaml.Behaviors.dll_5"/>
     <ROW Component="Microsoft.Xaml.Behaviors.dll_6" ComponentId="{0A549BD0-04A7-418F-B88D-1A841717E340}" Directory_="__1_Dir" Attributes="0" KeyPath="Microsoft.Xaml.Behaviors.dll_6"/>
     <ROW Component="PackageContents.xml" ComponentId="{B7452EB3-8D38-4276-AF37-C318F50CE234}" Directory_="RGtoolsTopoAlign.bundle_Dir" Attributes="0" KeyPath="PackageContents.xml" Type="0"/>
     <ROW Component="ProductInformation" ComponentId="{0A801FF0-EE12-4064-A813-C0D2975DDD0A}" Directory_="APPDIR" Attributes="260" KeyPath="Version"/>
-    <ROW Component="System.Buffers.dll_2" ComponentId="{CBF32ADD-88D7-4218-AF9F-5BADAE082E61}" Directory_="__8_Dir" Attributes="0" KeyPath="System.Buffers.dll_2"/>
     <ROW Component="System.Buffers.dll_3" ComponentId="{DD79BA18-9ED3-492F-9B3A-FE22C867DEB3}" Directory_="__9_Dir" Attributes="0" KeyPath="System.Buffers.dll_3"/>
     <ROW Component="System.Buffers.dll_4" ComponentId="{91CA2AB1-EF2B-4401-933A-AE021E499E46}" Directory_="__10_Dir" Attributes="0" KeyPath="System.Buffers.dll_4"/>
     <ROW Component="System.Buffers.dll_5" ComponentId="{7B05EA37-D71B-4E61-BE95-6AA194997038}" Directory_="__Dir" Attributes="0" KeyPath="System.Buffers.dll_5"/>
-    <ROW Component="System.ComponentModel.Annotations.dll_2" ComponentId="{090B7D33-3F48-4AEA-AEBC-51457EF43E4F}" Directory_="__8_Dir" Attributes="0" KeyPath="System.ComponentModel.Annotations.dll_2"/>
     <ROW Component="System.ComponentModel.Annotations.dll_3" ComponentId="{49EF46A1-8FF9-45F3-8E71-9FBB07787659}" Directory_="__9_Dir" Attributes="0" KeyPath="System.ComponentModel.Annotations.dll_3"/>
     <ROW Component="System.ComponentModel.Annotations.dll_4" ComponentId="{6BB8F264-D7EA-4BD7-91C8-E5E95D6299D5}" Directory_="__10_Dir" Attributes="0" KeyPath="System.ComponentModel.Annotations.dll_4"/>
     <ROW Component="System.ComponentModel.Annotations.dll_5" ComponentId="{9082DFD2-0802-4784-A8E9-3CFF28A9D314}" Directory_="__Dir" Attributes="0" KeyPath="System.ComponentModel.Annotations.dll_5"/>
-    <ROW Component="System.Memory.dll_2" ComponentId="{AF9A187A-2C99-4E35-BFAB-94D7C3E84648}" Directory_="__8_Dir" Attributes="0" KeyPath="System.Memory.dll_2"/>
     <ROW Component="System.Memory.dll_3" ComponentId="{E3A4BCA8-7553-47D5-B945-72F0DC488C47}" Directory_="__9_Dir" Attributes="0" KeyPath="System.Memory.dll_3"/>
     <ROW Component="System.Memory.dll_4" ComponentId="{97B30FC9-135D-4E32-9374-710BA2DABE74}" Directory_="__10_Dir" Attributes="0" KeyPath="System.Memory.dll_4"/>
     <ROW Component="System.Memory.dll_5" ComponentId="{E3B5C969-77B4-477F-89DC-B660773625C6}" Directory_="__Dir" Attributes="0" KeyPath="System.Memory.dll_5"/>
-    <ROW Component="System.Numerics.Vectors.dll_2" ComponentId="{DBA5A195-7187-433F-B28E-5F3EADB0E305}" Directory_="__8_Dir" Attributes="0" KeyPath="System.Numerics.Vectors.dll_2"/>
     <ROW Component="System.Numerics.Vectors.dll_3" ComponentId="{9B2957F2-E659-465D-8C1F-4C00BCDDA8B7}" Directory_="__9_Dir" Attributes="0" KeyPath="System.Numerics.Vectors.dll_3"/>
     <ROW Component="System.Numerics.Vectors.dll_4" ComponentId="{FB0266AA-E407-4F2E-947E-A942B9FBB5C0}" Directory_="__10_Dir" Attributes="0" KeyPath="System.Numerics.Vectors.dll_4"/>
     <ROW Component="System.Numerics.Vectors.dll_5" ComponentId="{016EE9CF-E125-4D6C-8DA2-F438B8295603}" Directory_="__Dir" Attributes="0" KeyPath="System.Numerics.Vectors.dll_5"/>
-    <ROW Component="System.Runtime.CompilerServices.Unsa_2_fe.dll" ComponentId="{2C7AF92E-D6A5-442F-9C6A-18F50006962A}" Directory_="__8_Dir" Attributes="0" KeyPath="System.Runtime.CompilerServices.Unsa_2_fe.dll"/>
     <ROW Component="System.Runtime.CompilerServices.Unsa_3_fe.dll" ComponentId="{D41F3685-3421-4DE0-8206-7F8D3CCF7167}" Directory_="__9_Dir" Attributes="0" KeyPath="System.Runtime.CompilerServices.Unsa_3_fe.dll"/>
     <ROW Component="System.Runtime.CompilerServices.Unsa_4_fe.dll" ComponentId="{C877DB0B-4643-44A5-B6F5-F6AFC6AE774A}" Directory_="__10_Dir" Attributes="0" KeyPath="System.Runtime.CompilerServices.Unsa_4_fe.dll"/>
     <ROW Component="System.Runtime.CompilerServices.Unsa_5_fe.dll" ComponentId="{EC4BAF70-5513-4C77-8606-29F35E16A25E}" Directory_="__Dir" Attributes="0" KeyPath="System.Runtime.CompilerServices.Unsa_5_fe.dll"/>
-    <ROW Component="System.Threading.Tasks.Extensions.dll_2" ComponentId="{DD851081-06B1-4CA2-AE87-DF431CB5F990}" Directory_="__8_Dir" Attributes="0" KeyPath="System.Threading.Tasks.Extensions.dll_2"/>
     <ROW Component="System.Threading.Tasks.Extensions.dll_3" ComponentId="{9FB769F2-1701-4E0B-B9B2-504D88BC369B}" Directory_="__9_Dir" Attributes="0" KeyPath="System.Threading.Tasks.Extensions.dll_3"/>
     <ROW Component="System.Threading.Tasks.Extensions.dll_4" ComponentId="{9090144B-B47E-4856-98F1-59F8915885D5}" Directory_="__10_Dir" Attributes="0" KeyPath="System.Threading.Tasks.Extensions.dll_4"/>
     <ROW Component="System.Threading.Tasks.Extensions.dll_5" ComponentId="{2450EF73-AF43-4FC5-8870-F62B7652F2EC}" Directory_="__Dir" Attributes="0" KeyPath="System.Threading.Tasks.Extensions.dll_5"/>
     <ROW Component="TopoAlign.addin" ComponentId="{DB3AEEB0-2CA7-4866-B25C-E4C972C29E5C}" Directory_="NewFolder_Dir" Attributes="0" KeyPath="TopoAlign.addin" Type="0"/>
-    <ROW Component="TopoAlign.addin_2" ComponentId="{80E4613A-4A3A-4D3C-BFC1-3B5E0B60A733}" Directory_="__8_Dir" Attributes="0" KeyPath="TopoAlign.addin_2" Type="0"/>
     <ROW Component="TopoAlign.addin_3" ComponentId="{B872092F-97C2-4C5D-AB49-BB230EF112AA}" Directory_="__9_Dir" Attributes="0" KeyPath="TopoAlign.addin_3" Type="0"/>
     <ROW Component="TopoAlign.addin_4" ComponentId="{9E0D1BA2-A50C-4275-A894-862DF3C2085F}" Directory_="__10_Dir" Attributes="0" KeyPath="TopoAlign.addin_4" Type="0"/>
     <ROW Component="TopoAlign.addin_5" ComponentId="{25F23F17-7C77-4976-89D8-66CF440A4FE3}" Directory_="__Dir" Attributes="0" KeyPath="TopoAlign.addin_5" Type="0"/>
     <ROW Component="TopoAlign.addin_6" ComponentId="{D679B099-02E4-408A-A5E8-640FCDBDFAB3}" Directory_="__1_Dir" Attributes="0" KeyPath="TopoAlign.addin_6" Type="0"/>
     <ROW Component="TopoAlign.dll" ComponentId="{03F0D2B7-989A-4E14-A949-837CECE39A1C}" Directory_="NewFolder_Dir" Attributes="256" KeyPath="TopoAlign.dll"/>
-    <ROW Component="TopoAlign.dll_2" ComponentId="{0C3073D7-C1F8-410C-BDEC-68B328DBB003}" Directory_="__8_Dir" Attributes="256" KeyPath="TopoAlign.dll_2"/>
     <ROW Component="TopoAlign.dll_3" ComponentId="{1ADB4904-EF19-43E6-9353-15C52CE9B51E}" Directory_="__9_Dir" Attributes="256" KeyPath="TopoAlign.dll_3"/>
     <ROW Component="TopoAlign.dll_4" ComponentId="{62E77137-EC43-4B22-B3C6-BFE0433085BB}" Directory_="__10_Dir" Attributes="256" KeyPath="TopoAlign.dll_4"/>
     <ROW Component="TopoAlign.dll_5" ComponentId="{75675335-46A9-4CBC-ACE3-78B0D7CDF67E}" Directory_="__Dir" Attributes="256" KeyPath="TopoAlign.dll_5"/>
     <ROW Component="TopoAlign.dll_6" ComponentId="{FA770F78-7800-443F-AE60-8877E0B269DC}" Directory_="__1_Dir" Attributes="256" KeyPath="TopoAlign.dll_6"/>
     <ROW Component="geometry3Sharp.dll" ComponentId="{34AD4B65-5A79-4E98-96F8-4BC44E3F52E7}" Directory_="NewFolder_Dir" Attributes="0" KeyPath="geometry3Sharp.dll"/>
-    <ROW Component="geometry3Sharp.dll_2" ComponentId="{E75AC157-7434-4C64-8320-F4C1CEFDDAF8}" Directory_="__8_Dir" Attributes="0" KeyPath="geometry3Sharp.dll_2"/>
     <ROW Component="geometry3Sharp.dll_3" ComponentId="{1A6F7B30-6034-4F40-A528-BFFE464F6691}" Directory_="__9_Dir" Attributes="0" KeyPath="geometry3Sharp.dll_3"/>
     <ROW Component="geometry3Sharp.dll_4" ComponentId="{C9DACE54-5FE2-419D-9A42-EAEE0F27250E}" Directory_="__10_Dir" Attributes="0" KeyPath="geometry3Sharp.dll_4"/>
     <ROW Component="geometry3Sharp.dll_5" ComponentId="{CB2BC250-4C86-44AA-9391-57FBB5FC0C7F}" Directory_="__Dir" Attributes="0" KeyPath="geometry3Sharp.dll_5"/>
@@ -106,8 +93,6 @@
     <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
-    <ROW File="geometry3Sharp.dll_2" Component_="geometry3Sharp.dll_2" FileName="GEOMET~1.DLL|geometry3Sharp.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\geometry3Sharp.dll" SelfReg="false"/>
-    <ROW File="TopoAlign.dll_2" Component_="TopoAlign.dll_2" FileName="TOPOAL~1.DLL|TopoAlign.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\TopoAlign.dll" SelfReg="false"/>
     <ROW File="geometry3Sharp.dll_3" Component_="geometry3Sharp.dll_3" FileName="GEOMET~1.DLL|geometry3Sharp.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R22\geometry3Sharp.dll" SelfReg="false"/>
     <ROW File="TopoAlign.addin_3" Component_="TopoAlign.addin_3" FileName="TOPOAL~1.ADD|TopoAlign.addin" Attributes="0" SourcePath="..\TopoAlign\bin\Release R22\TopoAlign.addin" SelfReg="false"/>
     <ROW File="TopoAlign.dll_3" Component_="TopoAlign.dll_3" FileName="TOPOAL~1.DLL|TopoAlign.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R22\TopoAlign.dll" SelfReg="false"/>
@@ -118,16 +103,6 @@
     <ROW File="geometry3Sharp.dll_5" Component_="geometry3Sharp.dll_5" FileName="GEOMET~1.DLL|geometry3Sharp.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R24\geometry3Sharp.dll" SelfReg="false"/>
     <ROW File="TopoAlign.addin_5" Component_="TopoAlign.addin_5" FileName="TOPOAL~1.ADD|TopoAlign.addin" Attributes="0" SourcePath="..\TopoAlign\bin\Release R24\TopoAlign.addin" SelfReg="false"/>
     <ROW File="TopoAlign.dll_5" Component_="TopoAlign.dll_5" FileName="TOPOAL~1.DLL|TopoAlign.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R24\TopoAlign.dll" SelfReg="false"/>
-    <ROW File="CommunityToolkit.Mvvm.dll_2" Component_="CommunityToolkit.Mvvm.dll_2" FileName="COMMUN~1.DLL|CommunityToolkit.Mvvm.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\CommunityToolkit.Mvvm.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Bcl.AsyncInterfaces.dll_2" Component_="Microsoft.Bcl.AsyncInterfaces.dll_2" FileName="MICROS~1.DLL|Microsoft.Bcl.AsyncInterfaces.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\Microsoft.Bcl.AsyncInterfaces.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Xaml.Behaviors.dll_2" Component_="Microsoft.Xaml.Behaviors.dll_2" FileName="MICROS~2.DLL|Microsoft.Xaml.Behaviors.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\Microsoft.Xaml.Behaviors.dll" SelfReg="false"/>
-    <ROW File="System.Buffers.dll_2" Component_="System.Buffers.dll_2" FileName="SYSTEM~1.DLL|System.Buffers.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\System.Buffers.dll" SelfReg="false"/>
-    <ROW File="System.ComponentModel.Annotations.dll_2" Component_="System.ComponentModel.Annotations.dll_2" FileName="SYSTEM~2.DLL|System.ComponentModel.Annotations.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\System.ComponentModel.Annotations.dll" SelfReg="false"/>
-    <ROW File="System.Memory.dll_2" Component_="System.Memory.dll_2" FileName="SYSTEM~3.DLL|System.Memory.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\System.Memory.dll" SelfReg="false"/>
-    <ROW File="System.Numerics.Vectors.dll_2" Component_="System.Numerics.Vectors.dll_2" FileName="SYSTEM~4.DLL|System.Numerics.Vectors.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\System.Numerics.Vectors.dll" SelfReg="false"/>
-    <ROW File="System.Runtime.CompilerServices.Unsa_2_fe.dll" Component_="System.Runtime.CompilerServices.Unsa_2_fe.dll" FileName="SYSTEM~5.DLL|System.Runtime.CompilerServices.Unsafe.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\System.Runtime.CompilerServices.Unsafe.dll" SelfReg="false"/>
-    <ROW File="System.Threading.Tasks.Extensions.dll_2" Component_="System.Threading.Tasks.Extensions.dll_2" FileName="SYSTEM~6.DLL|System.Threading.Tasks.Extensions.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\System.Threading.Tasks.Extensions.dll" SelfReg="false"/>
-    <ROW File="TopoAlign.addin_2" Component_="TopoAlign.addin_2" FileName="TOPOAL~1.ADD|TopoAlign.addin" Attributes="0" SourcePath="..\TopoAlign\bin\Release R21\TopoAlign.addin" SelfReg="false"/>
     <ROW File="CommunityToolkit.Mvvm.dll_3" Component_="CommunityToolkit.Mvvm.dll_3" FileName="COMMUN~1.DLL|CommunityToolkit.Mvvm.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R22\CommunityToolkit.Mvvm.dll" SelfReg="false"/>
     <ROW File="Microsoft.Bcl.AsyncInterfaces.dll_3" Component_="Microsoft.Bcl.AsyncInterfaces.dll_3" FileName="MICROS~1.DLL|Microsoft.Bcl.AsyncInterfaces.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R22\Microsoft.Bcl.AsyncInterfaces.dll" SelfReg="false"/>
     <ROW File="Microsoft.Xaml.Behaviors.dll_3" Component_="Microsoft.Xaml.Behaviors.dll_3" FileName="MICROS~2.DLL|Microsoft.Xaml.Behaviors.dll" Attributes="0" SourcePath="..\TopoAlign\bin\Release R22\Microsoft.Xaml.Behaviors.dll" SelfReg="false"/>
@@ -259,8 +234,6 @@
     <ROW Feature_="MainFeature" Component_="APPDIR"/>
     <ROW Feature_="MainFeature" Component_="ProductInformation"/>
     <ROW Feature_="MainFeature" Component_="ApplicationPlugins"/>
-    <ROW Feature_="MainFeature" Component_="geometry3Sharp.dll_2"/>
-    <ROW Feature_="MainFeature" Component_="TopoAlign.dll_2"/>
     <ROW Feature_="MainFeature" Component_="geometry3Sharp.dll_3"/>
     <ROW Feature_="MainFeature" Component_="TopoAlign.addin_3"/>
     <ROW Feature_="MainFeature" Component_="TopoAlign.dll_3"/>
@@ -276,16 +249,6 @@
     <ROW Feature_="MainFeature" Component_="Microsoft.Xaml.Behaviors.dll"/>
     <ROW Feature_="MainFeature" Component_="TopoAlign.addin"/>
     <ROW Feature_="MainFeature" Component_="TopoAlign.dll"/>
-    <ROW Feature_="MainFeature" Component_="CommunityToolkit.Mvvm.dll_2"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.Bcl.AsyncInterfaces.dll_2"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.Xaml.Behaviors.dll_2"/>
-    <ROW Feature_="MainFeature" Component_="System.Buffers.dll_2"/>
-    <ROW Feature_="MainFeature" Component_="System.ComponentModel.Annotations.dll_2"/>
-    <ROW Feature_="MainFeature" Component_="System.Memory.dll_2"/>
-    <ROW Feature_="MainFeature" Component_="System.Numerics.Vectors.dll_2"/>
-    <ROW Feature_="MainFeature" Component_="System.Runtime.CompilerServices.Unsa_2_fe.dll"/>
-    <ROW Feature_="MainFeature" Component_="System.Threading.Tasks.Extensions.dll_2"/>
-    <ROW Feature_="MainFeature" Component_="TopoAlign.addin_2"/>
     <ROW Feature_="MainFeature" Component_="CommunityToolkit.Mvvm.dll_3"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.Bcl.AsyncInterfaces.dll_3"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.Xaml.Behaviors.dll_3"/>
