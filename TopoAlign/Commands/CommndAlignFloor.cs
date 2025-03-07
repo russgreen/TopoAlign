@@ -14,7 +14,7 @@ public class CommndAlignFloor : IExternalCommand
 {
     private UIApplication _uiapp;
     private UIDocument _uidoc;
-    private Autodesk.Revit.ApplicationServices.Application _app;
+    private Autodesk.Revit.ApplicationServices.Application _app; 
     private Document _doc;
     private Selection _sel;
     private decimal _offset;
@@ -263,18 +263,6 @@ public class CommndAlignFloor : IExternalCommand
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
 #if REVIT2025_OR_GREATER                     
-            //foreach (XYZ pt in points)
-            //{
-            //    //don't add the offset.  We already added it to the sub-division
-            //    var pt1 = new XYZ(pt.X, pt.Y, pt.Z);
-
-            //    var editor = _floor.GetSlabShapeEditor();
-            //    //editor.ResetSlabShape();
-            //    editor.Enable();
-            //    editor.AddPoint(pt1);
-            //    //_floor.GetSlabShapeEditor().AddPoint(pt1);
-            //}
-
             //var editor = _floor.GetSlabShapeEditor();
             //editor.Enable();
             //editor.AddPoints(points);
@@ -283,7 +271,7 @@ public class CommndAlignFloor : IExternalCommand
             {
                 //don't add the offset.  We already added it to the sub-division
                 var pt1 = new XYZ(pt.X, pt.Y, pt.Z);
-                _floor.GetSlabShapeEditor().DrawPoint(pt1);
+                _floor.GetSlabShapeEditor().AddPoint(pt1);
             }
 
 #elif REVIT2024
