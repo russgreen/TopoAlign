@@ -33,10 +33,10 @@ public class CommandPointsAtIntersection : IExternalCommand
 
 #if REVIT2018 || REVIT2019 || REVIT2020
     private DisplayUnitType _docDisplayUnits; 
-    private DisplayUnitType _useDisplayUnits;
+    //private DisplayUnitType _useDisplayUnits;
 #else
     private ForgeTypeId _docDisplayUnits;
-    private ForgeTypeId _useDisplayUnits;
+    //private ForgeTypeId _useDisplayUnits;
 #endif
 
     public Models.Settings cSettings;

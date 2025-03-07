@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <Configurations>Debug R19;Debug R20;Debug R21;Debug R22;Debug R23;Debug R24;Debug R25;Debug R26</Configurations>
-	  <Configurations>$(Configurations);Release R19;Release R20;Release R21;Release R22;Release R23;Release R24;Release R25;Release R26</Configurations>
+	  <Configurations>Debug R21;Debug R22;Debug R23;Debug R24;Debug R25;Debug R26</Configurations>
+	  <Configurations>$(Configurations)Release R21;Release R22;Release R23;Release R24;Release R25;Release R26</Configurations>
 	  <Description>Align topo surface to model elements</Description>
 	  <Copyright>Copyright © Russell Green</Copyright>
 	  <Version>2.5.6</Version>
@@ -31,24 +31,6 @@
 		<DebugType>none</DebugType>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$(Configuration.Contains('R19'))">
-		<TargetFramework>net47</TargetFramework>
-		<RevitVersion>2019</RevitVersion>
-		<DefineConstants>$(DefineConstants);REVIT2019</DefineConstants>
-		<DefineConstants>$(DefineConstants);REVIT2019_OR_GREATER</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition="$(Configuration.Contains('R20'))">
-		<TargetFramework>net471</TargetFramework>
-		<RevitVersion>2020</RevitVersion>
-		<DefineConstants>$(DefineConstants);REVIT2020</DefineConstants>
-		<DefineConstants>$(DefineConstants);REVIT2019_OR_GREATER;REVIT2020_OR_GREATER</DefineConstants>
-	</PropertyGroup>
-	<PropertyGroup Condition="$(Configuration.Contains('R21'))">
-		<TargetFramework>net48</TargetFramework>
-		<RevitVersion>2021</RevitVersion>
-		<DefineConstants>$(DefineConstants);REVIT2021</DefineConstants>
-		<DefineConstants>$(DefineConstants);REVIT2019_OR_GREATER;REVIT2020_OR_GREATER;REVIT2021_OR_GREATER</DefineConstants>
-	</PropertyGroup>
 	<PropertyGroup Condition="$(Configuration.Contains('R22'))">
 		<TargetFramework>net48</TargetFramework>
 		<RevitVersion>2022</RevitVersion>
@@ -83,13 +65,7 @@
 	<PropertyGroup>
 		<AssemblyName>TopoAlign</AssemblyName>
 	</PropertyGroup>
-   
-  <!--<PropertyGroup Condition="$(Configuration.Contains('Release'))">
-	<Obfuscate>true</Obfuscate>
-    <ConfuserReplaceOutput>false</ConfuserReplaceOutput>
-    <ConfuserProject>$(MSBuildProjectDirectory)\$(MSBuildProjectName)$(RevitVersion).crproj</ConfuserProject>
-  </PropertyGroup>-->
-   
+     
   
    <ItemGroup>
      <None Remove="Images\FloorToTopo32.png" />
