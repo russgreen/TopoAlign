@@ -6,7 +6,5 @@
     <ClientId>60ce490d-ee24-40e1-817b-ba9f23820564</ClientId>
     <FullClassName>TopoAlign.App</FullClassName>
     <VendorId>TopoAlign</VendorId>
-	<VisibilityMode>NotVisibleInFamily</VisibilityMode>
-	<VisibilityMode>NotVisibleWhenNoActiveDocument</VisibilityMode>
   </AddIn>
 </RevitAddIns>
