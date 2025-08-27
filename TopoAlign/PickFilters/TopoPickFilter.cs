@@ -13,11 +13,6 @@ public class TopoPickFilter : ISelectionFilter
         }
 
 #if REVIT2024_OR_GREATER
-        //if (elem.Category.Id.Value == (long)BuiltInCategory.OST_Topography)
-        //{
-        //    return true;
-        //}
-
         if (elem.Category.Id.Value == (int)BuiltInCategory.OST_Toposolid)
         {
             return true;
