@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<DOCUMENT Type="Advanced Installer" CreateVersion="19.1" version="22.2" Modules="simple" RootPath="." Language="en" Id="{5916C2D6-3FA4-4F34-99C8-C6302DB4726B}">
+<DOCUMENT Type="Advanced Installer" CreateVersion="19.1" version="22.7" Modules="simple" RootPath="." Language="en" Id="{5916C2D6-3FA4-4F34-99C8-C6302DB4726B}">
   <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
     <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
     <ROW Property="Manufacturer" Value="Russell Green"/>
-    <ROW Property="ProductCode" Value="1033:{1218288A-407B-4B20-90A3-32914DCF96A5} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{0CA89EE0-0ABB-481D-BD2F-B32BFAEB3FEC} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="Topo Align"/>
-    <ROW Property="ProductVersion" Value="2.6.0" Options="32"/>
+    <ROW Property="ProductVersion" Value="2.6.1" Options="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{F04F085F-5478-481E-B50C-946A19EEF10F}"/>
     <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
