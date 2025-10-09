@@ -4,7 +4,7 @@ using TopoAlign.Helpers;
 
 namespace TopoAlign.Comparers;
 
-class XyzEqualityComparer : IEqualityComparer<XYZ>
+internal class XyzEqualityComparer : IEqualityComparer<XYZ>
 {
     private const double _sixteenthInchInFeet = 1.0d / (16.0d * 12.0d);
 

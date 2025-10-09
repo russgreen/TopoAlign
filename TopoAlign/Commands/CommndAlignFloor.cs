@@ -4,6 +4,8 @@ using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using System.Diagnostics;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using TopoAlign.Comparers;
 using TopoAlign.Geometry;
 
@@ -19,6 +21,7 @@ public class CommndAlignFloor : IExternalCommand
     private Selection _sel;
     private decimal _offset;
     private Floor _floor;
+
 
 #if REVIT2024_OR_GREATER
     private Toposolid _topoSolid;
@@ -48,12 +51,6 @@ public class CommndAlignFloor : IExternalCommand
         _app = _uiapp.Application;
         _doc = _uidoc.Document;
         _sel = _uidoc.Selection;
-
-        //check entitlement
-        //if (CheckEntitlement.LicenseCheck(_app) == false)
-        //{
-        //    return Result.Cancelled;
-        //}
 
 #if REVIT2018 || REVIT2019 || REVIT2020
         _docUnits = _doc.GetUnits();
@@ -144,114 +141,29 @@ public class CommndAlignFloor : IExternalCommand
             return false;
         }
 
-        //reset the floor 
-        using (var t = new Transaction(_doc, "Reset floor"))
-        {
-            t.Start();
-            FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
-            t.SetFailureHandlingOptions(failureHandlingOptions);
-
-#if REVIT2024_OR_GREATER
-            _floor.GetSlabShapeEditor().ResetSlabShape();
-#else
-            _floor.SlabShapeEditor.ResetSlabShape();
-#endif
-            t.Commit();
-        }
-
+        ResetFloorSlape();
 
         var options = new Options();
         var geometryElement = _floor.get_Geometry(options);
         IList<CurveLoop> floorBoundaryCurves = GetGeometryOutline(geometryElement);
 
-#if REVIT2025_OR_GREATER
+#if REVIT2024_OR_GREATER
         //create a sub-region that matches the floor to get all the topo surface points
-        Toposolid siteSubDivision;
+        var siteSubDivision = CreateSubDivision(ref offset, floorBoundaryCurves);
 
-        using (var t = new Transaction(_doc, "Make SubRegion"))
-        {
-            t.Start();
-            FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
-            t.SetFailureHandlingOptions(failureHandlingOptions);
-
-            siteSubDivision = _topoSolid.CreateSubDivision(_doc, floorBoundaryCurves);
-
-            //set sub-divide height
-            if (offset == 0)
-            {
-                offset = 0.001;
-            }
-
-            siteSubDivision.get_Parameter(BuiltInParameter.TOPOSOLID_SUBDIVIDE_HEIGHT)
-                .Set(offset);
-
-            t.Commit();
-        }
-
-        List<XYZ> points = GetPointsFromSubDivision(siteSubDivision);
-#elif REVIT2024
+        var points = GetPointsFromSubDivision(siteSubDivision);
+#else
         //create a sub-region that matches the floor to get all the topo surface points
-        Toposolid siteSubDivision;
+        SiteSubRegion siteSubRegion = CreateSubRegion(floorBoundaryCurves);
 
-        using (var t = new Transaction(_doc, "Make SubRegion"))
+        if (siteSubRegion == null)
         {
-            t.Start();
-            FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
-            t.SetFailureHandlingOptions(failureHandlingOptions);
-
-            siteSubDivision = _topoSolid.CreateSubDivision(_doc, floorBoundaryCurves);
-
-            //set sub-divide height
-            if (offset == 0)
-            {
-                offset = 0.001;
-            }
-
-            siteSubDivision.get_Parameter(BuiltInParameter.TOPOSOLID_SUBDIVIDE_HEIGNT)
-                .Set(offset);
-
-            t.Commit();
+            return false;
         }
-
-        List<XYZ> points = GetPointsFromSubDivision(siteSubDivision);
-#else        
-        //create a sub-region that matches the floor to get all the topo surface points
-        SiteSubRegion siteSubRegion = (SiteSubRegion)null;
-        try
-        {
-            using (var t = new Transaction(_doc, "Make SubRegion"))
-            {
-                t.Start();
-                FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
-                failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
-                t.SetFailureHandlingOptions(failureHandlingOptions);
-                siteSubRegion = SiteSubRegion.Create(_doc, floorBoundaryCurves, _topoSurface.Id);
-                t.Commit();
-            }    
-        }
-        catch(Exception ex) 
-        { 
-            if(ex.Message.Contains("existing SiteSubRegions"))
-            {
-                var td = new TaskDialog("Error aligning element")
-                {
-                    MainContent = "You cannot align an element that crosses a subregion",
-                    CommonButtons = TaskDialogCommonButtons.Cancel,
-                };
-                td.Show();
-
-            }
-
-            return false; 
-        }
-
 
         //add the points to the floor     
         var comparer = new XyzEqualityComparer(); // (0.01)
-       
+
         var points = (IEnumerable<XYZ>)siteSubRegion.TopographySurface.GetPoints().Distinct(comparer);
 #endif
 
@@ -262,26 +174,15 @@ public class CommndAlignFloor : IExternalCommand
             failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
-#if REVIT2025_OR_GREATER                     
-            //var editor = _floor.GetSlabShapeEditor();
-            //editor.Enable();
-            //editor.AddPoints(points);
-
-            foreach (XYZ pt in points)
-            {
-                //don't add the offset.  We already added it to the sub-division
-                var pt1 = new XYZ(pt.X, pt.Y, pt.Z);
-                _floor.GetSlabShapeEditor().AddPoint(pt1);
-            }
-
-#elif REVIT2024
+#if REVIT2026_OR_GREATER
+            //were just going to create a sub-region
+#elif REVIT2024 || REVIT2025
             foreach (XYZ pt in points)
             {
                 //don't add the offset.  We already added it to the sub-division
                 var pt1 = new XYZ(pt.X, pt.Y, pt.Z);
                 _floor.GetSlabShapeEditor().DrawPoint(pt1); 
              }
-            //_floor.GetSlabShapeEditor().AddPoints(points);
 #else
             foreach (XYZ pt in points)
             {
@@ -290,8 +191,9 @@ public class CommndAlignFloor : IExternalCommand
             }
 #endif
 
-
-#if REVIT2024_OR_GREATER
+#if REVIT2026_OR_GREATER
+            _doc.Delete(_floor.Id);
+#elif REVIT2024 || REVIT2025
             _doc.Delete(siteSubDivision.Id);
 #else
             _doc.Delete(siteSubRegion.TopographySurface.Id);
@@ -303,11 +205,100 @@ public class CommndAlignFloor : IExternalCommand
         return true;
     }
 
+#if !REVIT2024_OR_GREATER
+    private SiteSubRegion CreateSubRegion(IList<CurveLoop> floorBoundaryCurves)
+    {
+        try
+        {
+            SiteSubRegion siteSubRegion;
+
+            using (var t = new Transaction(_doc, "Make SubRegion"))
+            {
+                t.Start();
+                FailureHandlingOptions failureHandlingOptions = t.GetFailureHandlingOptions();
+                failureHandlingOptions.SetFailuresPreprocessor((IFailuresPreprocessor)new FailureHandler());
+                t.SetFailureHandlingOptions(failureHandlingOptions);
+                siteSubRegion = SiteSubRegion.Create(_doc, floorBoundaryCurves, _topoSurface.Id);
+                t.Commit();
+            }
+
+            return siteSubRegion;
+        }
+        catch (Exception ex)
+        {
+            if (ex.Message.Contains("existing SiteSubRegions"))
+            {
+                var td = new TaskDialog("Error aligning element")
+                {
+                    MainContent = "You cannot align an element that crosses a subregion",
+                    CommonButtons = TaskDialogCommonButtons.Cancel,
+                };
+                td.Show();
+
+            }
+
+            return null;
+        }
+    }
+#endif
+
+#if REVIT2024_OR_GREATER
+    private Toposolid CreateSubDivision(ref double offset, IList<CurveLoop> floorBoundaryCurves)
+    {
+        Toposolid siteSubDivision;
+        using (var t = new Transaction(_doc, "Make SubRegion"))
+        {
+            t.Start();
+            var failureHandlingOptions = t.GetFailureHandlingOptions();
+            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
+            t.SetFailureHandlingOptions(failureHandlingOptions);
+
+            siteSubDivision = _topoSolid.CreateSubDivision(_doc, floorBoundaryCurves);
+
+            //set sub-divide height
+            if (offset == 0)
+            {
+                offset = 0.001;
+            }
+
+#if REVIT2024
+            siteSubDivision.get_Parameter(BuiltInParameter.TOPOSOLID_SUBDIVIDE_HEIGNT)
+                .Set(offset);
+#else
+            siteSubDivision.get_Parameter(BuiltInParameter.TOPOSOLID_SUBDIVIDE_HEIGHT)
+                .Set(offset);
+#endif
+
+            t.Commit();
+        }
+
+        return siteSubDivision;
+    }
+#endif
+
+    private void ResetFloorSlape()
+    {
+        //reset the floor 
+        using (var t = new Transaction(_doc, "Reset floor"))
+        {
+            t.Start();
+            var failureHandlingOptions = t.GetFailureHandlingOptions();
+            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
+            t.SetFailureHandlingOptions(failureHandlingOptions);
+
+#if REVIT2024_OR_GREATER
+            _floor.GetSlabShapeEditor().ResetSlabShape();
+#else
+            _floor.SlabShapeEditor.ResetSlabShape();
+#endif
+            t.Commit();
+        }
+    }
+
 #if REVIT2024_OR_GREATER
     private List<XYZ> GetPointsFromSubDivision(Toposolid siteSubDivision)
     {
-        var points = new List<XYZ>();
-        var comparer = new XyzEqualityComparer(); // (0.01)
+        var raw = new List<XYZ>();
 
         //get the siteSubDivision GeometryElement
         var geometryElement = siteSubDivision.get_Geometry(new Options());
@@ -315,21 +306,35 @@ public class CommndAlignFloor : IExternalCommand
 
         foreach (var face in faces)
         {
-            var faceVertices = face.Triangulate().Vertices;
-
-            foreach (var vertex in faceVertices)
+            // 1) Collect triangulation vertices (interior-heavy)
+            var meshVerts = face.Triangulate().Vertices;
+            foreach (var v in meshVerts)
             {
-                if (!points.Contains(vertex))
+                raw.Add(v);
+            }
+
+            // 2) Explicitly sample boundary curves to ensure edge/corner points exist
+            //    Using endpoints and a midpoint is enough to ensure we hit corners and edges.
+            var loops = face.GetEdgesAsCurveLoops();
+            foreach (var loop in loops)
+            {
+                foreach (var curve in loop)
                 {
-                    points.Add(vertex);
+                    // endpoints
+                    raw.Add(curve.Evaluate(0.0, true));
+                    raw.Add(curve.Evaluate(1.0, true));
+
+                    // midpoint
+                    raw.Add(curve.Evaluate(0.5, true));
                 }
             }
         }
 
+        // De-dup by XY to stabilize the set and avoid minor z/precision duplicates
+        var points = raw.Distinct(new XyEqualityComparer()).ToList();
         return points;
     }
-#endif
-
+     
     private IList<Face> GetTopFaces(GeometryElement geometryElement)
     {
         var faces = new List<Face>();
@@ -349,7 +354,9 @@ public class CommndAlignFloor : IExternalCommand
         }
 
         return faces;
-    }
+    }   
+    #endif
+
 
     private IList<CurveLoop> GetGeometryOutline(GeometryElement geometryElement)
     {
@@ -371,6 +378,5 @@ public class CommndAlignFloor : IExternalCommand
 
         return face1.GetEdgesAsCurveLoops().ToList();
     }
-
 
 }
