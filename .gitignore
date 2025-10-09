@@ -347,6 +347,8 @@ ARCHISOFT_topoalign\ARCHISOFT_topoalign_2019.addin
 ARCHISOFT_topoalign\ARCHISOFT_topoalign_2020.addin
 ARCHISOFT_topoalign\ARCHISOFT_topoalign_2021.addin
 ARCHISOFT_topoalign\ARCHISOFT_topoalign_2022.addin
+ApiSecret.txt
+MeasurementId.txt
 
 # Advanced Installer
 Installer/*.back.aip
