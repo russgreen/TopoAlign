@@ -55,7 +55,11 @@ class App : IExternalApplication
             $"Align to{Environment.NewLine}Topo",
             Assembly.GetExecutingAssembly().Location,
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommndAlignFloor)}"));
+#if REVIT2026_OR_GREATER
+        pbFloorAlign.ToolTip = "Delete the floor and place a toposolid sub-region";
+#else
         pbFloorAlign.ToolTip = "Adjust a floor to follow the topography";
+#endif
         pbFloorAlign.LargeImage = PngImageSource("TopoAlign.Images.FloorToTopo32.png");
 
         PushButton pbPointsFromLines = (PushButton)panel.AddItem(new PushButtonData(
