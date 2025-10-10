@@ -174,9 +174,41 @@ public class CommndAlignFloor : IExternalCommand
             failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
-#if REVIT2026_OR_GREATER
-            //were just going to create a sub-region
-#elif REVIT2024 || REVIT2025
+#if REVIT2025_OR_GREATER
+            var editor = _floor.GetSlabShapeEditor();
+            editor.Enable();
+
+            // 0) Bootstrap: ensure vertices exist
+            var verts = editor.SlabShapeVertices.Cast<SlabShapeVertex>().ToList();
+            if (verts.Count == 0)
+            {
+                SeedInteriorVertices(editor, points);
+                _doc.Regenerate(); // force update
+                verts = editor.SlabShapeVertices.Cast<SlabShapeVertex>().ToList();
+            }
+
+            // 1) Collect corner vertices now present
+            var cornerVerts = verts.Where(v => v.VertexType == SlabShapeVertexType.Corner).ToList();
+
+            // 2) Elevate corner vertices from point cloud (match by XY)
+            var xyComparer = new XyEqualityComparer();
+            foreach (var cv in cornerVerts)
+            {
+                var match = points.FirstOrDefault(p => xyComparer.Equals(p, cv.Position));
+                if (match != null)
+                {
+                    try { editor.ModifySubElement(cv, match.Z); } catch { }
+                }
+            }
+
+            // 3) Add interior points (skip those coincident with corners)
+            foreach (var p in points)
+            {
+                if (cornerVerts.Any(c => xyComparer.Equals(c.Position, p))) continue;
+                try { editor.AddPoint(p); } catch { /* ignore interior failures */ }
+            }
+
+#elif REVIT2024
             foreach (XYZ pt in points)
             {
                 //don't add the offset.  We already added it to the sub-division
@@ -191,9 +223,7 @@ public class CommndAlignFloor : IExternalCommand
             }
 #endif
 
-#if REVIT2026_OR_GREATER
-            _doc.Delete(_floor.Id);
-#elif REVIT2024 || REVIT2025
+#if REVIT2024_OR_GREATER
             _doc.Delete(siteSubDivision.Id);
 #else
             _doc.Delete(siteSubRegion.TopographySurface.Id);
@@ -354,9 +384,45 @@ public class CommndAlignFloor : IExternalCommand
         }
 
         return faces;
-    }   
-    #endif
+    }
+#endif
 
+#if REVIT2025_OR_GREATER
+    private void SeedInteriorVertices(SlabShapeEditor editor, IEnumerable<XYZ> allPoints)
+    {
+        // Derive centroid from available points (fallback: floor bbox if needed)
+        var pts = allPoints as IList<XYZ> ?? allPoints.ToList();
+        if (pts.Count == 0)
+        {
+            return;
+        }
+
+        double cx = 0, cy = 0, cz = 0;
+        foreach (var p in pts) 
+        { 
+            cx += p.X; cy += p.Y; cz += p.Z; 
+        }
+
+        cx /= pts.Count; cy /= pts.Count; cz /= pts.Count;
+
+        var centroid = new XYZ(cx, cy, cz);
+
+        // Pick three non-collinear offsets so Revit builds a triangulated sub-shape
+        double delta = Math.Max((pts.Max(p => Math.Abs(p.X - cx)) +
+                                  pts.Max(p => Math.Abs(p.Y - cy))) * 0.01, 0.5);
+        var seedPts = new[]
+        {
+            centroid,
+            new XYZ(centroid.X + delta, centroid.Y, centroid.Z),
+            new XYZ(centroid.X, centroid.Y + delta, centroid.Z)
+        };
+
+        foreach (var sp in seedPts)
+        {
+            try { editor.AddPoint(sp); } catch { /* ignore */ }
+        }
+    }
+#endif
 
     private IList<CurveLoop> GetGeometryOutline(GeometryElement geometryElement)
     {
