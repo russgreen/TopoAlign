@@ -5,7 +5,7 @@
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
     <ROW Property="Manufacturer" Value="Russell Green"/>
-    <ROW Property="ProductCode" Value="1033:{5B1C6B07-D88A-4F8B-8EDD-839650868B17} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{F77BD642-B762-4B33-AC42-A1304D98871D} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="Topo Align"/>
     <ROW Property="ProductVersion" Value="2.6.3" Options="32"/>
