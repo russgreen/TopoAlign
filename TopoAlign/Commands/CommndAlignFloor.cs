@@ -3,6 +3,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using Serilog;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -14,6 +15,8 @@ namespace TopoAlign.Commands;
 [Transaction(TransactionMode.Manual)]
 public class CommndAlignFloor : IExternalCommand
 {
+    private static readonly ILogger log = Log.ForContext<CommndAlignFloor>();
+
     private UIApplication _uiapp;
     private UIDocument _uidoc;
     private Autodesk.Revit.ApplicationServices.Application _app; 
@@ -43,6 +46,8 @@ public class CommndAlignFloor : IExternalCommand
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
+        log.Information("{command}", nameof(CommndAlignFloor));
+
         cSettings = new Models.Settings();
         cSettings.LoadSettings();
 

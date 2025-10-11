@@ -3,6 +3,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using Serilog;
 using System.Diagnostics;
 using TopoAlign.Comparers;
 using TopoAlign.Extensions;
@@ -13,6 +14,8 @@ namespace TopoAlign.Commands;
 [Regeneration(RegenerationOption.Manual)]
 public class CommandResetTopoRegion : IExternalCommand
 {
+    private static readonly ILogger log = Serilog.Log.ForContext<CommandResetTopoRegion>();
+
     private UIApplication _uiapp;
     private UIDocument _uidoc;
     private Autodesk.Revit.ApplicationServices.Application _app;
@@ -22,7 +25,7 @@ public class CommandResetTopoRegion : IExternalCommand
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
-        // Crashes.GenerateTestCrash()
+        log.Information("{command}", nameof(CommandResetTopoRegion));
 
         _uiapp = commandData.Application;
         _uidoc = _uiapp.ActiveUIDocument;
