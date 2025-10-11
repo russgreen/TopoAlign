@@ -154,9 +154,14 @@ public class CommndAlignFloor : IExternalCommand
 
 #if REVIT2024_OR_GREATER
         //create a sub-region that matches the floor to get all the topo surface points
-        var siteSubDivision = CreateSubDivision(ref offset, floorBoundaryCurves);
+        var siteSubDivision = CreateSubDivision(floorBoundaryCurves);
 
-        var points = GetPointsFromSubDivision(siteSubDivision);
+        if(siteSubDivision is null)
+        {
+            return false;
+        }
+
+        var points = GetPointsFromSubDivision(siteSubDivision, offset);
 #else
         //create a sub-region that matches the floor to get all the topo surface points
         SiteSubRegion siteSubRegion = CreateSubRegion(floorBoundaryCurves);
@@ -183,34 +188,33 @@ public class CommndAlignFloor : IExternalCommand
             var editor = _floor.GetSlabShapeEditor();
             editor.Enable();
 
-            // 0) Bootstrap: ensure vertices exist
-            var verts = editor.SlabShapeVertices.Cast<SlabShapeVertex>().ToList();
-            if (verts.Count == 0)
+            foreach (var p in points)
             {
-                SeedInteriorVertices(editor, points);
-                _doc.Regenerate(); // force update
-                verts = editor.SlabShapeVertices.Cast<SlabShapeVertex>().ToList();
+                try { editor.AddPoint(p); } catch { /* ignore interior failures */ }
             }
 
-            // 1) Collect corner vertices now present
+            _doc.Regenerate(); // force update
+
+            var verts = editor.SlabShapeVertices.Cast<SlabShapeVertex>().ToList();
             var cornerVerts = verts.Where(v => v.VertexType == SlabShapeVertexType.Corner).ToList();
 
-            // 2) Elevate corner vertices from point cloud (match by XY)
             var xyComparer = new XyEqualityComparer();
             foreach (var cv in cornerVerts)
             {
                 var match = points.FirstOrDefault(p => xyComparer.Equals(p, cv.Position));
                 if (match != null)
                 {
-                    try { editor.ModifySubElement(cv, match.Z); } catch { }
+                    try
+                    {
+                        var levelOffset = _floor.GetParameter(
+                            ParameterUtils.GetParameterTypeId(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM))
+                            .AsDouble();
+                        var offsetZ = match.Z - levelOffset;
+                        editor.ModifySubElement(cv, offsetZ);
+                    }
+                    catch
+                    { }
                 }
-            }
-
-            // 3) Add interior points (skip those coincident with corners)
-            foreach (var p in points)
-            {
-                if (cornerVerts.Any(c => xyComparer.Equals(c.Position, p))) continue;
-                try { editor.AddPoint(p); } catch { /* ignore interior failures */ }
             }
 
 #elif REVIT2024
@@ -278,9 +282,9 @@ public class CommndAlignFloor : IExternalCommand
 #endif
 
 #if REVIT2024_OR_GREATER
-    private Toposolid CreateSubDivision(ref double offset, IList<CurveLoop> floorBoundaryCurves)
+    private Toposolid CreateSubDivision(IList<CurveLoop> floorBoundaryCurves)
     {
-        Toposolid siteSubDivision;
+        Toposolid siteSubDivision = null;
         using (var t = new Transaction(_doc, "Make SubRegion"))
         {
             t.Start();
@@ -288,21 +292,24 @@ public class CommndAlignFloor : IExternalCommand
             failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
             t.SetFailureHandlingOptions(failureHandlingOptions);
 
-            siteSubDivision = _topoSolid.CreateSubDivision(_doc, floorBoundaryCurves);
-
-            //set sub-divide height
-            if (offset == 0)
+            try
             {
-                offset = 0.001;
-            }
+                siteSubDivision = _topoSolid.CreateSubDivision(_doc, floorBoundaryCurves);
 
 #if REVIT2024
-            siteSubDivision.get_Parameter(BuiltInParameter.TOPOSOLID_SUBDIVIDE_HEIGNT)
-                .Set(offset);
-#else
-            siteSubDivision.get_Parameter(BuiltInParameter.TOPOSOLID_SUBDIVIDE_HEIGHT)
-                .Set(offset);
+                siteSubDivision.get_Parameter(BuiltInParameter.TOPOSOLID_SUBDIVIDE_HEIGNT)
+                    .Set(0.001);
+#elif REVIT2025
+                siteSubDivision.get_Parameter(BuiltInParameter.TOPOSOLID_SUBDIVIDE_HEIGHT)
+                    .Set(0.0001);
 #endif
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+
+                t.RollBack();
+            }
 
             t.Commit();
         }
@@ -331,7 +338,7 @@ public class CommndAlignFloor : IExternalCommand
     }
 
 #if REVIT2024_OR_GREATER
-    private List<XYZ> GetPointsFromSubDivision(Toposolid siteSubDivision)
+    private List<XYZ> GetPointsFromSubDivision(Toposolid siteSubDivision, double offset)
     {
         var raw = new List<XYZ>();
 
@@ -365,8 +372,13 @@ public class CommndAlignFloor : IExternalCommand
             }
         }
 
-        // De-dup by XY to stabilize the set and avoid minor z/precision duplicates
-        var points = raw.Distinct(new XyEqualityComparer()).ToList();
+        // De-dup by XY to stabilize the set and avoid minor z/precision duplicates and add offset to Z
+        var points = new List<XYZ>();
+        foreach(var point in raw.Distinct(new XyEqualityComparer()).ToList())
+        {
+            points.Add(new XYZ(point.X, point.Y, point.Z + offset));
+        }
+
         return points;
     }
      
@@ -389,43 +401,6 @@ public class CommndAlignFloor : IExternalCommand
         }
 
         return faces;
-    }
-#endif
-
-#if REVIT2025_OR_GREATER
-    private void SeedInteriorVertices(SlabShapeEditor editor, IEnumerable<XYZ> allPoints)
-    {
-        // Derive centroid from available points (fallback: floor bbox if needed)
-        var pts = allPoints as IList<XYZ> ?? allPoints.ToList();
-        if (pts.Count == 0)
-        {
-            return;
-        }
-
-        double cx = 0, cy = 0, cz = 0;
-        foreach (var p in pts) 
-        { 
-            cx += p.X; cy += p.Y; cz += p.Z; 
-        }
-
-        cx /= pts.Count; cy /= pts.Count; cz /= pts.Count;
-
-        var centroid = new XYZ(cx, cy, cz);
-
-        // Pick three non-collinear offsets so Revit builds a triangulated sub-shape
-        double delta = Math.Max((pts.Max(p => Math.Abs(p.X - cx)) +
-                                  pts.Max(p => Math.Abs(p.Y - cy))) * 0.01, 0.5);
-        var seedPts = new[]
-        {
-            centroid,
-            new XYZ(centroid.X + delta, centroid.Y, centroid.Z),
-            new XYZ(centroid.X, centroid.Y + delta, centroid.Z)
-        };
-
-        foreach (var sp in seedPts)
-        {
-            try { editor.AddPoint(sp); } catch { /* ignore */ }
-        }
     }
 #endif
 

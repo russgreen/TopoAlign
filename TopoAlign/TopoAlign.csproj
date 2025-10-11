@@ -105,7 +105,9 @@
      <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
+	   
 	 <PackageReference Include="Serilog" Version="4.3.0" />
+	   
 	 <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
 	 <PackageReference Include="Serilog.Sinks.GoogleAnalytics" Version="1.*" />
 
