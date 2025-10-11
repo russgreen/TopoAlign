@@ -1,8 +1,13 @@
-﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
+using Serilog;
+using Serilog.Sinks.GoogleAnalytics;
 using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 using System.Windows.Media.Imaging;
+using TopoAlign.Helpers;
 
 namespace TopoAlign;
 
@@ -11,6 +16,7 @@ namespace TopoAlign;
 class App : IExternalApplication
 {
     public static UIControlledApplication CachedUiCtrApp;
+    public static ControlledApplication CtrApp;
     public static UIApplication CachedUiApp;
 
     public static Autodesk.Revit.DB.Document RevitDocument;
@@ -22,6 +28,37 @@ class App : IExternalApplication
     public Result OnStartup(UIControlledApplication a)
     {
         CachedUiCtrApp = a;
+        CtrApp = a.ControlledApplication;
+
+        var cultureInfo = Thread.CurrentThread.CurrentCulture;
+        var regionInfo = new RegionInfo(cultureInfo.LCID);
+        var clientId = ClientIdProvider.GetOrCreateClientId();
+
+        var loggerConfigTopoAlign = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Debug();
+#if !RELEASE
+
+        loggerConfigTopoAlign = loggerConfigTopoAlign
+                .WriteTo.GoogleAnalytics(opts =>
+                {
+                    opts.MeasurementId = "##MEASUREMENTID##";
+                    opts.ApiSecret = "##APISECRET##";
+                    opts.ClientId = clientId;
+
+                    opts.FlushPeriod = TimeSpan.FromSeconds(1);
+                    opts.BatchSizeLimit = 1;
+                    opts.MaxEventsPerRequest = 1;
+                    opts.IncludePredicate = e => e.Properties.ContainsKey("UsageTracking");
+
+                    opts.GlobalParams["app_version"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+                    opts.GlobalParams["revit_version"] = CtrApp.VersionNumber;
+
+                    opts.CountryId = regionInfo.TwoLetterISORegionName;
+                });
+#endif
+
+        Log.Logger = loggerConfigTopoAlign.CreateLogger();
 
         _ = CreateRibbonPanel();
 

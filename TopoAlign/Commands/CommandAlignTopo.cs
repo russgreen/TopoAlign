@@ -1,14 +1,21 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Serilog;
+using Serilog.Context;
+using Serilog.Core;
 
 namespace TopoAlign.Commands;
 
 [Transaction(TransactionMode.Manual)]
 public class CommandAlignTopo : IExternalCommand
 {
-     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+    private static readonly ILogger log = Log.ForContext<CommandAlignTopo>();
+
+    public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
+        log.Information("{command}", nameof(CommandAlignTopo));
+
         App.CachedUiApp = commandData.Application;
         App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
 

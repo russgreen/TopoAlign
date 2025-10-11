@@ -2,6 +2,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace TopoAlign.Commands;
 [Regeneration(RegenerationOption.Manual)]
 public class CommandPointsOnSurface : IExternalCommand
 {
+    private static readonly ILogger log = Log.ForContext<CommandPointsOnSurface>();
+
     private UIApplication _uiapp;
     private UIDocument _uidoc;
     private Autodesk.Revit.ApplicationServices.Application _app;
@@ -47,6 +50,8 @@ public class CommandPointsOnSurface : IExternalCommand
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
+        log.Information("{command}", nameof(CommandPointsOnSurface));
+
         cSettings = new Models.Settings();
         cSettings.LoadSettings();
         _uiapp = commandData.Application;
