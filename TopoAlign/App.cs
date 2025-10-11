@@ -37,8 +37,8 @@ class App : IExternalApplication
         var loggerConfigTopoAlign = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Debug();
-#if RELEASE
 
+#if RELEASE
         loggerConfigTopoAlign = loggerConfigTopoAlign
                 .WriteTo.GoogleAnalytics(opts =>
                 {
