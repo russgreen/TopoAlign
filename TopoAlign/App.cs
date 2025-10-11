@@ -37,7 +37,7 @@ class App : IExternalApplication
         var loggerConfigTopoAlign = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Debug();
-#if !RELEASE
+#if RELEASE
 
         loggerConfigTopoAlign = loggerConfigTopoAlign
                 .WriteTo.GoogleAnalytics(opts =>
@@ -49,7 +49,7 @@ class App : IExternalApplication
                     opts.FlushPeriod = TimeSpan.FromSeconds(1);
                     opts.BatchSizeLimit = 1;
                     opts.MaxEventsPerRequest = 1;
-                    opts.IncludePredicate = e => e.Properties.ContainsKey("UsageTracking");
+                    //opts.IncludePredicate = e => e.Properties.ContainsKey("UsageTracking");
 
                     opts.GlobalParams["app_version"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString();
                     opts.GlobalParams["revit_version"] = CtrApp.VersionNumber;
