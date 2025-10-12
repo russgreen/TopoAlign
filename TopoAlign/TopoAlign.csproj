@@ -68,8 +68,11 @@
 	</PropertyGroup>
 	
 	<PropertyGroup>
-		<!--<IsRepackable Condition="$(Configuration.Contains('Release')) And '$(RevitVersion)' &lt; '2026'">true</IsRepackable>-->
-		<IsRepackable Condition="$(Configuration.Contains('Release'))">true</IsRepackable>
+		<!-- Repack:
+		     - Release: always
+		     - Debug: only when RevitVersion < 2025 (i.e., R22–R24) -->
+		<IsRepackable Condition="$(Configuration.Contains('Release')) Or 
+					  ( $(Configuration.Contains('Debug')) And '$(RevitVersion)' &lt; '2025')">true</IsRepackable>
 		<!--<RepackBinariesExcludes>Syncfusion*.dll</RepackBinariesExcludes>-->
 	</PropertyGroup>
 
