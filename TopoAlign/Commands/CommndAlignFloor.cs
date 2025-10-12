@@ -68,6 +68,7 @@ public class CommndAlignFloor : IExternalCommand
         {
 
             frm.nudVertOffset.Value = 0;
+            frm.nudVertOffset.Minimum = -frm.nudVertOffset.Maximum;
             frm.nudDivide.Enabled = false;
 
 #if REVIT2018 || REVIT2019 || REVIT2020
