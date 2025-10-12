@@ -68,6 +68,7 @@ public class CommndAlignFloor : IExternalCommand
         {
 
             frm.nudVertOffset.Value = 0;
+            frm.nudVertOffset.Minimum = -frm.nudVertOffset.Maximum;
             frm.nudDivide.Enabled = false;
 
 #if REVIT2018 || REVIT2019 || REVIT2020
@@ -188,9 +189,19 @@ public class CommndAlignFloor : IExternalCommand
             var editor = _floor.GetSlabShapeEditor();
             editor.Enable();
 
+            var levelOffset = _floor.GetParameter(ParameterUtils.GetParameterTypeId(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM)).AsDouble();
+
+
             foreach (var p in points)
             {
-                try { editor.AddPoint(p); } catch { /* ignore interior failures */ }
+                try 
+                {
+                    editor.AddPoint(new XYZ(p.X, p.Y, p.Z - levelOffset)); 
+                } 
+                catch 
+                { 
+                    // ignore interior failures  
+                }
             }
 
             _doc.Regenerate(); // force update
@@ -206,9 +217,6 @@ public class CommndAlignFloor : IExternalCommand
                 {
                     try
                     {
-                        var levelOffset = _floor.GetParameter(
-                            ParameterUtils.GetParameterTypeId(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM))
-                            .AsDouble();
                         var offsetZ = match.Z - levelOffset;
                         editor.ModifySubElement(cv, offsetZ);
                     }
