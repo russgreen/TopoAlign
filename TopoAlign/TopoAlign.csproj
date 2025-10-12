@@ -5,7 +5,7 @@
 	  <Configurations>$(Configurations);Release R22;Release R23;Release R24;Release R25;Release R26</Configurations>
 	  <Description>Align topo surface to model elements</Description>
 	  <Copyright>Copyright © Russell Green</Copyright>
-	  <Version>2.6.4</Version>
+	  <Version>2.6.5</Version>
 	  <PlatformTarget>x64</PlatformTarget>
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	  <LangVersion>latest</LangVersion>
@@ -72,7 +72,8 @@
 		     - Release: always
 		     - Debug: only when RevitVersion < 2025 (i.e., R22–R24) -->
 		<IsRepackable Condition="$(Configuration.Contains('Release')) Or 
-					  ( $(Configuration.Contains('Debug')) And '$(RevitVersion)' &lt; '2025')">true</IsRepackable>
+					  (($(Configuration.Contains('Debug')) And 
+					  ($(Configuration.Contains('R22')) Or $(Configuration.Contains('R23')) Or $(Configuration.Contains('R24')))))">true</IsRepackable>
 		<!--<RepackBinariesExcludes>Syncfusion*.dll</RepackBinariesExcludes>-->
 	</PropertyGroup>
 
