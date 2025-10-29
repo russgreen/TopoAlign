@@ -86,6 +86,7 @@ class App : IExternalApplication
         $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandAlignTopo)}"));
         pbTopoAlign.ToolTip = "Adjust topo to edge or floor geometry";
         pbTopoAlign.LargeImage = PngImageSource("TopoAlign.Images.TopoAlign32.png");
+        pbTopoAlign.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandAlignTopo.html"));
 
         PushButton pbFloorAlign = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommndAlignFloor),
@@ -98,6 +99,7 @@ class App : IExternalApplication
         pbFloorAlign.ToolTip = "Adjust a floor to follow the topography";
 #endif
         pbFloorAlign.LargeImage = PngImageSource("TopoAlign.Images.FloorToTopo32.png");
+        pbFloorAlign.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandAlignFloor.html"));
 
         PushButton pbPointsFromLines = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandPointsOnSurface),
@@ -106,6 +108,7 @@ class App : IExternalApplication
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandPointsOnSurface)}"));
         pbPointsFromLines.ToolTip = "Add points on the surface along selected model lines. Model lines must be lines and arcs and be placed BELOW the topo surface.";
         pbPointsFromLines.LargeImage = PngImageSource("TopoAlign.Images.PointsFromLines32.png");
+        pbPointsFromLines.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandPointsOnSurface.html"));
 
         PushButton pbPointsAlongContours = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandPointsAlongContours),
@@ -114,6 +117,7 @@ class App : IExternalApplication
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandPointsAlongContours)}"));
         pbPointsAlongContours.ToolTip = "Add points on surface along selected contour model lines. Model lines can be placed on zero datum BELOW the topo surface and projected up a set distance using an offset value.";
         pbPointsAlongContours.LargeImage = PngImageSource("TopoAlign.Images.PointsFromContours32.png");
+        pbPointsAlongContours.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandPointsAlongContours.html"));
 
         PushButton pbPointsAtIntersection = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandPointsAtIntersection),
@@ -122,6 +126,7 @@ class App : IExternalApplication
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandPointsAtIntersection)}"));
         pbPointsAtIntersection.ToolTip = "Add points on the surface at the intersection with a selected face.";
         pbPointsAtIntersection.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
+        pbPointsAtIntersection.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandPointsAtIntersection.html"));
 
         PushButton pbResetRegion = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandResetTopoRegion),
@@ -130,16 +135,7 @@ class App : IExternalApplication
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandResetTopoRegion)}"));
         pbResetRegion.ToolTip = "Copy points from existing topo surface to new topo surface within a region to undo changes made.";
         pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
-
-        //set help document
-        var contextHelp = new ContextualHelp(ContextualHelpType.Url, @"C:\ProgramData\Autodesk\ApplicationPlugins\rg tools Topo Align.bundle\Contents\help.html");
-
-        pbTopoAlign.SetContextualHelp(contextHelp);
-        pbFloorAlign.SetContextualHelp(contextHelp);
-        pbPointsFromLines.SetContextualHelp(contextHelp);
-        pbPointsAlongContours.SetContextualHelp(contextHelp);
-        pbPointsAtIntersection.SetContextualHelp(contextHelp);
-        pbResetRegion.SetContextualHelp(contextHelp);
+        pbResetRegion.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandResetTopoRegion.html"));
 
         return panel;
     }
