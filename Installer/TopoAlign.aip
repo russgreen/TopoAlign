@@ -24,9 +24,9 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiDirsComponent">
     <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
+    <ROW Directory="AppDataFolder" Directory_Parent="TARGETDIR" DefaultDir="APPDAT~1|AppDataFolder" IsPseudoRoot="1"/>
     <ROW Directory="ApplicationPlugins_Dir" Directory_Parent="Autodesk_Dir" DefaultDir="APPLIC~1|ApplicationPlugins"/>
-    <ROW Directory="Autodesk_Dir" Directory_Parent="CommonAppDataFolder" DefaultDir="Autodesk"/>
-    <ROW Directory="CommonAppDataFolder" Directory_Parent="TARGETDIR" DefaultDir="COMMON~1|CommonAppDataFolder" IsPseudoRoot="1"/>
+    <ROW Directory="Autodesk_Dir" Directory_Parent="AppDataFolder" DefaultDir="Autodesk"/>
     <ROW Directory="Contents_Dir" Directory_Parent="RGtoolsTopoAlign.bundle_Dir" DefaultDir="Contents"/>
     <ROW Directory="NewFolder_Dir" Directory_Parent="Contents_Dir" DefaultDir="2026"/>
     <ROW Directory="RGtoolsTopoAlign.bundle_Dir" Directory_Parent="ApplicationPlugins_Dir" DefaultDir="RGTOOL~1.BUN|RG tools Topo Align.bundle"/>
