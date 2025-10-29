@@ -34,12 +34,29 @@
           <li>Review options and confirm to apply changes.</li>
         </ol>
 
+        <script src="../assets/video-loader.js"></script>
+        <script>
+          const VIDEO_URL = 'https://russgreen.github.io/TopoAlign/assets/aligntopo.mp4';
+        </script>
+        <div id="video-section" style="display: none;">
+          <h2>Demo Video</h2>
+          <video width="1000" controls preload="metadata" muted>
+            <source src="" type="video/mp4">
+            <!-- Add additional source formats if available -->
+            <!-- <source src="" type="video/webm"> -->
+            Your browser does not support the video tag.
+          </video>
+        </div>
+              
+
         <h2 id="options">Options / Parameters</h2>
         <ul>
-          <li>Placeholder: Alignment Mode — Select an alignment strategy (e.g., to element faces, to curves).</li>
-          <li>Placeholder: Sampling/Spacing — Controls point density on the topo.</li>
-          <li>Placeholder: Vertical Offset — Optional Z offset to apply.</li>
+          <li>Alignment Mode — Select an alignment strategy (e.g., to element faces, to edges).</li>
           <li>Units — Inputs respect the current Revit project units.</li>
+          <li>Divide Edge Distance — Controls point density on the topo for straight line edges.</li>
+          <li>Vertical Offset — Optional Z offset to apply.</li>
+          <li>Remove inside topo points - Attempt to remove existing topo points within the selected region.</li>
+          <li>Face to use - Align to the top or bottom face of the selected element.</li>
         </ul>
 
         <h2 id="results">Output / Results</h2>
@@ -53,6 +70,7 @@
           <li>Align in manageable regions for complex sites.</li>
           <li>Verify view orientation to ensure correct element selection.</li>
           <li>Use an isolated view to reduce accidental selections.</li>
+          <li>Cleanup points does not 100% detect existing points to cleanup and some manual deletion may be required.</li>
         </ul>
 
         <h2 id="troubleshooting">Troubleshooting</h2>
