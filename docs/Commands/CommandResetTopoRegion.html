@@ -1,0 +1,68 @@
+﻿<!-- docs/Commands/CommandResetTopoRegion.html -->
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <title>TopoAlign – Reset Region</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+ <header>
+ <div class="wrap">
+ <div class="brand"><h1>TopoAlign</h1></div>
+    <nav class="crumbs">
+        <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Reset Region</li>
+        </ol>
+    </nav>
+ </div>
+ </header>
+
+ <main>
+ <div class="wrap">
+ <article>
+ <h1 id="overview">Reset Region</h1>
+ <p>Replaces target topography points inside a user-drawn rectangle with points from a source topography filtered by phases.</p>
+
+ <h2 id="usage">Usage / Steps</h2>
+ <ol>
+ <li>Ensure you are in a plan view.</li>
+ <li>Choose source/target phases and select corresponding topos.</li>
+ <li>Draw a rectangle to define the reset region.</li>
+ <li>The target region is cleared and repopulated from the source.</li>
+ </ol>
+
+ <h2 id="options">Options / Parameters</h2>
+ <ul>
+ <li>Source Phase — Filters source topo candidates.</li>
+ <li>Target Phase — Filters target topo candidates.</li>
+ <li>Selection Rectangle — Defines region bounds in the active view.</li>
+ </ul>
+
+ <h2 id="results">Output / Results</h2>
+ <ul>
+ <li>Target topo points within the rectangle mirror the source topo points.</li>
+ </ul>
+
+ <h2 id="tips">Tips &amp; Pitfalls</h2>
+ <ul>
+ <li>Use a scope box or temporary isolate to avoid mis-selections.</li>
+ <li>Ensure both topos overlap the selection rectangle.</li>
+ </ul>
+
+ <h2 id="troubleshooting">Troubleshooting</h2>
+ <ul>
+ <li><strong>Must be in a plan view</strong> → Switch views and retry.</li>
+ <li><strong>No topos listed</strong> → Phase filters exclude them → Pick different phases.</li>
+ </ul>
+
+ </article>
+
+ </div>
+ </main>
+
+ <footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>

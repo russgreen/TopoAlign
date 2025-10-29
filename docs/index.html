@@ -1,0 +1,115 @@
+<!-- docs/index.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TopoAlign • Documentation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="brand">
+        <h1>TopoAlign</h1>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <article>
+        <p>TopoAlign provides a set of Revit add-in commands to align and manage topographic surfaces and slabs. Typical outcomes include adding sampled points to topography from curves or intersections, aligning floor slab shapes to the underlying terrain, and resetting regions of topography based on source/target selections.</p>
+
+        <h2 id="requirements">System Requirements</h2>
+        <ul>
+          <li>Autodesk Revit: 2022, 2023, 2024, 2025, or 2026</li>
+          <li>.NET Framework 4.8 for Revit 2022–2024; .NET 8.0 (Windows) for Revit 2025–2026</li>
+          <li>Permissions to install Revit add-ins under your user profile</li>
+        </ul>
+
+        <h2 id="installation">Installation</h2>
+        <h3 id="installation-installer">Installer</h3>
+        <p>If an installer is provided, run it and start Revit. The add-in will appear in the Add-Ins tab.</p>
+        <h3 id="installation-manual">Manual</h3>
+        <ol>
+          <li>Build or obtain the add-in DLLs and the <code>TopoAlign.addin</code> manifest.</li>
+          <li>Copy them to: <code>%AppData%\Autodesk\Revit\Addins\&lt;RevitYear&gt;\</code>.</li>
+          <li>Launch Revit and verify the commands in the TopoAlign tab.</li>
+        </ol>
+
+        <h2 id="quick-start">Quick Start</h2>
+        <ol>
+          <li>Open a model and switch to a suitable view (3D for most point projection workflows; plan for region reset).</li>
+          <li>Use <strong>Align to Element</strong> to add points to topography from selected model elements.</li>
+          <li>Use <strong>Align to Topo</strong> to shape a floor slab to the terrain, with an optional vertical offset.</li>
+          <li>Use <strong>Points Along Contours</strong> or <strong>Points On Surface</strong> to add points to topography from selected lines.</li>
+          <li>Use <strong>Points At Intersection</strong> to place points where a face intersects the topography.</li>
+          <li>Use <strong>Reset Topo Region</strong> to replace points within a rectangle from a source topo into a target topo.</li>
+        </ol>
+
+        <h2 id="commands">Commands</h2>
+        <div class="cards">
+          <div class="card">
+            <img src="./assets/AlignTopo.png" alt="Align to Element" class="card-icon">
+            <h3><a href="./Commands/CommandAlignTopo.html">Align to Element</a></h3>
+            <p class="muted">Dialog-driven alignment of topography to selected elements. Provides a guided workflow.</p>
+          </div>
+          <div class="card">
+            <img src="./assets/AlignFloor.png" alt="Align to Topo" class="card-icon">
+            <h3><a href="./Commands/CommandAlignFloor.html">Align to Topo</a></h3>
+            <p class="muted">Shapes a floor slab to match the terrain within its outline, with optional vertical offset.</p>
+          </div>
+          <div class="card">
+              <img src="./assets/PointsOnSurface.png" alt="Points from Lines" class="card-icon">
+              <h3><a href="./Commands/CommandPointsOnSurface.html">Points from Lines</a></h3>
+              <p class="muted">Samples points on the topographic surface beneath selected curves and places them on the topo.</p>
+          </div>
+          <div class="card">
+            <img src="./assets/PointsAlongContours.png" alt="Points Along Contours" class="card-icon">
+            <h3><a href="./Commands/CommandPointsAlongContours.html">Points Along Contours</a></h3>
+            <p class="muted">Adds points to topography at a fixed interval along selected model lines/curves.</p>
+          </div>
+          <div class="card">
+            <img src="./assets/PointsAtIntersection.png" alt="Points At Intersection" class="card-icon">
+            <h3><a href="./Commands/CommandPointsAtIntersection.html">Points At Intersection</a></h3>
+            <p class="muted">Computes and adds points where a selected face intersects the topography.</p>
+          </div>
+          <div class="card">
+            <img src="./assets/ResetTopoRegion.png" alt="Reset Topo Region" class="card-icon">
+            <h3><a href="./Commands/CommandResetTopoRegion.html">Reset Topo Region</a></h3>
+            <p class="muted">Replaces points in a rectangular region of a target topo with points from a source topo.</p>
+          </div>
+        </div>
+
+        <h2 id="config">Configuration &amp; Paths</h2>
+        <ul>
+          <li>Add-in manifest: <code>%AppData%\Autodesk\Revit\Addins\&lt;RevitYear&gt;\TopoAlign.addin</code></li>
+          <li>Installed binaries: same folder as manifest unless configured otherwise.</li>
+          <li>Settings: stored per-user (Placeholder) and persisted between runs for unit/offset/divide inputs.</li>
+        </ul>
+
+        <h2 id="logging">Logging</h2>
+        <p>Anonymized usage is logged to Google Analytics. No personal data is collected. The information collection is the addin version, Revit version, command used and the country of the user.</p>
+
+        <h2 id="support">Support</h2>
+        <ul>
+          <li><a href="https://github.com/russgreen/TopoAlign/issues">Issues</a></li>
+          <li><a href="https://github.com/russgreen/TopoAlign/discussions">Discussions</a></li>
+        </ul>
+
+        <h2 id="whats-new">What's New</h2>
+        <ul>
+          <li>Recent fixes and improvements to topography point handling.</li>
+          <li>Updates for Revit2026 compatibility.</li>
+        </ul>
+      </article>
+
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">TopoAlign • Documentation</div>
+  </footer>
+</body>
+</html>

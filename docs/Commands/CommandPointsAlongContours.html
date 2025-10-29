@@ -1,0 +1,67 @@
+﻿<!-- docs/Commands/CommandPointsAlongContours.html -->
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <title>TopoAlign – Points Along Contours</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+ <header>
+ <div class="wrap">
+ <div class="brand"><h1>TopoAlign</h1></div>
+    <nav class="crumbs">
+        <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Points Along Contours</li>
+        </ol>
+    </nav>
+ </div>
+ </header>
+
+ <main>
+ <div class="wrap">
+ <article>
+ <h1 id="overview">Points Along Contours</h1>
+ <p>Adds points to the topographic surface at a fixed spacing along selected model lines or curves. Useful for sampling contours, boundaries, or path-aligned features.</p>
+
+ <h2 id="usage">Usage / Steps</h2>
+ <ol>
+ <li>Launch the command.</li>
+ <li>Set the spacing (“Divide”) and optional vertical offset. Choose units.</li>
+ <li>Select one or more lines/curves when prompted.</li>
+ <li>Confirm to add points to the topo at regular intervals.</li>
+ </ol>
+
+ <h2 id="options">Options / Parameters</h2>
+ <ul>
+ <li>Divide Distance (double) — Interval between points along input curves.</li>
+ <li>Vertical Offset (double) — Optional Z offset applied to created points.</li>
+ <li>Units — Length units for inputs; defaults to project units.</li>
+ </ul>
+
+ <h2 id="results">Output / Results</h2>
+ <ul>
+ <li>Topo points are created at regular intervals along the selected curves.</li>
+ <li>Duplicate points are removed using a positional tolerance.</li>
+ </ul>
+
+ <h2 id="tips">Tips &amp; Pitfalls</h2>
+ <ul>
+ <li>If the selected curves form a closed loop, you may be prompted to clean interior points.</li>
+ <li>Ensure curves are contiguous if you expect an ordered path.</li>
+ </ul>
+
+ <h2 id="troubleshooting">Troubleshooting</h2>
+ <ul>
+ <li><strong>No points added</strong> → Invalid or empty selection → Rerun and select model lines/curves.</li>
+ <li><strong>Uneven spacing</strong> → Curves of varying types → Consider simplifying or segmenting inputs.</li>
+ </ul>
+
+ </div>
+ </main>
+
+ <footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>

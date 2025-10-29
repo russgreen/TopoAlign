@@ -1,0 +1,69 @@
+﻿<!-- docs/Commands/CommandAlignTopo.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TopoAlign – Align to Element</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="brand"><h1>TopoAlign</h1></div>
+      <nav class="crumbs">
+        <ol>
+          <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+          <li class="crumb">Align to Element</li>
+        </ol>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <article>
+        <h1 id="overview">Align to Element</h1>
+        <p>Opens a dialog to guide aligning a topographic surface to selected model elements. This command provides a workflow-centric UI for choosing inputs and applying adjustments to the topography.</p>
+
+        <h2 id="usage">Usage / Steps</h2>
+        <ol>
+          <li>Launch the command from the Add-Ins tab.</li>
+          <li>In the dialog, choose the alignment mode and target topography.</li>
+          <li>Select the driving elements when prompted.</li>
+          <li>Review options and confirm to apply changes.</li>
+        </ol>
+
+        <h2 id="options">Options / Parameters</h2>
+        <ul>
+          <li>Placeholder: Alignment Mode — Select an alignment strategy (e.g., to element faces, to curves).</li>
+          <li>Placeholder: Sampling/Spacing — Controls point density on the topo.</li>
+          <li>Placeholder: Vertical Offset — Optional Z offset to apply.</li>
+          <li>Units — Inputs respect the current Revit project units.</li>
+        </ul>
+
+        <h2 id="results">Output / Results</h2>
+        <ul>
+          <li>Topography points are added/adjusted to match the selected references.</li>
+          <li>Changes are recorded in the model history and can be undone.</li>
+        </ul>
+
+        <h2 id="tips">Tips &amp; Pitfalls</h2>
+        <ul>
+          <li>Align in manageable regions for complex sites.</li>
+          <li>Verify view orientation to ensure correct element selection.</li>
+          <li>Use an isolated view to reduce accidental selections.</li>
+        </ul>
+
+        <h2 id="troubleshooting">Troubleshooting</h2>
+        <ul>
+          <li><strong>Dialog shows no selectable topo</strong> → No topo in view → Create/Reveal the topography and retry.</li>
+          <li><strong>Command cancels unexpectedly</strong> → Element selection was canceled → Restart command and complete all prompts.</li>
+        </ul>
+
+    </div>
+  </main>
+
+  <footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>
