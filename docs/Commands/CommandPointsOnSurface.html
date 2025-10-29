@@ -1,0 +1,65 @@
+﻿<!-- docs/Commands/CommandPointsOnSurface.html -->
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <title>TopoAlign – Points from Lines</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+ <header>
+ <div class="wrap">
+ <div class="brand"><h1>TopoAlign</h1></div>
+    <nav class="crumbs">
+        <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Points from Lines</li>
+        </ol>
+    </nav>
+ </div>
+ </header>
+
+ <main>
+ <div class="wrap">
+ <article>
+ <h1 id="overview">Points from Lines</h1>
+ <p>Samples the topographic surface beneath selected lines/curves and creates points on the topo at a fixed spacing along those curves.</p>
+
+ <h2 id="usage">Usage / Steps</h2>
+ <ol>
+ <li>Launch the command.</li>
+ <li>Set the spacing (“Divide”). Vertical offset is disabled for this command.</li>
+ <li>Select the target topo, then select one or more lines/curves.</li>
+ <li>Points are projected onto the topo along the selected paths.</li>
+ </ol>
+
+ <h2 id="options">Options / Parameters</h2>
+ <ul>
+ <li>Divide Distance (double) — Interval between sample points along the curves.</li>
+ <li>Units — Length units for inputs; defaults to project units.</li>
+ </ul>
+
+ <h2 id="results">Output / Results</h2>
+ <ul>
+ <li>Topo points are added at sampled positions, with duplicates removed using a tolerance.</li>
+ </ul>
+
+ <h2 id="tips">Tips &amp; Pitfalls</h2>
+ <ul>
+ <li>Ensure curves are connected if a continuous path is required.</li>
+ <li>Consider isolating the topo and inputs to simplify selection.</li>
+ </ul>
+
+ <h2 id="troubleshooting">Troubleshooting</h2>
+ <ul>
+ <li><strong>“You must be in a3D view”</strong> → Switch to a3D view and retry.</li>
+ <li><strong>Empty result</strong> → Curves may be out of topo range → Check overlaps and spacing.</li>
+ </ul>
+
+ </div>
+ </main>
+
+ <footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>

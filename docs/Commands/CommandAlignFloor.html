@@ -1,0 +1,70 @@
+﻿<!-- docs/Commands/CommandCommndAlignFloor.html -->
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <title>TopoAlign – Align to Topo</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+ <header>
+ <div class="wrap">
+ <div class="brand"><h1>TopoAlign</h1></div>
+    <nav class="crumbs">
+        <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Align to Topo</li>
+        </ol>
+    </nav>
+ </div>
+ </header>
+
+ <main>
+ <div class="wrap">
+ <article>
+ <h1 id="overview">Align to Topo</h1>
+ <p>Shapes a selected floor slab to match the underlying terrain within its footprint. An optional vertical offset can be applied to maintain clearances or design intent.</p>
+
+ <h2 id="usage">Usage / Steps</h2>
+ <ol>
+ <li>Launch the command.</li>
+ <li>Enter a vertical offset (can be negative or zero). Units respect project settings.</li>
+ <li>Select the floor to align when prompted.</li>
+ <li>Select the target topography/toposolid.</li>
+ <li>The slab shape editor is populated with sampled points from the terrain.</li>
+ </ol>
+
+ <h2 id="options">Options / Parameters</h2>
+ <ul>
+ <li>Vertical Offset (double) — Default0; offset applied to the sampled terrain before shaping the slab.</li>
+ <li>Units — Choose from valid length units. Defaults to the project’s length units.</li>
+ </ul>
+
+ <h2 id="results">Output / Results</h2>
+ <ul>
+ <li>The floor’s slab shape is modified to follow the terrain inside the floor boundary.</li>
+ <li>Existing slab shape is reset prior to applying new points.</li>
+ </ul>
+
+ <h2 id="examples">Examples</h2>
+ <p>[Screenshot: Floor slab conformed to terrain within footprint]</p>
+
+ <h2 id="tips">Tips &amp; Pitfalls</h2>
+ <ul>
+ <li>Apply small offsets to avoid self-intersections or extreme warping near edges.</li>
+ <li>Ensure the floor outline does not cross subregions or subdivisions that could block sampling.</li>
+ </ul>
+
+ <h2 id="troubleshooting">Troubleshooting</h2>
+ <ul>
+ <li><strong>No points added</strong> → Floor or topo not selected → Rerun and ensure both selections complete.</li>
+ <li><strong>Slab fails to update</strong> → Geometry conflicts → Reset slab shape and try a smaller offset.</li>
+ </ul>
+
+ </div>
+ </main>
+
+ <footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>

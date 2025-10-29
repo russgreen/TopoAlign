@@ -1,0 +1,67 @@
+﻿<!-- docs/Commands/CommandPointsAtIntersection.html -->
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <title>TopoAlign – Points At Intersection</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+ <header>
+ <div class="wrap">
+ <div class="brand"><h1>TopoAlign</h1></div>
+    <nav class="crumbs">
+        <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Points At Intersection</li>
+        </ol>
+    </nav>
+ </div>
+ </header>
+
+ <main>
+ <div class="wrap">
+ <article>
+ <h1 id="overview">Points At Intersection</h1>
+ <p>Computes intersections between a selected face and the topographic surface, then places points on the topo at those intersections.</p>
+
+ <h2 id="usage">Usage / Steps</h2>
+ <ol>
+ <li>Switch to a3D view.</li>
+ <li>Launch the command.</li>
+ <li>Select the topo when prompted.</li>
+ <li>Select a face on an element.</li>
+ <li>Points are computed and placed at the intersection locations.</li>
+ </ol>
+
+ <h2 id="options">Options / Parameters</h2>
+ <ul>
+ <li>Sampling Distance (double) — Placeholder: step used for triangle intersection sampling.</li>
+ <li>Units — Uses project length units when applicable.</li>
+ </ul>
+
+ <h2 id="results">Output / Results</h2>
+ <ul>
+ <li>Topo points are added where the face intersects the terrain.</li>
+ <li>Duplicate points are removed using a geometric tolerance.</li>
+ </ul>
+
+ <h2 id="tips">Tips &amp; Pitfalls</h2>
+ <ul>
+ <li>Prefer simple faces for clearer intersections (planar or gently curved).</li>
+ <li>Ensure the face and topo overlap in3D space.</li>
+ </ul>
+
+ <h2 id="troubleshooting">Troubleshooting</h2>
+ <ul>
+ <li><strong>Must be in a3D view</strong> → Switch to a3D view and retry.</li>
+ <li><strong>No intersections found</strong> → Elements do not intersect → Adjust selection or view.</li>
+ </ul>
+
+ </div>
+ </main>
+
+ <footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>
