@@ -56,59 +56,83 @@ public class PointInPoly
         }
     }
 
-    /// <summary>
-    /// Determine whether given 2D point lies within
-    /// the polygon.
-    /// 
-    /// Written by Jeremy Tammik, Autodesk, 2009-09-23,
-    /// based on code that I wrote back in 1996 in C++,
-    /// which in turn was based on C code from the
-    /// article "An Incremental Angle Point in Polygon
-    /// Test" by Kevin Weiler, Autodesk, in "Graphics
-    /// Gems IV", Academic Press, 1994.
-    /// 
-    /// Copyright (C) 2009 by Jeremy Tammik. All
-    /// rights reserved.
-    /// 
-    /// This code may be freely used. Please preserve
-    /// this comment.
-    /// </summary>
+    // Robust winding-number containment (boundary-inclusive when paired with IsPointOnPolygonBoundary)
     public static bool PolygonContains(UVArray polygon, UV point)
     {
-        // initialize
-        int quad = GetQuadrant(polygon.Item(0), point);
-        int angle = 0;
+        const double eps = 1e-9;
 
-        // loop on all vertices of polygon
-        int next_quad;
-        int delta;
-        int n = polygon.Size;
-        for (int i = 0, loopTo = n - 1; i <= loopTo; i++)
+        // Defensive: if caller hasn't already done boundary test, do it here
+        // If you already call IsPointOnPolygonBoundary before this, this short-circuit is harmless.
+        if (IsPointOnPolygonBoundary(polygon, point))
         {
-            var vertex = polygon.Item(i);
-            var next_vertex = polygon.Item(i + 1 < n ? i + 1 : 0);
-
-            // calculate quadrant and delta from last quadrant
-            next_quad = GetQuadrant(next_vertex, point);
-            delta = next_quad - quad;
-            AdjustDelta(ref delta, vertex, next_vertex, point);
-
-            // add delta to total angle sum
-            angle = angle + delta;
-
-            // increment for next step
-            quad = next_quad;
+            return true;
         }
 
-        // complete 360 degrees (angle of + 4 or -4 ) 
-        // means inside
+        int winding = 0;
+        int n = polygon.Size;
 
-        return angle == +4 || angle == -4;
+        // Standard winding number algorithm with upper-exclusive rule
+        // j trails i (previous vertex)
+        int j = n - 1;
+        for (int i = 0; i < n; j = i, i++)
+        {
+            var vi = polygon.Item(i);
+            var vj = polygon.Item(j);
 
-        // odd number of windings rule:
-        // if (angle & 4) return INSIDE; else return OUTSIDE;
-        // non-zero winding rule:
-        // if (angle != 0) return INSIDE; else return OUTSIDE;
+            // Skip degenerate edges
+            if (vi.IsAlmostEqualTo(vj))
+            {
+                continue;
+            }
+
+            // Upward crossing: vj.V <= y < vi.V
+            if (vj.V <= point.V && vi.V > point.V)
+            {
+                var left = IsLeft(vj, vi, point);
+                if (left > eps)
+                {
+                    ++winding;
+                }
+            }
+            // Downward crossing: vi.V <= y < vj.V
+            else if (vi.V <= point.V && vj.V > point.V)
+            {
+                var left = IsLeft(vj, vi, point);
+                if (left < -eps)
+                {
+                    --winding;
+                }
+            }
+        }
+
+        // Non-zero winding rule (robust for self-consistent polygon orientation)
+        return winding != 0;
+    }
+
+    private static double IsLeft(UV a, UV b, UV c)
+    {
+        // cross((b - a), (c - a)) in 2D
+        return (b.U - a.U) * (c.V - a.V) - (c.U - a.U) * (b.V - a.V);
+    }
+
+
+    // New: explicit boundary check with tolerance-aware line test
+    public static bool IsPointOnPolygonBoundary(UVArray polygon, UV point)
+    {
+        for (int i = 0, j = polygon.Size - 1; i < polygon.Size; j = i++)
+        {
+            var a = polygon.Item(i);
+            var b = polygon.Item(j);
+
+            // vertex hit
+            if (a.IsAlmostEqualTo(point) || b.IsAlmostEqualTo(point))
+                return true;
+
+            // edge hit
+            if (point.IsOnLine(a, b))
+                return true;
+        }
+        return false;
     }
 
     public static bool PointInPolygon(UVArray polygon, UV point)
@@ -326,9 +350,17 @@ public class UVArray
 
     public UVArray(List<XYZ> XYZArray)
     {
-        arrayPoints = new List<UV>();
+        arrayPoints = new();
         foreach (XYZ p in XYZArray)
+        {
             arrayPoints.Add(PointsUtils.Flatten(p));
+        }
+    }
+
+    // New: allow construction from UV lists directly
+    public UVArray(List<UV> uvArray)
+    {
+        arrayPoints = new List<UV>(uvArray);
     }
 
     public UV Item(int i)
