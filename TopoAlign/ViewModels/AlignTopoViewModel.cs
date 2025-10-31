@@ -3,8 +3,11 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Diagnostics;
 using System.Reflection;
+using TopoAlign;
 using TopoAlign.Comparers;
+using TopoAlign.Extensions;
 using TopoAlign.Geometry;
 
 namespace TopoAlign.ViewModels;
@@ -497,25 +500,6 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
     private void CleanupTopoPoints(Element element)
     {
-        ////try and get boundary and cleanup topo
-        //switch (element.Category.Name ?? "")
-        //{
-        //    case "Floors":
-        //        break;
-        //    case "Roofs":
-        //        break;
-        //    case "Walls":
-        //        break;
-        //    case "Pads":
-        //        break;
-        //    default:
-        //        {
-        //            // don't cleanup
-        //            return;
-        //        }
-        //}
-                   
-
         var opt = new Options
         {
             ComputeReferences = true
@@ -525,7 +509,8 @@ internal partial class AlignTopoViewModel : BaseViewModel
         var polygons = new List<List<XYZ>>();
         polygons = GetPolygonsFromGeometryElement(geometryElement);
 
-        UVArray polygon = GetPolygon(polygons);
+        // Build separate UV loops for each polygon loop (no flattening across loops)
+        var uvLoops = GetUvLoops(polygons);
 
         // Get topo points withing bounding box of element
         Autodesk.Revit.DB.View v = null;
@@ -537,14 +522,14 @@ internal partial class AlignTopoViewModel : BaseViewModel
 #if REVIT2024_OR_GREATER
         if (_topoSolid != null)
         {
-            min = new XYZ(bb.Min.X - 1d, bb.Min.Y - 1d, _topoSolid.get_BoundingBox(v).Min.Z);
-            max = new XYZ(bb.Max.X + 1d, bb.Max.Y + 1d, _topoSolid.get_BoundingBox(v).Max.Z);
+            min = new XYZ(bb.Min.X - 1d, bb.Min.Y - 1d, _topoSolid.get_BoundingBox(v).Min.Z - 1d);
+            max = new XYZ(bb.Max.X + 1d, bb.Max.Y + 1d, _topoSolid.get_BoundingBox(v).Max.Z + 2d);
         }
 #else
         if(_topoSurface != null)
         {
-            min = new XYZ(bb.Min.X - 1d, bb.Min.Y - 1d, _topoSurface.get_BoundingBox(v).Min.Z);
-            max = new XYZ(bb.Max.X + 1d, bb.Max.Y + 1d, _topoSurface.get_BoundingBox(v).Max.Z);
+            min = new XYZ(bb.Min.X - 1d, bb.Min.Y - 1d, _topoSurface.get_BoundingBox(v).Min.Z - 1d);
+            max = new XYZ(bb.Max.X + 1d, bb.Max.Y + 1d, _topoSurface.get_BoundingBox(v).Max.Z + 2d);
         }
 #endif
 
@@ -569,6 +554,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
         }
 #endif
 
+
         foreach (XYZ pt in topoPoints)
         {
             if (outline.Contains(pt, 0.000000001d))
@@ -577,13 +563,54 @@ internal partial class AlignTopoViewModel : BaseViewModel
             }
         }
 
-        // Check each point to see if point is with 2D boundary
+
+        // Check each point against all loops: boundary-inclusive even-odd rule
         var pointsInPolygon = new List<XYZ>();
         using (var pf = new ProgressForm("Analyzing topo points.", "{0} points of " + topoPointsInBoundingBox.Count + " processed...", topoPointsInBoundingBox.Count))
         {
             foreach (XYZ pt in topoPointsInBoundingBox)
             {
-                if (PointInPoly.PointInPolygon(polygon, PointsUtils.Flatten(pt)) == true)
+                //Debug.WriteLine($"point to check : {pt}");
+
+                var pUV = PointsUtils.Flatten(pt);
+
+                //Debug.WriteLine($"point as uv : {pUV}");
+
+                // boundary first: if on any loop boundary, it's considered inside
+                bool onBoundary = false;
+                foreach (var loop in uvLoops)
+                {
+                    if (PointInPoly.IsPointOnPolygonBoundary(loop, pUV))
+                    {
+                        onBoundary = true;
+                        break;
+                    }
+                }
+
+                bool inside = false;
+                if (onBoundary)
+                {
+                    inside = true;
+                }
+                else
+                {
+                    // even-odd across all loops
+                    foreach (var loop in uvLoops)
+                    {
+                        //for (global::System.Int32 i = 0; i < loop.Size; i++)
+                        //{
+                        //    var uv = loop.Item(i);
+                        //    Debug.WriteLine($"Boundary loop point : {uv}");
+                        //}
+
+                        if (PointInPoly.PolygonContains(loop, pUV))
+                        {
+                            inside = !inside;
+                        }
+                    }
+                }
+
+                if (inside)
                 {
                     pointsInPolygon.Add(pt);
                 }
@@ -591,6 +618,18 @@ internal partial class AlignTopoViewModel : BaseViewModel
                 pf.Increment();
             }
         }
+
+        //using (var t = new Transaction(App.RevitDocument, "debugging points"))
+        //{
+        //    t.Start();
+
+        //    foreach(var pt in pointsInPolygon)
+        //    {
+        //        pt.Visualize(App.RevitDocument);
+        //    }
+
+        //    t.Commit();
+        //}
 
         // Remove topo points if any are found within the polygon
         if (pointsInPolygon.Count > 0)
@@ -665,6 +704,23 @@ internal partial class AlignTopoViewModel : BaseViewModel
         }
 
         return uvArr;
+    }
+
+    // New: build per-loop UV polygons (preserve loops)
+    private static List<UVArray> GetUvLoops(List<List<XYZ>> polygons)
+    {
+        var loops = new List<UVArray>(polygons.Count);
+        foreach (var poly in polygons)
+        {
+            var uv = new List<UV>(poly.Count);
+            foreach (var p in poly)
+            {
+                uv.Add(PointsUtils.Flatten(p));
+            }
+
+            loops.Add(new UVArray(uv));
+        }
+        return loops;
     }
 
     private List<List<XYZ>> GetPolygonsFromGeometryElement(GeometryElement geometryElement)
