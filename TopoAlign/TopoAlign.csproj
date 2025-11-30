@@ -106,7 +106,7 @@
    <ItemGroup>
      <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
      <PackageReference Include="geometry3Sharp" Version="1.0.324" />
-     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.*" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
 	   
@@ -116,7 +116,7 @@
 	 <PackageReference Include="Serilog.Sinks.GoogleAnalytics" Version="1.*" />
 
 	   <!--Repacking-->
-	   <PackageReference Include="ILRepack" Version="2.0.41">
+	   <PackageReference Include="ILRepack" Version="2.0.44">
 		   <PrivateAssets>all</PrivateAssets>
 		   <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	   </PackageReference>
