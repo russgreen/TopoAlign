@@ -30,12 +30,6 @@ partial class Build
     {
         var configurations = Solution.GetModel().BuildTypes;
 
-        //var configurations = Solution.Configurations
-        //    .Select(pair => pair.Key)
-        //    .Select(config => config.Remove(config.LastIndexOf('|')))
-        //    .Distinct()
-        //    .ToList();
-
         return configurations;
     }
 }
