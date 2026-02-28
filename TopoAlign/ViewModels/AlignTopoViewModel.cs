@@ -159,9 +159,10 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
         GetTopoSurface(topoFilter);
 
+        List<Element> elements = new();
         List<Edge> edges = new();
         List<Curve> curves = new();
-        GetElementOrEdges(elemFilter, ref edges, ref curves);
+        GetElementsOrEdges(elemFilter, ref elements, ref edges, ref curves);
 
         IList<XYZ> points = new List<XYZ>();
         IList<XYZ> points1 = new List<XYZ>();
@@ -176,23 +177,34 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
             if (SingleElement)
             {
-                if (_element is FamilyInstance fi)
+                foreach (Element element in elements)
                 {
-                    if (CleanTopoPoints == true)
+                    if (element is FamilyInstance fi)
                     {
-                        CleanupTopoPoints(fi);
-                    }
+                        if (CleanTopoPoints == true)
+                        {
+                            CleanupTopoPoints(fi);
+                        }
 
-                    points = GetPointsFromFamily(fi.get_Geometry(opt), TopFace);
-                }
-                else
-                {
-                    if (CleanTopoPoints == true)
+                        foreach (var point in GetPointsFromFamily(fi.get_Geometry(opt), TopFace))
+                        {
+                            points.Add(point);
+                        }
+                        
+                    }
+                    else
                     {
-                        CleanupTopoPoints(_element);
-                    }
+                        if (CleanTopoPoints == true)
+                        {
+                            CleanupTopoPoints(element);
+                        }
 
-                    points = GetPointsFromElement(_element, TopFace);
+                        foreach (var point in GetPointsFromElement(element, TopFace))
+                        {
+                            points.Add(point);
+                        }
+                        
+                    }
                 }
 
                 if (points.Count == 0)
@@ -317,6 +329,54 @@ internal partial class AlignTopoViewModel : BaseViewModel
         }
     }
 
+    private void GetElementsOrEdges(ElemPickFilter elemFilter, ref List<Element> elements, ref List<Edge> edges, ref List<Curve> curves)
+    {
+        if (SingleElement)
+        {
+            //we're using elements rather than edges
+            try
+            {
+                foreach(Reference r in App.CachedUiApp.ActiveUIDocument.Selection.PickObjects(ObjectType.Element, elemFilter, "Select objects to align to"))
+                {
+                    var element = App.RevitDocument.GetElement(r);
+                    elements.Add(element);
+                }
+            }
+            catch (Exception)
+            {
+                return;
+            }
+        }
+        else
+        {
+            //we're using edges
+            try
+            {
+                edges = new List<Edge>();
+                curves = new List<Curve>();
+                foreach (Reference r in App.CachedUiApp.ActiveUIDocument.Selection.PickObjects(ObjectType.Edge, "Select edge(s) to align to"))
+                {
+                    var element = App.RevitDocument.GetElement(r.ElementId);
+                    Edge selectedEdge = element.GetGeometryObjectFromReference(r) as Edge;
+                    var m_Curve = selectedEdge.AsCurve();
+                    if (element is FamilyInstance fi)
+                    {
+                        var the_list_of_the_joined = JoinGeometryUtils.GetJoinedElements(App.RevitDocument, fi);
+                        if (the_list_of_the_joined.Count == 0)
+                        {
+                            m_Curve = m_Curve.CreateTransformed(fi.GetTransform());
+                        }
+                    }
+
+                    curves.Add(m_Curve);
+                }
+            }
+            catch (Exception)
+            {
+                return;
+            }
+        }
+    }
 
     private IList<XYZ> GetPointsFromElement(Element element, bool topFace)
     {
