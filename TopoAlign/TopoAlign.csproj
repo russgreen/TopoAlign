@@ -5,7 +5,7 @@
 	  <Configurations>$(Configurations);Release R22;Release R23;Release R24;Release R25;Release R26;Release R27</Configurations>
 	  <Description>Align topo surface to model elements</Description>
 	  <Copyright>Copyright © Russell Green</Copyright>
-	  <Version>2.6.7</Version>
+	  <Version>2.7.0</Version>
 	  <PlatformTarget>x64</PlatformTarget>
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	  <LangVersion>latest</LangVersion>
