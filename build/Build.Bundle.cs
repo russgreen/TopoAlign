@@ -1,4 +1,5 @@
 ﻿using Nuke.Common;
+using Nuke.Common.Git;
 using Nuke.Common.ProjectModel;
 using Serilog;
 using System.Collections.Generic;
@@ -32,7 +33,8 @@ partial class Build
                             { "Release R23", "2023" },
                             { "Release R24", "2024" },
                             { "Release R25", "2025" },
-                            { "Release R26", "2026" }
+                            { "Release R26", "2026" },
+                            { "Release R27", "2027" }
                         };
 
                 if (configurationToDirectoryMap.ContainsKey(configuration))

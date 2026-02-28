@@ -43,7 +43,7 @@
 
         <GroupBox Grid.ColumnSpan="2" Header="Pick method" Margin="0,0,0,5">
             <StackPanel Orientation="Horizontal">
-                <RadioButton Content="Single element" IsChecked="{Binding SingleElement}" />
+                <RadioButton Content="Element(s)" IsChecked="{Binding SingleElement}" />
                 <RadioButton Content="Edge(s)" Margin="30,0,0,0"
                              IsChecked="{Binding Edge, Mode=OneWay}"/>
             </StackPanel>
