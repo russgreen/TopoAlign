@@ -25,10 +25,11 @@ partial class Build
                 Log.Information(projectBinDirectory);
 
                 var files = Directory.GetFiles(projectBinDirectory, "*.*");
-                var destinationDirectory = Path.Combine(bundleContentsDirectory, "2022");
+                var destinationDirectory = Path.Combine(bundleContentsDirectory, "2021");
 
                 var configurationToDirectoryMap = new Dictionary<string, string>
                         {
+                            { "Release R21", "2021" },
                             { "Release R22", "2022" },
                             { "Release R23", "2023" },
                             { "Release R24", "2024" },
