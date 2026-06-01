@@ -78,7 +78,7 @@ public class CommandPointsOnSurface : IExternalCommand
             _divide = Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)cSettings.DivideEdgeDistance, _docDisplayUnits));
 
             frm.nudVertOffset.Value = 0;
-            frm.nudVertOffset.Enabled = false;
+            //frm.nudVertOffset.Enabled = false;
 
             if (_divide > frm.nudDivide.Maximum)
             {
