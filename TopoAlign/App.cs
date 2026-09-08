@@ -31,7 +31,7 @@ class App : IExternalApplication
         CtrApp = a.ControlledApplication;
 
         var cultureInfo = Thread.CurrentThread.CurrentCulture;
-        var regionInfo = new RegionInfo(cultureInfo.LCID);
+        var regionInfo = new RegionInfo(cultureInfo.Name);
         var clientId = ClientIdProvider.GetOrCreateClientId();
 
         var loggerConfigTopoAlign = new LoggerConfiguration()
