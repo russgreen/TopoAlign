@@ -13,9 +13,7 @@
       "triggeredBy": [
         "Sign"
       ],
-      "triggers": [
-        "Installer"
-      ]
+      "triggers": []
     },
     {
       "name": "Clean",
@@ -54,7 +52,7 @@
       "dependsOn": [],
       "after": [],
       "triggeredBy": [
-        "Bundle"
+        "Sign"
       ],
       "triggers": []
     },
@@ -70,7 +68,8 @@
         "Compile"
       ],
       "triggers": [
-        "Bundle"
+        "Bundle",
+        "Installer"
       ]
     }
   ]
