@@ -19,17 +19,19 @@ partial class Build
         {
             if (configuration.StartsWith("Release"))
             {
-                var project = Solution.TopoAlign.GetMSBuildProject(configuration);
-                var projectBinDirectory = Path.Combine(project.DirectoryPath, @"bin", configuration);
-                 
-                Log.Information(projectBinDirectory);
+                if(configuration == "Release R21")
+                {
+                    Log.Warning("Skipping configuration {configuration}. This version is no longer supported.", configuration);
+                    continue;
+                }   
 
-                var files = Directory.GetFiles(projectBinDirectory, "*.*");
-                var destinationDirectory = Path.Combine(bundleContentsDirectory, "2021");
+                var projectBinDirectory = Path.Combine(Solution.TopoAlign.Directory, @"bin", configuration);
+                Log.Information("Bundle source directory: {directory}", projectBinDirectory);
+
+                var destinationDirectory = Path.Combine(bundleContentsDirectory, "2022");
 
                 var configurationToDirectoryMap = new Dictionary<string, string>
                         {
-                            { "Release R21", "2021" },
                             { "Release R22", "2022" },
                             { "Release R23", "2023" },
                             { "Release R24", "2024" },
@@ -68,7 +70,7 @@ partial class Build
             var packageContents = new _build.ApplicationPackage();
             packageContents.LoadFromXml(bundlePackageContents);
 
-            var version = Solution.TopoAlign.GetProperty("Version");
+            var version = GetProjectVersion(Path.Combine(RootDirectory, @"TopoAlign\TopoAlign.csproj"));
 
             packageContents.AppVersion = version;
             packageContents.FriendlyVersion = version;
@@ -87,6 +89,8 @@ partial class Build
         {
             File.Delete(bundleZip);
         }
+
         System.IO.Compression.ZipFile.CreateFromDirectory(bundleDirectory, bundleZip);
+        Log.Information("Created bundle zip: {bundleZip}", bundleZip);
     });
 }

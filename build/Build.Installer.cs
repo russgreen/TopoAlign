@@ -11,7 +11,7 @@ using System.Xml.Linq;
 partial class Build
 {
     Target Installer => _ => _
-    .TriggeredBy(Bundle)
+    .TriggeredBy(Sign)
     .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
     .Executes(() =>
     {
