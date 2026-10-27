@@ -14,7 +14,7 @@ partial class Build
 {
     Target Installer => _ => _
         .TriggeredBy(Bundle)
-        //.OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
+        .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
         .Executes(() =>
         {
             // Version home: <Version> in the add-in csproj, same as the wixproj fallback.

@@ -1,5 +1,6 @@
 <Solution>
   <Configurations>
+    <BuildType Name="Debug" />
     <BuildType Name="Debug R21" />
     <BuildType Name="Debug R22" />
     <BuildType Name="Debug R23" />
@@ -7,6 +8,7 @@
     <BuildType Name="Debug R25" />
     <BuildType Name="Debug R26" />
     <BuildType Name="Debug R27" />
+    <BuildType Name="Release" />
     <BuildType Name="Release R21" />
     <BuildType Name="Release R22" />
     <BuildType Name="Release R23" />
@@ -14,6 +16,10 @@
     <BuildType Name="Release R25" />
     <BuildType Name="Release R26" />
     <BuildType Name="Release R27" />
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
     </Configurations>
   <Folder Name="/ConfuserProjects/" />
   <Folder Name="/Solution Items/">
@@ -35,10 +41,74 @@
     <BuildType Solution="Release R25|*" Project="Release" />
     <BuildType Solution="Release R26|*" Project="Release" />
     <BuildType Solution="Release R27|*" Project="Release" />
-    <Build Project="false" />
+    <Build Solution="Debug R21|Any CPU" Project="false" />
+    <Build Solution="Debug R22|Any CPU" Project="false" />
+    <Build Solution="Debug R23|Any CPU" Project="false" />
+    <Build Solution="Debug R24|Any CPU" Project="false" />
+    <Build Solution="Debug R25|Any CPU" Project="false" />
+    <Build Solution="Debug R26|Any CPU" Project="false" />
+    <Build Solution="Debug R27|Any CPU" Project="false" />
+    <Build Solution="Release R21|Any CPU" Project="false" />
+    <Build Solution="Release R22|Any CPU" Project="false" />
+    <Build Solution="Release R23|Any CPU" Project="false" />
+    <Build Solution="Release R24|Any CPU" Project="false" />
+    <Build Solution="Release R25|Any CPU" Project="false" />
+    <Build Solution="Release R26|Any CPU" Project="false" />
+    <Build Solution="Release R27|Any CPU" Project="false" />
   </Project>
-  <Project Path="TopoAlign/TopoAlign.csproj" />
+  <Project Path="TopoAlign/TopoAlign.csproj">
+    <BuildType Solution="Debug|*" Project="Debug R27" />
+    <BuildType Solution="Release|*" Project="Release R27" />
+  </Project>
   <Project Path="installer/TopoAlign.Setup.wixproj">
-    <Build Project="false" />
+    <Platform Solution="Debug R21|ARM64" Project="Any CPU" />
+    <Platform Solution="Debug R21|x64" Project="Any CPU" />
+    <Platform Solution="Debug R21|x86" Project="Any CPU" />
+    <Platform Solution="Debug R22|ARM64" Project="Any CPU" />
+    <Platform Solution="Debug R22|x64" Project="Any CPU" />
+    <Platform Solution="Debug R22|x86" Project="Any CPU" />
+    <Platform Solution="Debug R23|ARM64" Project="Any CPU" />
+    <Platform Solution="Debug R23|x64" Project="Any CPU" />
+    <Platform Solution="Debug R23|x86" Project="Any CPU" />
+    <Platform Solution="Debug R24|ARM64" Project="Any CPU" />
+    <Platform Solution="Debug R24|x64" Project="Any CPU" />
+    <Platform Solution="Debug R24|x86" Project="Any CPU" />
+    <Platform Solution="Debug R25|ARM64" Project="Any CPU" />
+    <Platform Solution="Debug R25|x64" Project="Any CPU" />
+    <Platform Solution="Debug R25|x86" Project="Any CPU" />
+    <Platform Solution="Debug R26|ARM64" Project="Any CPU" />
+    <Platform Solution="Debug R26|x64" Project="Any CPU" />
+    <Platform Solution="Debug R26|x86" Project="Any CPU" />
+    <Platform Solution="Debug R27|ARM64" Project="Any CPU" />
+    <Platform Solution="Debug R27|x64" Project="Any CPU" />
+    <Platform Solution="Debug R27|x86" Project="Any CPU" />
+    <Platform Solution="Debug|Any CPU" Project="x64" />
+    <Platform Solution="Release R21|ARM64" Project="Any CPU" />
+    <Platform Solution="Release R21|x64" Project="Any CPU" />
+    <Platform Solution="Release R21|x86" Project="Any CPU" />
+    <Platform Solution="Release R22|ARM64" Project="Any CPU" />
+    <Platform Solution="Release R22|x64" Project="Any CPU" />
+    <Platform Solution="Release R22|x86" Project="Any CPU" />
+    <Platform Solution="Release R23|ARM64" Project="Any CPU" />
+    <Platform Solution="Release R23|x64" Project="Any CPU" />
+    <Platform Solution="Release R23|x86" Project="Any CPU" />
+    <Platform Solution="Release R24|ARM64" Project="Any CPU" />
+    <Platform Solution="Release R24|x64" Project="Any CPU" />
+    <Platform Solution="Release R24|x86" Project="Any CPU" />
+    <Platform Solution="Release R25|ARM64" Project="Any CPU" />
+    <Platform Solution="Release R25|x64" Project="Any CPU" />
+    <Platform Solution="Release R25|x86" Project="Any CPU" />
+    <Platform Solution="Release R26|ARM64" Project="Any CPU" />
+    <Platform Solution="Release R26|x64" Project="Any CPU" />
+    <Platform Solution="Release R26|x86" Project="Any CPU" />
+    <Platform Solution="Release R27|ARM64" Project="Any CPU" />
+    <Platform Solution="Release R27|x64" Project="Any CPU" />
+    <Platform Solution="Release R27|x86" Project="Any CPU" />
+    <Platform Solution="Release|Any CPU" Project="x64" />
+    <Build Solution="*|ARM64" />
+    <Build Solution="*|x64" />
+    <Build Solution="*|x86" />
+    <Build Solution="Debug|Any CPU" />
+    <Build Solution="Release|Any CPU" />
   </Project>
 </Solution>
