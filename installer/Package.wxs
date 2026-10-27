@@ -1,0 +1,115 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!--
+    Revit releases. To support a new Revit release, add its two digit year to RevitReleases (nothing else here changes).
+    Releases from FirstProgramFilesRelease are installed under Program Files, earlier ones under ProgramData.
+    TopoAlign has no isolated manifest, so every release installs TopoAlign_Installed.addin as TopoAlign.addin.
+  -->
+  <?define RevitReleases="21;22;23;24;25;26;27"?>
+  <?define FirstProgramFilesRelease="27"?>
+
+  <!-- Registry location. This MUST stay the value the Advanced Installer package wrote (Manufacturer was "Russell Green"). -->
+  <?define RegistryKey="Software\Russell Green\Topo Align"?>
+
+  <!--
+    The UpgradeCode MUST NEVER change. It is the code used by the Advanced Installer package (TopoAlign.aip), so this
+    package upgrades existing installations. The ProductCode is generated per build.
+  -->
+  <Package Name="Topo Align"
+           Manufacturer="Russ Green"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="F04F085F-5478-481E-B50C-946A19EEF10F"
+           Language="1033"
+           Scope="perMachine">
+
+    <SummaryInformation Description="Topo Align installer" />
+
+    <!-- AllowSameVersionUpgrades needs ICE61 suppressed in the wixproj. -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- ARPPRODUCTICON must be the Id of an Icon element, never a file path. -->
+    <Icon Id="TopoAlign.ico" SourceFile="$(var.RepoRoot)TopoAlign\TopoAlign.ico" />
+    <Property Id="ARPPRODUCTICON" Value="TopoAlign.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/russgreen/TopoAlign" />
+    <Property Id="ARPCOMMENTS" Value="Topo Align is a Revit add-in to align topography to elements picked in the model." />
+
+    <!-- Re-use the location of a previous installation (including those made by the Advanced Installer package) -->
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="PreviousInstallFolder" Root="HKLM" Key="$(var.RegistryKey)" Name="Path" Type="directory" Bitness="always64" />
+    </Property>
+
+    <!-- UI: shared template in UI.wxs, PNG art next to this file -->
+    <WixVariable Id="WixUIBannerBmp" Value="$(sys.SOURCEFILEDIR)topoalign_banner.png" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(sys.SOURCEFILEDIR)topoalign_background.png" />
+    <UIRef Id="WixUI_Minimal" />
+
+    <!-- Install locations -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Topo Align" />
+
+      <!-- Revit 2027 and later is installed under Program Files -->
+      <Directory Id="PfAutodeskFolder" Name="Autodesk">
+        <Directory Id="PfRevitFolder" Name="Revit">
+          <Directory Id="PfRevitAddinsFolder" Name="Addins">
+            <?foreach Rel in $(var.RevitReleases)?>
+            <?if $(Rel) >= $(var.FirstProgramFilesRelease)?>
+            <Directory Id="Revit20$(Rel)Addins" Name="20$(Rel)">
+              <Directory Id="Revit20$(Rel)App" Name="TopoAlign" />
+            </Directory>
+            <?endif?>
+            <?endforeach?>
+          </Directory>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="AutodeskFolder" Name="Autodesk">
+        <Directory Id="RevitFolder" Name="Revit">
+          <Directory Id="RevitAddinsFolder" Name="Addins">
+            <?foreach Rel in $(var.RevitReleases)?>
+            <?if $(Rel) < $(var.FirstProgramFilesRelease)?>
+            <Directory Id="Revit20$(Rel)Addins" Name="20$(Rel)">
+              <Directory Id="Revit20$(Rel)App" Name="TopoAlign" />
+            </Directory>
+            <?endif?>
+            <?endforeach?>
+          </Directory>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="Topo Align" Level="1" AllowAbsent="no">
+      <ComponentGroupRef Id="AppRegistry" />
+      <ComponentGroupRef Id="RevitAddins" />
+    </Feature>
+
+    <ComponentGroup Id="AppRegistry" Directory="INSTALLFOLDER">
+      <Component Id="ProductInformation">
+        <RegistryValue Root="HKLM" Key="$(var.RegistryKey)" Name="Path" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="$(var.RegistryKey)" Name="Version" Type="string" Value="[ProductVersion]" />
+        <CreateFolder />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Revit add-ins, one set of files per supported Revit release -->
+    <ComponentGroup Id="RevitAddins">
+      <?foreach Rel in $(var.RevitReleases)?>
+      <ComponentGroupRef Id="Revit20$(Rel)" />
+      <?endforeach?>
+    </ComponentGroup>
+
+    <?foreach Rel in $(var.RevitReleases)?>
+    <ComponentGroup Id="Revit20$(Rel)">
+      <Component Id="Revit20$(Rel)Addin" Directory="Revit20$(Rel)Addins">
+        <File Id="Revit20$(Rel)AddinFile" Name="TopoAlign.addin" Source="$(var.RepoRoot)TopoAlign\TopoAlign.addin" />
+      </Component>
+      <!-- A missing bin\Release R$(Rel) folder only raises warning WIX8601 and ships an empty add-in folder: build every release first. -->
+      <Files Include="$(var.RepoRoot)TopoAlign\bin\Release R$(Rel)\**" Directory="Revit20$(Rel)App" />
+    </ComponentGroup>
+    <?endforeach?>
+  </Package>
+</Wix>

@@ -1,88 +1,62 @@
 using Fallout.Common;
-using Serilog;
-using System.Diagnostics;
-using System.IO;
-using System;
-using Fallout.Solutions;
-using System.Linq;
 using Fallout.Common.Git;
+using Fallout.Common.Tools.DotNet;
+using Serilog;
+using System;
+using System.IO;
+using System.Linq;
+using System.Xml.Linq;
+using static Fallout.Common.Tools.DotNet.DotNetTasks;
 
+// Standard installer target. One partial class file per repo, identical apart from the project / output names.
+// Multi package repos: call BuildInstaller for each .Setup.wixproj and SignMSI for each <Product>-SetupFiles folder.
 partial class Build
 {
     Target Installer => _ => _
-    .TriggeredBy(Bundle)
-    .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
-    .Executes(() =>
-    {
-        var aipProjectPath = Path.Combine(RootDirectory, @"Installer\TopoAlign.aip");
-        var version = Solution.TopoAlign.GetProperty("Version");
-
-        Log.Information("AIP : {aipProjectPath}", aipProjectPath);
-        Log.Information("Version : {version}", version);
-
-        AdvancedInstallerCLI($"/edit {aipProjectPath} /SetVersion {version}");
-        AdvancedInstallerCLI($"/edit {aipProjectPath} /SetProductCode -langid 1033");
-        AdvancedInstallerCLI($"/build {aipProjectPath}");
-
-        SignMSI(version);
-    });
-
-    static void SignMSI(string version)
-    {
-        var aipOutputPath = Path.Combine(RootDirectory, @"Installer\TopoAlign-SetupFiles");
-        Log.Information(aipOutputPath);
-
-        var msiPath = Directory.GetFiles(aipOutputPath, $"**{version}.msi").FirstOrDefault();
-        Log.Information(msiPath);
-
-        if (File.Exists(msiPath))
+        .TriggeredBy(Bundle)
+        //.OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch())
+        .Executes(() =>
         {
-            SignFiles(new System.Collections.Generic.List<string> { msiPath });
-        }
+            // Version home: <Version> in the add-in csproj, same as the wixproj fallback.
+            var version = GetProjectVersion(Path.Combine(RootDirectory, "TopoAlign", "TopoAlign.csproj"));
+            var wixProject = Path.Combine(RootDirectory, "installer", "TopoAlign.Setup.wixproj");
+
+            Log.Information("WiX project : {wixProject}", wixProject);
+            Log.Information("Version : {version}", version);
+
+            // Always pass ProductVersion so the MSI name, the Package version and the signing glob can never disagree.
+            DotNetBuild(settings => settings
+                .SetProjectFile(wixProject)
+                .SetConfiguration("Release")
+                .SetProperty("ProductVersion", version)
+                .SetVerbosity(DotNetVerbosity.minimal));
+
+            SignMSI(Path.Combine(RootDirectory, "installer", "TopoAlign-SetupFiles"), version);
+        });
+
+    static string GetProjectVersion(string projectFilePath)
+    {
+        var doc = XDocument.Load(projectFilePath);
+        var propertyGroup = doc.Root?
+            .Elements()
+            .FirstOrDefault(x => x.Name.LocalName == "PropertyGroup");
+
+        var versionProperties = new[] { "Version", "VersionPrefix", "ApplicationVersion", "FileVersion", "InformationalVersion" };
+
+        var versionElement = propertyGroup?
+            .Elements()
+            .FirstOrDefault(x => versionProperties.Contains(x.Name.LocalName) && !string.IsNullOrWhiteSpace(x.Value));
+
+        return versionElement?.Value ?? "1.0.0";
     }
 
-
-    static void AdvancedInstallerCLI(string args)
+    static void SignMSI(string setupFilesDirectory, string version)
     {
-        Log.Information("Command args {args}", args);
+        // A missing MSI after a successful build is a failure, never a silent skip.
+        var msiPath = Directory.GetFiles(setupFilesDirectory, $"*.{version}.msi").FirstOrDefault()
+            ?? throw new FileNotFoundException($"No *.{version}.msi found in {setupFilesDirectory} to sign.");
 
-        var applicationPath = GetAdvancedInstallerPath();
-        var applicationFullPath = Path.Combine(applicationPath, "AdvancedInstaller.com");
-
-        var p = new ProcessStartInfo();
-        p.WorkingDirectory = applicationPath;
-        p.FileName = applicationFullPath;
-        p.Arguments = args;
-
-        var process = Process.Start(p);
-        process.WaitForExit();
-
-        if (process.ExitCode != 0)
-        {
-            throw new Exception("Advanced Installer CLI failed.");
-        }
-    }
-
-    static string GetAdvancedInstallerPath()
-    {
-        var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-        var caphyonPath = Path.Combine(programFilesPath, "Caphyon");
-
-        var latestVersion = Directory.GetDirectories(caphyonPath)
-            .Select(Path.GetFileName)
-            .Where(x => x.StartsWith("Advanced Installer")) // Ensure we only consider Advanced Installer directories
-            .Select(x => new { Path = x, Version = new Version(x.Substring("Advanced Installer ".Length)) }) // Extract the version number from the directory name
-            .OrderByDescending(x => x.Version) // Sort by version number
-            .FirstOrDefault();
-
-        if (latestVersion == null)
-        {
-            throw new Exception("Advanced Installer is not installed.");
-        }
-
-        var advancedInstallerPath = Path.Combine(caphyonPath, latestVersion.Path, "bin", "x86");
-        Log.Information(advancedInstallerPath);
-
-        return advancedInstallerPath;
+        Log.Information("Signing {msiPath}", msiPath);
+        SignFiles(new System.Collections.Generic.List<string> { msiPath });
     }
 }

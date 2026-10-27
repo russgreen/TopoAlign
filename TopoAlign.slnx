@@ -38,4 +38,7 @@
     <Build Project="false" />
   </Project>
   <Project Path="TopoAlign/TopoAlign.csproj" />
+  <Project Path="installer/TopoAlign.Setup.wixproj">
+    <Build Project="false" />
+  </Project>
 </Solution>

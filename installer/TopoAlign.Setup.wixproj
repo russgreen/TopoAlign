@@ -1,0 +1,25 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <SuppressValidation>false</SuppressValidation>
+    <!-- ICE61: AllowSameVersionUpgrades is deliberate so rebuilding a version still replaces it. -->
+    <SuppressIces>ICE61</SuppressIces>
+
+    <!-- Version: the Fallout build always passes -p:ProductVersion=<version>. A direct build reads <Version> from the add-in csproj. -->
+    <ProductVersion Condition="'$(ProductVersion)' == ''">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\TopoAlign\TopoAlign.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;/Version&gt;').Groups[1].Value)</ProductVersion>
+
+    <OutputName>TopoAlign.$(ProductVersion)</OutputName>
+    <OutputPath>$(MSBuildProjectDirectory)\TopoAlign-SetupFiles\</OutputPath>
+
+    <!-- Repo root WITH the trailing backslash, so the wxs always writes $(var.RepoRoot)TopoAlign\... -->
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\'))</RepoRoot>
+    <DefineConstants>$(DefineConstants);ProductVersion=$(ProductVersion);RepoRoot=$(RepoRoot)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+  </ItemGroup>
+
+</Project>
