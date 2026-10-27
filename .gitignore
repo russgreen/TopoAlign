@@ -350,7 +350,5 @@ ARCHISOFT_topoalign\ARCHISOFT_topoalign_2022.addin
 ApiSecret.txt
 MeasurementId.txt
 
-# Advanced Installer
-Installer/*.back.aip
-Installer/TopoAlign-cache/*
-Installer/TopoAlign-SetupFiles/*
+# WiX installer output
+installer/*-SetupFiles/
