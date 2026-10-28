@@ -28,7 +28,7 @@ public partial class ProgressWindow : Window, IDisposable
 
         Show();
 
-        System.Windows.Forms.Application.DoEvents();
+        //System.Windows.Forms.Application.DoEvents();
     }
 
     public void Increment()
@@ -40,14 +40,14 @@ public partial class ProgressWindow : Window, IDisposable
             this.ProgressLabel.Text = string.Format(_format, this.Progress.Value);
         }
 
-        System.Windows.Forms.Application.DoEvents();
+        //System.Windows.Forms.Application.DoEvents();
     }
 
     public void SetCaption(string caption)
     {
         this.CaptionLanel.Text = caption;
 
-        System.Windows.Forms.Application.DoEvents();
+        //System.Windows.Forms.Application.DoEvents();
     }
 
     public bool GetAbortFlag()

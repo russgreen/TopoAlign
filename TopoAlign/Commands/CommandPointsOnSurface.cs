@@ -8,9 +8,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using TopoAlign.Comparers;
 using TopoAlign.Geometry;
+using TopoAlign.ViewModels;
+using TopoAlign.Views;
 
 namespace TopoAlign.Commands;
 
@@ -30,20 +31,11 @@ public class CommandPointsOnSurface : IExternalCommand
     //private Element _element;
     //private Edge _edge;
     private View3D _v3d;
-    private Units _docUnits;
 
 #if REVIT2024_OR_GREATER
     private Toposolid _topoSolid;
 #else
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
-#endif
-
-#if REVIT2018 || REVIT2019 || REVIT2020
-    private DisplayUnitType _docDisplayUnits; 
-    private DisplayUnitType _useDisplayUnits;
-#else
-    private ForgeTypeId _docDisplayUnits;
-    private ForgeTypeId _useDisplayUnits;
 #endif
 
     public Models.Settings cSettings;
@@ -66,63 +58,20 @@ public class CommandPointsOnSurface : IExternalCommand
         //    return Result.Cancelled;
         //}
 
-#if REVIT2018 || REVIT2019 || REVIT2020
-        _docUnits = _doc.GetUnits();
-        _docDisplayUnits = _doc.GetUnits().GetFormatOptions(UnitType.UT_Length).DisplayUnits;
-#else
-        _docUnits = _doc.GetUnits();
-        _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
-#endif
-        using (FormDivideLines frm = new())
+        var viewModel = new DivideLinesViewModel(_doc, cSettings.DivideEdgeDistance);
+        var view = new DivideLinesView(viewModel);
+
+        if (view.ShowDialog() == true)
         {
-            _divide = Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)cSettings.DivideEdgeDistance, _docDisplayUnits));
+            _divide = viewModel.InternalDivide;
 
-            frm.nudVertOffset.Value = 0;
-            //frm.nudVertOffset.Enabled = false;
+            //first save the settings for next time
+            cSettings.DivideEdgeDistance = _divide;
+            cSettings.SaveSettings();
 
-            if (_divide > frm.nudDivide.Maximum)
+            if (PointsOnSurfaceAlongLines() == false)
             {
-                frm.nudDivide.Value = frm.nudDivide.Maximum;
-            }
-            else
-            {
-                frm.nudDivide.Value = _divide;
-            }
-
-#if REVIT2018 || REVIT2019 || REVIT2020
-            foreach (DisplayUnitType displayUnitType in UnitUtils.GetValidDisplayUnits(UnitType.UT_Length))
-            {
-                frm.DisplayUnitTypecomboBox.Items.AddRange(new object[] { displayUnitType });
-                frm.DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelFor(displayUnitType));
-            }
-#else
-            foreach (ForgeTypeId displayUnitType in UnitUtils.GetValidUnits(SpecTypeId.Length))
-            {
-                frm.DisplayUnitTypecomboBox.Items.AddRange(new object[] { displayUnitType });
-                frm.DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelForUnit(displayUnitType));
-            }
-#endif
-            frm.DisplayUnitTypecomboBox.SelectedItem = _docDisplayUnits;
-            frm.DisplayUnitcomboBox.SelectedIndex = frm.DisplayUnitTypecomboBox.SelectedIndex;
-
-            if (frm.ShowDialog() == DialogResult.OK)
-            {
-#if REVIT2018 || REVIT2019 || REVIT2020
-                _useDisplayUnits = (DisplayUnitType)frm.DisplayUnitTypecomboBox.SelectedItem;
-                _divide = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)frm.nudDivide.Value, _useDisplayUnits));
-#else
-                _useDisplayUnits = (ForgeTypeId)frm.DisplayUnitTypecomboBox.SelectedItem;
-                _divide = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)frm.nudDivide.Value, _useDisplayUnits));
-#endif
-
-                //first save the settings for next time
-                cSettings.DivideEdgeDistance = _divide;
-                cSettings.SaveSettings();
-
-                if (PointsOnSurfaceAlongLines() == false)
-                {
-                    return Result.Failed;
-                }
+                return Result.Failed;
             }
         }
 

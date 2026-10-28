@@ -9,6 +9,8 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using TopoAlign.Comparers;
 using TopoAlign.Geometry;
+using TopoAlign.ViewModels;
+using TopoAlign.Views;
 
 namespace TopoAlign.Commands;
 
@@ -32,16 +34,6 @@ public class CommndAlignFloor : IExternalCommand
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
 #endif
 
-    private Units _docUnits;
-
-#if REVIT2018 || REVIT2019 || REVIT2020
-    private DisplayUnitType _docDisplayUnits; 
-    private DisplayUnitType _useDisplayUnits;
-#else
-    private ForgeTypeId _docDisplayUnits;
-    private ForgeTypeId _useDisplayUnits;
-#endif
-
     public Models.Settings cSettings;
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -57,56 +49,20 @@ public class CommndAlignFloor : IExternalCommand
         _doc = _uidoc.Document;
         _sel = _uidoc.Selection;
 
-#if REVIT2018 || REVIT2019 || REVIT2020
-        _docUnits = _doc.GetUnits();
-        _docDisplayUnits = _doc.GetUnits().GetFormatOptions(UnitType.UT_Length).DisplayUnits;
-#else
-        _docUnits = _doc.GetUnits();
-        _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
-#endif
-        using (FormDivideLines frm = new())
+        var viewModel = new DivideLinesViewModel(_doc, cSettings.DivideEdgeDistance, isDivideEnabled: false, allowNegativeOffset: true);
+        var view = new DivideLinesView(viewModel);
+
+        if (view.ShowDialog() == true)
         {
+            _offset = viewModel.InternalOffset;
 
-            frm.nudVertOffset.Value = 0;
-            frm.nudVertOffset.Minimum = -frm.nudVertOffset.Maximum;
-            frm.nudDivide.Enabled = false;
+            //first save the settings for next time
+            cSettings.VerticalOffset = _offset;
+            cSettings.SaveSettings();
 
-#if REVIT2018 || REVIT2019 || REVIT2020
-            foreach (DisplayUnitType displayUnitType in UnitUtils.GetValidDisplayUnits(UnitType.UT_Length))
+            if (AlignFloor((double)_offset) == false)
             {
-                frm.DisplayUnitTypecomboBox.Items.AddRange(new object[] { displayUnitType });
-                frm.DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelFor(displayUnitType));
-            }
-#else
-            foreach (ForgeTypeId displayUnitType in UnitUtils.GetValidUnits(SpecTypeId.Length))
-            {
-                frm.DisplayUnitTypecomboBox.Items.AddRange(new object[] { displayUnitType });
-                frm.DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelForUnit(displayUnitType));
-            }
-#endif
-
-            frm.DisplayUnitTypecomboBox.SelectedItem = _docDisplayUnits;
-            frm.DisplayUnitcomboBox.SelectedIndex = frm.DisplayUnitTypecomboBox.SelectedIndex;
-
-
-            if (frm.ShowDialog() == DialogResult.OK)
-            {
-#if REVIT2018 || REVIT2019 || REVIT2020
-                _useDisplayUnits = (DisplayUnitType)frm.DisplayUnitTypecomboBox.SelectedItem;
-                _offset = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)frm.nudVertOffset.Value, _useDisplayUnits));
-#else
-                _useDisplayUnits = (ForgeTypeId)frm.DisplayUnitTypecomboBox.SelectedItem;
-                _offset = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)frm.nudVertOffset.Value, _useDisplayUnits));
-#endif
-
-                //first save the settings for next time
-                cSettings.VerticalOffset = _offset;
-                cSettings.SaveSettings();
-
-                if (AlignFloor((double)_offset) == false)
-                {
-                    return Result.Failed;
-                }
+                return Result.Failed;
             }
         }
 
