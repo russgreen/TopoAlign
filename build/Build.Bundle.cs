@@ -14,63 +14,61 @@ partial class Build
         var bundleDirectory = RootDirectory / "Bundle" / "RG tools Topo Align.bundle";
         var bundleContentsDirectory = bundleDirectory / "Contents";
         var bundlePackageContents = bundleDirectory / "PackageContents.xml";
+        var topoAlignProjectFile = Path.Combine(RootDirectory, "TopoAlign", "TopoAlign.csproj");
 
         foreach (var configuration in GlobBuildConfigurations())
         {
-            if (configuration.StartsWith("Release"))
+            if (!configuration.StartsWith("Release"))
             {
-                if(configuration == "Release R21")
-                {
-                    Log.Warning("Skipping configuration {configuration}. This version is no longer supported.", configuration);
-                    continue;
-                }   
+                continue;
+            }
 
-                var projectBinDirectory = Path.Combine(Solution.TopoAlign.Directory, @"bin", configuration);
-                Log.Information("Bundle source directory: {directory}", projectBinDirectory);
+            if (configuration == "Release R21")
+            {
+                Log.Warning("Skipping configuration {configuration}. This version is no longer supported.", configuration);
+                continue;
+            }
 
-                var destinationDirectory = Path.Combine(bundleContentsDirectory, "2022");
+            var projectBinDirectory = Path.Combine(RootDirectory, "TopoAlign", "bin", configuration);
+            Log.Information("Bundle source directory: {directory}", projectBinDirectory);
 
-                var configurationToDirectoryMap = new Dictionary<string, string>
-                        {
-                            { "Release R22", "2022" },
-                            { "Release R23", "2023" },
-                            { "Release R24", "2024" },
-                            { "Release R25", "2025" },
-                            { "Release R26", "2026" },
-                            { "Release R27", "2027" }
-                        };
+            var destinationDirectory = Path.Combine(bundleContentsDirectory, "2022");
 
-                if (configurationToDirectoryMap.ContainsKey(configuration))
-                {
-                    var directoryName = configurationToDirectoryMap[configuration];
-                    destinationDirectory = Path.Combine(bundleContentsDirectory, directoryName);
-                }
+            var configurationToDirectoryMap = new Dictionary<string, string>
+            {
+                { "Release R22", "2022" },
+                { "Release R23", "2023" },
+                { "Release R24", "2024" },
+                { "Release R25", "2025" },
+                { "Release R26", "2026" },
+                { "Release R27", "2027" }
+            };
 
-                Log.Information(destinationDirectory);
+            if (configurationToDirectoryMap.TryGetValue(configuration, out var directoryName))
+            {
+                destinationDirectory = Path.Combine(bundleContentsDirectory, directoryName);
+            }
 
-                if(!Directory.Exists(destinationDirectory))
-                {
-                    Directory.CreateDirectory(destinationDirectory);
-                }
+            Log.Information("Bundle destination directory: {directory}", destinationDirectory);
 
-                foreach (var file in Directory.GetFiles(projectBinDirectory))
-                {
-                    var targetFile = Path.Combine(destinationDirectory, Path.GetFileName(file));
+            Directory.CreateDirectory(destinationDirectory);
 
-                    Log.Information("Copy file {file} to {target}", file, targetFile);
+            foreach (var file in Directory.GetFiles(projectBinDirectory))
+            {
+                var targetFile = Path.Combine(destinationDirectory, Path.GetFileName(file));
 
-                    File.Copy(file, targetFile, true);
-                }
+                Log.Information("Copy file {file} to {target}", file, targetFile);
+
+                File.Copy(file, targetFile, true);
             }
         }
 
-        //update the PackageContents.xml
         if (File.Exists(bundlePackageContents))
         {
             var packageContents = new _build.ApplicationPackage();
             packageContents.LoadFromXml(bundlePackageContents);
 
-            var version = GetProjectVersion(Path.Combine(RootDirectory, @"TopoAlign\TopoAlign.csproj"));
+            var version = GetProjectVersion(topoAlignProjectFile);
 
             packageContents.AppVersion = version;
             packageContents.FriendlyVersion = version;
@@ -89,8 +87,6 @@ partial class Build
         {
             File.Delete(bundleZip);
         }
-
         System.IO.Compression.ZipFile.CreateFromDirectory(bundleDirectory, bundleZip);
-        Log.Information("Created bundle zip: {bundleZip}", bundleZip);
     });
 }
