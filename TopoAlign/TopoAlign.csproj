@@ -13,7 +13,7 @@
 	  <NeutralLanguage>en</NeutralLanguage>
 	  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	  <UseWPF>true</UseWPF>
-	  <UseWindowsForms>true</UseWindowsForms>
+	  <!--<UseWindowsForms>true</UseWindowsForms>-->
 	  <!--<ImplicitUsings>true</ImplicitUsings>-->
 	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -113,7 +113,6 @@
    <ItemGroup>
      <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
      <PackageReference Include="geometry3Sharp" Version="1.0.324" />
-     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.*" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
 	   
@@ -128,12 +127,6 @@
 		   <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	   </PackageReference>
    </ItemGroup>
-	
-  <ItemGroup>
-    <EmbeddedResource Update="ProgressForm.resx">
-      <DependentUpon>ProgressForm.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
 
   <ItemGroup>
     <None Update="TopoAlign.addin">

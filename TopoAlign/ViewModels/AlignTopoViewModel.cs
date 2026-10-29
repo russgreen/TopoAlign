@@ -626,7 +626,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
         // Check each point against all loops: boundary-inclusive even-odd rule
         var pointsInPolygon = new List<XYZ>();
-        using (var pf = new ProgressForm("Analyzing topo points.", "{0} points of " + topoPointsInBoundingBox.Count + " processed...", topoPointsInBoundingBox.Count))
+        using (var pf = new ProgressWindow("Analyzing topo points.", "{0} points of " + topoPointsInBoundingBox.Count + " processed...", topoPointsInBoundingBox.Count))
         {
             foreach (XYZ pt in topoPointsInBoundingBox)
             {

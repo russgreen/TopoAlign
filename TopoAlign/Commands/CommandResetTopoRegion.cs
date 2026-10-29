@@ -7,6 +7,8 @@ using Serilog;
 using System.Diagnostics;
 using TopoAlign.Comparers;
 using TopoAlign.Extensions;
+using TopoAlign.ViewModels;
+using TopoAlign.Views;
 
 namespace TopoAlign.Commands;
 
@@ -45,39 +47,19 @@ public class CommandResetTopoRegion : IExternalCommand
             return Result.Failed;
         }
 
-        var frm = new FormProjectPhases();
-
-#if REVIT2024_OR_GREATER
         // load phases to combo
-        var comboPhases = new Dictionary<long, string>();
+        var phaseNames = new List<string>();
 
         foreach (Phase phase in _doc.Phases)
-            comboPhases.Add(phase.Id.Value, phase.Name);
-#else
-        // load phases to combo
-        var comboPhases = new Dictionary<int, string>();
+            phaseNames.Add(phase.Name);
 
-        foreach (Phase phase in _doc.Phases)
-            comboPhases.Add(phase.Id.IntegerValue, phase.Name);
-#endif
+        var phasesViewModel = new ProjectPhasesViewModel(phaseNames);
+        var phasesView = new ProjectPhasesView(phasesViewModel);
 
-        if (comboPhases.Count > 0)
+        if (phasesView.ShowDialog() == true)
         {
-            frm.cboPhaseSource.DisplayMember = "Value";
-            frm.cboPhaseSource.ValueMember = "Value"; // "Key"
-            frm.cboPhaseSource.DataSource = new BindingSource(comboPhases, null);
-            frm.cboPhaseSource.SelectedIndex = 0;
-            frm.cboPhaseTarget.DisplayMember = "Value";
-            frm.cboPhaseTarget.ValueMember = "Value"; // "Key"
-            frm.cboPhaseTarget.DataSource = new BindingSource(comboPhases, null);
-            frm.cboPhaseTarget.SelectedIndex = 1;
-            frm.btnOK.Enabled = true;
-        }
-
-        if (frm.ShowDialog() == DialogResult.OK)
-        {
-            _sourcePhaseName = frm.cboPhaseSource.SelectedValue.ToString();
-            _targetPhaseName = frm.cboPhaseTarget.SelectedValue.ToString();
+            _sourcePhaseName = phasesViewModel.SourcePhase;
+            _targetPhaseName = phasesViewModel.TargetPhase;
 
             var sourcePhase = new FilteredElementCollector(_doc)
                 .OfClass(typeof(Phase))
@@ -101,20 +83,13 @@ public class CommandResetTopoRegion : IExternalCommand
 #endif
 
             var fh = new FailureHandler();
-            var frm1 = new FormResetTopo();
 
             try
             {
 
                 // load existing topo(s) to combo
-#if REVIT2024_OR_GREATER
-                var comboSource = new Dictionary<long, string>();
-                var comboTarget = new Dictionary<long, string>();
-#else
-                
-                var comboSource = new Dictionary<int, string>();
-                var comboTarget = new Dictionary<int, string>();
-#endif
+                var comboSource = new List<Models.TopoItemModel>();
+                var comboTarget = new List<Models.TopoItemModel>();
 
 
 #if REVIT2024_OR_GREATER
@@ -129,12 +104,12 @@ public class CommandResetTopoRegion : IExternalCommand
 
                             if ((phaseParam.AsValueString() ?? "") == (_sourcePhaseName ?? ""))
                             {
-                                comboSource.Add(topo.Id.Value, "Toposolid (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
+                                comboSource.Add(new Models.TopoItemModel { Id = topo.Id.Value, Label = "Toposolid (" + nameParam.AsString() + ") - " + phaseParam.AsValueString() });
                             }
 
                             if ((phaseParam.AsValueString() ?? "") == (_targetPhaseName ?? ""))
                             {
-                                comboTarget.Add(topo.Id.Value, "Toposolid (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
+                                comboTarget.Add(new Models.TopoItemModel { Id = topo.Id.Value, Label = "Toposolid (" + nameParam.AsString() + ") - " + phaseParam.AsValueString() });
                             }
                         }
                         catch (Exception)
@@ -154,12 +129,12 @@ public class CommandResetTopoRegion : IExternalCommand
 
                             if ((phaseParam.AsValueString() ?? "") == (_sourcePhaseName ?? ""))
                             {
-                                comboSource.Add(topo.Id.IntegerValue, "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
+                                comboSource.Add(new Models.TopoItemModel { Id = topo.Id.IntegerValue, Label = "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString() });
                             }
 
                             if ((phaseParam.AsValueString() ?? "") == (_targetPhaseName ?? ""))
                             {
-                                comboTarget.Add(topo.Id.IntegerValue, "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString());
+                                comboTarget.Add(new Models.TopoItemModel { Id = topo.Id.IntegerValue, Label = "Toposurface (" + nameParam.AsString() + ") - " + phaseParam.AsValueString() });
                             }
                         }
                         catch (Exception)
@@ -169,27 +144,10 @@ public class CommandResetTopoRegion : IExternalCommand
                 }
 #endif
 
-                // load topos to source combo
-                if (comboSource.Count > 0)
-                {
-                    frm1.cboTopoSource.DisplayMember = "Value";
-                    frm1.cboTopoSource.ValueMember = "Key";
-                    frm1.cboTopoSource.DataSource = new BindingSource(comboSource, null);
-                    // .cboTopoSource.Items.AddRange(comboSource.Keys.ToArray)
-                    frm1.cboTopoSource.SelectedIndex = 0;
-                }
+                var resetViewModel = new ResetTopoViewModel(comboSource, comboTarget);
+                var resetView = new ResetTopoView(resetViewModel);
 
-                // load topos to target combo
-                if (comboTarget.Count > 0)
-                {
-                    frm1.cboTopoTarget.DisplayMember = "Value";
-                    frm1.cboTopoTarget.ValueMember = "Key";
-                    frm1.cboTopoTarget.DataSource = new BindingSource(comboTarget, null);
-                    // .cboTopoTarget.Items.AddRange(comboTarget.Keys.ToArray)
-                    frm1.cboTopoTarget.SelectedIndex = 0;
-                }
-
-                if (frm1.ShowDialog() == DialogResult.OK)
+                if (resetView.ShowDialog() == true)
                 {
                     // pick region
                     var pb = _uidoc.Selection.PickBox(PickBoxStyle.Enclosing, "Pick a rectatangle (lower left to upper right) within which the target topo points will be reset from the source topo");
@@ -231,11 +189,11 @@ public class CommandResetTopoRegion : IExternalCommand
                     Toposolid topoTarget = null;
                     foreach (Element topo in topoList)
                     {
-                        if ((topo.Id.ToString() ?? "") == (frm1.cboTopoSource.SelectedValue.ToString() ?? ""))
+                        if ((topo.Id.ToString() ?? "") == resetViewModel.SelectedSource.Id.ToString())
                         {
                             topoSource = (Toposolid)topo;
                         }
-                        else if ((topo.Id.ToString() ?? "") == (frm1.cboTopoTarget.SelectedValue.ToString() ?? ""))
+                        else if ((topo.Id.ToString() ?? "") == resetViewModel.SelectedTarget.Id.ToString())
                         {
                             topoTarget = (Toposolid)topo;
                         }
@@ -246,11 +204,11 @@ public class CommandResetTopoRegion : IExternalCommand
                     TopographySurface topoTarget = null;
                     foreach (Element topo in topoList)
                     {
-                        if ((topo.Id.ToString() ?? "") == (frm1.cboTopoSource.SelectedValue.ToString() ?? ""))
+                        if ((topo.Id.ToString() ?? "") == resetViewModel.SelectedSource.Id.ToString())
                         {
                             topoSource = (TopographySurface)topo;
                         }
-                        else if ((topo.Id.ToString() ?? "") == (frm1.cboTopoTarget.SelectedValue.ToString() ?? ""))
+                        else if ((topo.Id.ToString() ?? "") == resetViewModel.SelectedTarget.Id.ToString())
                         {
                             topoTarget = (TopographySurface)topo;
                         }

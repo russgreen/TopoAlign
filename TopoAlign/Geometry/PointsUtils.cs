@@ -561,7 +561,7 @@ public class PointsUtils
 
         // Check each point to see if point is with 2D boundary
         var points1 = new List<XYZ>();
-        using (var pf = new ProgressForm("Analyzing topo points.", "{0} points of " + points.Count + " processed...", points.Count))
+        using (var pf = new ProgressWindow("Analyzing topo points.", "{0} points of " + points.Count + " processed...", points.Count))
         {
             foreach (XYZ pt in points)
             {
@@ -668,7 +668,7 @@ public class PointsUtils
 
         // Check each point to see if point is with 2D boundary
         var points1 = new List<XYZ>();
-        using (var pf = new ProgressForm("Analyzing topo points.", "{0} points of " + points.Count + " processed...", points.Count))
+        using (var pf = new ProgressWindow("Analyzing topo points.", "{0} points of " + points.Count + " processed...", points.Count))
         {
             foreach (XYZ pt in points)
             {
