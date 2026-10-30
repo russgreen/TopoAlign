@@ -26,6 +26,7 @@ internal static class AlignmentApi
     private static bool _initialised;
     private static Type _alignmentType;
     private static Type _schemaType;
+    private static Type _alignmentDataType;
 
     public static bool IsAvailable
     {
@@ -64,12 +65,14 @@ internal static class AlignmentApi
 
             _alignmentType = assembly.GetType(NamespacePrefix + "Alignment");
             _schemaType = assembly.GetType(NamespacePrefix + "AlignmentSchema");
+            _alignmentDataType = assembly.GetType(NamespacePrefix + "AlignmentData");
         }
         catch (Exception ex)
         {
             log.Error(ex, "Failed to load Civil Alignments assembly");
             _alignmentType = null;
             _schemaType = null;
+            _alignmentDataType = null;
         }
     }
 
@@ -197,6 +200,66 @@ internal static class AlignmentApi
             log.Error(ex, "GetJson failed");
             return null;
         }
+    }
+
+    public static ElementId Create(Document doc, string name, string json, double displayedStartDistance, ICollection<ElementId> sourceCurveIdsToDelete = null)
+    {
+        if (doc is null)
+        {
+            throw new ArgumentNullException(nameof(doc));
+        }
+
+        if (!IsAvailable || _alignmentDataType is null)
+        {
+            throw new InvalidOperationException("Civil Alignments API is not available.");
+        }
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            throw new ArgumentException("Alignment JSON is required.", nameof(json));
+        }
+
+        var createMethod = _alignmentType.GetMethod("CreateAlignment", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Document), _alignmentDataType }, null);
+        if (createMethod is null)
+        {
+            throw new MissingMethodException("Alignment.CreateAlignment(Document, AlignmentData) was not found.");
+        }
+
+        var alignmentData = Activator.CreateInstance(_alignmentDataType, true);
+        _alignmentDataType.GetProperty("JSON", AnyMember)?.SetValue(alignmentData, json);
+        _alignmentDataType.GetProperty("DisplayedStartDistance", AnyMember)?.SetValue(alignmentData, displayedStartDistance);
+
+        var fh = new FailureHandler();
+
+        using var transaction = new Transaction(doc, "Create alignment");
+        transaction.Start();
+
+        var failureHandlingOptions = transaction.GetFailureHandlingOptions();
+        failureHandlingOptions.SetFailuresPreprocessor(fh);
+        transaction.SetFailureHandlingOptions(failureHandlingOptions);
+
+        var alignment = createMethod.Invoke(null, new[] { doc, alignmentData });
+        if (alignment is null)
+        {
+            transaction.RollBack();
+            throw new InvalidOperationException("Civil Alignments API returned no alignment object.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            alignment.GetType().GetProperty("Name", AnyMember)?.SetValue(alignment, name);
+        }
+
+        var alignmentElement = alignment.GetType().GetProperty("Element", AnyMember)?.GetValue(alignment) as Element;
+
+        if (sourceCurveIdsToDelete is not null && sourceCurveIdsToDelete.Count > 0)
+        {
+            doc.Delete(sourceCurveIdsToDelete.Where(id => id is not null && id != ElementId.InvalidElementId).ToList());
+        }
+
+        transaction.Commit();
+
+        return alignmentElement?.Id ?? ElementId.InvalidElementId;
     }
 
     private static T ReadProperty<T>(object instance, string name)

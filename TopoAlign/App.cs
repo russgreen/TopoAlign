@@ -137,12 +137,21 @@ class App : IExternalApplication
         pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
         pbResetRegion.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandResetTopoRegion.html"));
 
+        PushButton pbCreateAlignment = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandCreateAlignment),
+            $"Create{Environment.NewLine}Alignment",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandCreateAlignment)}"));
+        pbCreateAlignment.ToolTip = "Create a native Revit alignment from model/detail lines and arcs.";
+        pbCreateAlignment.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
+        pbCreateAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandCreateAlignment.html"));
+
         PushButton pbAlignment = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandAlignmentTool),
             $"Alignment{Environment.NewLine}Tool",
             Assembly.GetExecutingAssembly().Location,
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandAlignmentTool)}"));
-        pbAlignment.ToolTip = "Read, create and edit alignments (paths).";
+        pbAlignment.ToolTip = "Inspect native alignment details and JSON.";
         pbAlignment.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
         pbAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandAlignmentTool.html"));
 

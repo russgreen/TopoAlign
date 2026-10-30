@@ -1,0 +1,59 @@
+<!-- docs/Commands/CommandCreateAlignment.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – Create Alignment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <div class="brand"><h1>TopoAlign</h1></div>
+        <nav class="crumbs">
+            <ol>
+                <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+                <li class="crumb">Create Alignment</li>
+            </ol>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <article>
+            <h1 id="overview">Create Alignment</h1>
+            <p>Creates a Revit native alignment from selected model/detail lines and arcs. The command validates curve continuity, lets you control start station and direction, and can optionally delete source lines after creation.</p>
+
+            <h2 id="usage">Usage / Steps</h2>
+            <ol>
+                <li>Launch <strong>Create Alignment</strong> from the Topo Align ribbon panel.</li>
+                <li>Set alignment name, start station, and units.</li>
+                <li>Click <strong>Pick lines/arcs</strong> and select a continuous chain of model/detail curves.</li>
+                <li>Optionally reverse direction and/or delete source lines.</li>
+                <li>Click <strong>Create Alignment</strong>.</li>
+            </ol>
+
+            <h2 id="options">Options / Parameters</h2>
+            <ul>
+                <li><strong>Alignment name</strong> — Name for the new alignment element.</li>
+                <li><strong>Start station</strong> — Displayed start station value (converted using selected units).</li>
+                <li><strong>Pick lines/arcs</strong> — Accepts model and detail curves (line/arc only).</li>
+                <li><strong>Reverse direction</strong> — Reverses stationing direction before creation.</li>
+                <li><strong>Delete source lines</strong> — Removes selected source curve elements after successful creation.</li>
+            </ul>
+
+            <h2 id="notes">Notes</h2>
+            <ul>
+                <li>Requires Autodesk Civil Alignments support in the installed Revit version.</li>
+                <li>Current implementation uses an existing alignment in the model as a JSON template for schema compatibility.</li>
+            </ul>
+        </article>
+    </div>
+</main>
+
+<footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>
