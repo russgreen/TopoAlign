@@ -14,5 +14,6 @@ public partial class CreateAlignmentView : Window
 
         DataContext = viewModel;
         viewModel.ClosingRequest += (s, e) => DialogResult = true;
+        viewModel.HideRequested += (s, e) => Hide();
     }
 }

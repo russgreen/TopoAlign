@@ -8,7 +8,6 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance {x:Type viewModels:CreateAlignmentViewModel}, IsDesignTimeCreatable=False}"
         Title="{Binding WindowTitle}"
-        Visibility="{Binding IsWindowVisible, Mode=TwoWay}"
         FontSize="12" FontFamily="Segoe UI Light"
         WindowStartupLocation="CenterScreen"
         Height="305" Width="360"

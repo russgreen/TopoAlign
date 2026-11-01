@@ -27,27 +27,31 @@ internal static class CurveChainer
             return result;
         }
 
-        var curves = sourceCurves
+        var picked = sourceCurves
             .Where(c => c is not null)
-            .Select(ProjectToPlan)
             .ToList();
 
-        if (curves.Count == 0)
+        if (picked.Count == 0)
         {
             result.ErrorMessage = "No supported curves selected.";
             return result;
         }
 
-        if (curves.Any(c => c is not Line and not Arc))
+        // Check the types before projecting, because projecting only knows how to rebuild lines and arcs.
+        if (picked.Any(c => c is not Line and not Arc))
         {
             result.ErrorMessage = "Only line and arc curves are supported.";
             return result;
         }
 
-        var startIndex = FindStartCurveIndex(curves);
+        var curves = picked
+            .Select(ProjectToPlan)
+            .ToList();
+
+        var (startIndex, reverseStart) = FindStartCurve(curves);
 
         var used = new HashSet<int>();
-        var current = curves[startIndex];
+        var current = reverseStart ? ReverseCurve(curves[startIndex]) : curves[startIndex];
         used.Add(startIndex);
         result.Curves.Add(current);
 
@@ -111,34 +115,63 @@ internal static class CurveChainer
         return reversed;
     }
 
-    private static int FindStartCurveIndex(IReadOnlyList<Curve> curves)
+    /// <summary>
+    /// Finds the curve the chain should start from: one with a free end (an end no other curve touches).
+    /// If that free end is the curve's end point, the curve has to be reversed so the chain leaves from it.
+    /// A closed loop has no free ends, so it starts from the first curve as drawn.
+    /// </summary>
+    private static (int Index, bool Reverse) FindStartCurve(IReadOnlyList<Curve> curves)
     {
+        // Prefer a curve whose start is free and end is joined, so the drawn direction is kept where possible
+        // and a lone detached curve is not picked over a real chain end.
         for (var i = 0; i < curves.Count; i++)
         {
-            var start = curves[i].GetEndPoint(0);
-            var touches = 0;
-
-            for (var j = 0; j < curves.Count; j++)
+            if (!TouchesAnother(curves, i, 0) && TouchesAnother(curves, i, 1))
             {
-                if (i == j)
-                {
-                    continue;
-                }
-
-                var candidate = curves[j];
-                if (candidate.GetEndPoint(0).DistanceTo(start) <= Tolerance || candidate.GetEndPoint(1).DistanceTo(start) <= Tolerance)
-                {
-                    touches++;
-                }
-            }
-
-            if (touches == 0)
-            {
-                return i;
+                return (i, false);
             }
         }
 
-        return 0;
+        // Otherwise a curve whose end is the free end: it has to be reversed to start the chain.
+        for (var i = 0; i < curves.Count; i++)
+        {
+            if (TouchesAnother(curves, i, 0) && !TouchesAnother(curves, i, 1))
+            {
+                return (i, true);
+            }
+        }
+
+        // A single curve, or curves that are not joined at all (reported as not continuous later).
+        for (var i = 0; i < curves.Count; i++)
+        {
+            if (!TouchesAnother(curves, i, 0))
+            {
+                return (i, false);
+            }
+        }
+
+        return (0, false);
+    }
+
+    private static bool TouchesAnother(IReadOnlyList<Curve> curves, int index, int endIndex)
+    {
+        var point = curves[index].GetEndPoint(endIndex);
+
+        for (var j = 0; j < curves.Count; j++)
+        {
+            if (j == index)
+            {
+                continue;
+            }
+
+            var candidate = curves[j];
+            if (candidate.GetEndPoint(0).DistanceTo(point) <= Tolerance || candidate.GetEndPoint(1).DistanceTo(point) <= Tolerance)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static Curve ProjectToPlan(Curve curve)

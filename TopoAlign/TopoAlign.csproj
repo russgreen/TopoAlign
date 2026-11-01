@@ -130,6 +130,10 @@
    </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="TopoAlign.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="TopoAlign.addin">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <SubType>Designer</SubType>

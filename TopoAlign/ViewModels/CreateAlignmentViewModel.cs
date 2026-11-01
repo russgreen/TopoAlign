@@ -9,6 +9,24 @@ using TopoAlign.Alignments;
 
 namespace TopoAlign.ViewModels;
 
+internal sealed class CreateAlignmentRequest
+{
+    public CreateAlignmentRequest(string name, string json, double planLength, IList<ElementId> sourceCurveIdsToDelete)
+    {
+        Name = name;
+        Json = json;
+        PlanLength = planLength;
+        SourceCurveIdsToDelete = sourceCurveIdsToDelete;
+    }
+
+    public string Name { get; }
+    public string Json { get; }
+
+    /// <summary>Alignment length in feet (internal units).</summary>
+    public double PlanLength { get; }
+    public IList<ElementId> SourceCurveIdsToDelete { get; }
+}
+
 internal partial class CreateAlignmentViewModel : BaseViewModel
 {
     private static readonly ILogger log = Log.ForContext<CreateAlignmentViewModel>();
@@ -43,10 +61,16 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     [ObservableProperty]
     private Models.DisplayUnitModel _selectedDisplayUnit;
 
-    [ObservableProperty]
-    private System.Windows.Visibility _isWindowVisible = System.Windows.Visibility.Visible;
-
     public string WindowTitle { get; }
+
+    /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
+    public event EventHandler HideRequested;
+
+    /// <summary>True when the dialog was hidden to pick lines; the command picks, then shows the dialog again.</summary>
+    public bool PickRequested { get; set; }
+
+    /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
+    public CreateAlignmentRequest Request { get; private set; }
 
     private readonly Models.Settings _settings = new();
     private readonly List<ElementId> _selectedCurveIds = new();
@@ -92,8 +116,15 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     [RelayCommand]
     private void PickLines()
     {
-        IsWindowVisible = System.Windows.Visibility.Hidden;
+        // Hiding a ShowDialog window ends ShowDialog, so the command does the pick (inside the
+        // Revit API context) and then shows this same window again.
+        PickRequested = true;
+        HideRequested?.Invoke(this, EventArgs.Empty);
+    }
 
+    /// <summary>Selects the curves (pre-selection or interactive pick) and chains them. Called by the command.</summary>
+    internal void PickCurves()
+    {
         try
         {
             var uidoc = App.CachedUiApp.ActiveUIDocument;
@@ -157,10 +188,6 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
             log.Error(ex, "Failed while selecting curves for alignment creation");
             TaskDialog.Show("Create Alignment", ex.Message);
         }
-        finally
-        {
-            IsWindowVisible = System.Windows.Visibility.Visible;
-        }
     }
 
     [RelayCommand(CanExecute = nameof(CanCreateAlignment))]
@@ -174,17 +201,9 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
                 return;
             }
 
-            var templateElement = AlignmentApi.GetAlignmentElements(App.RevitDocument).FirstOrDefault();
-            if (templateElement is null)
+            if (!AlignmentApi.IsAvailable)
             {
-                TaskDialog.Show("Create Alignment", "No existing alignment is available to use as a JSON template. Use Alignment Tool first to create/import one sample alignment in this model.");
-                return;
-            }
-
-            var templateJson = AlignmentApi.GetJson(templateElement);
-            if (string.IsNullOrWhiteSpace(templateJson))
-            {
-                TaskDialog.Show("Create Alignment", "Failed to read alignment JSON from the template alignment.");
+                TaskDialog.Show("Create Alignment", "The Revit Civil Alignments add-in was not found, so alignments cannot be created in this version of Revit.");
                 return;
             }
 
@@ -193,28 +212,20 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
                 : _orderedCurves.ToList();
 
             var startStationInternal = UnitUtils.ConvertToInternalUnits((double)StartStation, SelectedDisplayUnit.DisplayUnit);
-            var json = AlignmentJsonBuilder.BuildFromTemplate(templateJson, curves, startStationInternal);
 
-            var createdId = AlignmentApi.Create(
-                App.RevitDocument,
+            // Alignment JSON is written in shared coordinates; the profile elevation takes the same offset.
+            var internalToShared = App.RevitDocument.ActiveProjectLocation.GetTotalTransform().Inverse;
+            var json = AlignmentJsonBuilder.Build(AlignmentName, curves, internalToShared, startStationInternal, out var planLength);
+
+            // The alignment is created by the command once this dialog has closed, so the transaction
+            // runs inside the Revit API context rather than from a WPF button handler.
+            Request = new CreateAlignmentRequest(
                 AlignmentName,
                 json,
-                startStationInternal,
-                DeleteSourceLines ? _selectedCurveIds : null);
-
-            if (createdId is null || createdId == ElementId.InvalidElementId)
-            {
-                TaskDialog.Show("Create Alignment", "Alignment was not created.");
-                return;
-            }
+                planLength,
+                DeleteSourceLines ? _selectedCurveIds.ToList() : null);
 
             SaveSettings(startStationInternal);
-#if REVIT2024_OR_GREATER
-            var createdElementId = createdId.Value;
-#else
-            var createdElementId = createdId.IntegerValue;
-#endif
-            TaskDialog.Show("Create Alignment", $"Alignment '{AlignmentName}' created (Id: {createdElementId}).");
             OnClosingRequest();
         }
         catch (Exception ex)

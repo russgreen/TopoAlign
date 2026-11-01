@@ -29,6 +29,55 @@ public class CommandCreateAlignment : IExternalCommand
         var viewModel = new CreateAlignmentViewModel();
         var view = new CreateAlignmentView(viewModel);
 
-        return view.ShowDialog() == true ? Result.Succeeded : Result.Cancelled;
+        // The dialog hides itself to let the user pick lines; the pick runs here in the API context,
+        // then the same dialog is shown again.
+        bool? dialogResult;
+        do
+        {
+            viewModel.PickRequested = false;
+            dialogResult = view.ShowDialog();
+
+            if (viewModel.PickRequested)
+            {
+                viewModel.PickCurves();
+            }
+        }
+        while (viewModel.PickRequested);
+
+        if (dialogResult != true || viewModel.Request is not { } request)
+        {
+            return Result.Cancelled;
+        }
+
+        // Create after the dialog has closed so the transaction runs in the Revit API context.
+        try
+        {
+            var createdId = Alignments.AlignmentApi.Create(
+                App.RevitDocument,
+                request.Name,
+                request.Json,
+                request.PlanLength,
+                request.SourceCurveIdsToDelete);
+
+            if (createdId is null || createdId == ElementId.InvalidElementId)
+            {
+                TaskDialog.Show("Create Alignment", "Alignment was not created.");
+                return Result.Failed;
+            }
+
+#if REVIT2024_OR_GREATER
+            var createdElementId = createdId.Value;
+#else
+            var createdElementId = createdId.IntegerValue;
+#endif
+            TaskDialog.Show("Create Alignment", $"Alignment '{request.Name}' created (Id: {createdElementId}).");
+            return Result.Succeeded;
+        }
+        catch (Exception ex)
+        {
+            log.Error(ex, "Create alignment failed");
+            TaskDialog.Show("Create Alignment", ex.Message);
+            return Result.Failed;
+        }
     }
 }

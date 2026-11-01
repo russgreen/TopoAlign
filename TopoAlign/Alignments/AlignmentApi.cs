@@ -27,6 +27,7 @@ internal static class AlignmentApi
     private static Type _alignmentType;
     private static Type _schemaType;
     private static Type _alignmentDataType;
+    private static Type _utilitiesType;
 
     public static bool IsAvailable
     {
@@ -66,6 +67,7 @@ internal static class AlignmentApi
             _alignmentType = assembly.GetType(NamespacePrefix + "Alignment");
             _schemaType = assembly.GetType(NamespacePrefix + "AlignmentSchema");
             _alignmentDataType = assembly.GetType(NamespacePrefix + "AlignmentData");
+            _utilitiesType = assembly.GetType(NamespacePrefix + "Utilities");
         }
         catch (Exception ex)
         {
@@ -73,6 +75,7 @@ internal static class AlignmentApi
             _alignmentType = null;
             _schemaType = null;
             _alignmentDataType = null;
+            _utilitiesType = null;
         }
     }
 
@@ -202,7 +205,13 @@ internal static class AlignmentApi
         }
     }
 
-    public static ElementId Create(Document doc, string name, string json, double displayedStartDistance, ICollection<ElementId> sourceCurveIdsToDelete = null)
+    /// <summary>
+    /// Creates a native alignment from Autodesk "infra" alignment JSON.
+    /// The displayed start/end are distances along the alignment (0 .. length), not stations; the start station
+    /// lives in the JSON. Must be called from within the Revit API context.
+    /// </summary>
+    /// <param name="planLength">Alignment length in feet, used if Autodesk's own length calculation is unavailable.</param>
+    public static ElementId Create(Document doc, string name, string json, double planLength, ICollection<ElementId> sourceCurveIdsToDelete = null)
     {
         if (doc is null)
         {
@@ -219,38 +228,52 @@ internal static class AlignmentApi
             throw new ArgumentException("Alignment JSON is required.", nameof(json));
         }
 
-        var createMethod = _alignmentType.GetMethod("CreateAlignment", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Document), _alignmentDataType }, null);
+        // CreateAlignment and the AlignmentData setters are non-public in the Civil Alignments DLL.
+        var createMethod = _alignmentType.GetMethod("CreateAlignment", AnyMember, null, new[] { typeof(Document), _alignmentDataType }, null);
         if (createMethod is null)
         {
             throw new MissingMethodException("Alignment.CreateAlignment(Document, AlignmentData) was not found.");
         }
-
-        var alignmentData = Activator.CreateInstance(_alignmentDataType, true);
-        _alignmentDataType.GetProperty("JSON", AnyMember)?.SetValue(alignmentData, json);
-        _alignmentDataType.GetProperty("DisplayedStartDistance", AnyMember)?.SetValue(alignmentData, displayedStartDistance);
 
         var fh = new FailureHandler();
 
         using var transaction = new Transaction(doc, "Create alignment");
         transaction.Start();
 
+        var displayedEnd = ResolveDisplayedEndDistance(json, planLength);
+
+        var alignmentData = Activator.CreateInstance(_alignmentDataType, true);
+        _alignmentDataType.GetProperty("JSON", AnyMember)?.SetValue(alignmentData, json);
+        _alignmentDataType.GetProperty("DisplayedStartDistance", AnyMember)?.SetValue(alignmentData, 0.0);
+        _alignmentDataType.GetProperty("DisplayedEndDistance", AnyMember)?.SetValue(alignmentData, displayedEnd);
+
         var failureHandlingOptions = transaction.GetFailureHandlingOptions();
         failureHandlingOptions.SetFailuresPreprocessor(fh);
         transaction.SetFailureHandlingOptions(failureHandlingOptions);
 
-        var alignment = createMethod.Invoke(null, new[] { doc, alignmentData });
+        object alignment;
+        try
+        {
+            alignment = createMethod.Invoke(null, new[] { doc, alignmentData });
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            // surface Autodesk's own message rather than the reflection wrapper
+            throw new InvalidOperationException(ex.InnerException.Message, ex.InnerException);
+        }
+
         if (alignment is null)
         {
             transaction.RollBack();
             throw new InvalidOperationException("Civil Alignments API returned no alignment object.");
         }
 
+        var alignmentElement = alignment.GetType().GetProperty("Element", AnyMember)?.GetValue(alignment) as Element;
+
         if (!string.IsNullOrWhiteSpace(name))
         {
-            alignment.GetType().GetProperty("Name", AnyMember)?.SetValue(alignment, name);
+            ApplyName(doc, alignment, alignmentElement, name);
         }
-
-        var alignmentElement = alignment.GetType().GetProperty("Element", AnyMember)?.GetValue(alignment) as Element;
 
         if (sourceCurveIdsToDelete is not null && sourceCurveIdsToDelete.Count > 0)
         {
@@ -260,6 +283,73 @@ internal static class AlignmentApi
         transaction.Commit();
 
         return alignmentElement?.Id ?? ElementId.InvalidElementId;
+    }
+
+    /// <summary>
+    /// Displayed end distance for a new alignment: Autodesk's own length for the JSON, unless it is missing or
+    /// disagrees with the plan length (a units mismatch), in which case the plan length is used.
+    /// </summary>
+    private static double ResolveDisplayedEndDistance(string json, double planLength)
+    {
+        var autodeskLength = GetAlignmentLength(json);
+        if (autodeskLength.HasValue && Math.Abs(autodeskLength.Value - planLength) <= Math.Max(0.01 * planLength, 1e-6))
+        {
+            return autodeskLength.Value;
+        }
+
+        log.Warning("Using plan length {planLength} as displayed end distance (Autodesk length: {autodeskLength})", planLength, autodeskLength);
+        return planLength;
+    }
+
+    /// <summary>
+    /// The name is already part of the JSON. Alignment.Name has no setter in current Revit versions, so only use it
+    /// if it is writable, and also name the element's type so the alignment is easy to find in the browser.
+    /// </summary>
+    private static void ApplyName(Document doc, object alignment, Element alignmentElement, string name)
+    {
+        try
+        {
+            var property = alignment.GetType().GetProperty("Name", AnyMember);
+            if (property is not null && property.CanWrite)
+            {
+                property.SetValue(alignment, name);
+            }
+        }
+        catch (Exception ex)
+        {
+            log.Warning(ex, "Could not set the alignment name through the Name property");
+        }
+
+        try
+        {
+            if (alignmentElement is not null && doc.GetElement(alignmentElement.GetTypeId()) is ElementType type && type.Name != name)
+            {
+                type.Name = name;
+            }
+        }
+        catch (Exception ex)
+        {
+            // for example another type already uses this name; the JSON name is still stored
+            log.Debug(ex, "Could not name the alignment type");
+        }
+    }
+
+    /// <summary>
+    /// Alignment length (internal units) for a JSON document via the private
+    /// Utilities.GetAlignmentLength(string), or null if it can't be determined.
+    /// </summary>
+    private static double? GetAlignmentLength(string json)
+    {
+        try
+        {
+            var method = _utilitiesType?.GetMethod("GetAlignmentLength", AnyMember, null, new[] { typeof(string) }, null);
+            return method?.Invoke(null, new object[] { json }) is double length ? length : null;
+        }
+        catch (Exception ex)
+        {
+            log.Warning(ex, "GetAlignmentLength failed");
+            return null;
+        }
     }
 
     private static T ReadProperty<T>(object instance, string name)

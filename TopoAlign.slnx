@@ -60,6 +60,23 @@
     <BuildType Solution="Debug|*" Project="Debug R27" />
     <BuildType Solution="Release|*" Project="Release R27" />
   </Project>
+  <Project Path="TopoAlign.Tests/TopoAlign.Tests.csproj">
+    <BuildType Solution="Debug|*" Project="Debug R27" />
+    <BuildType Solution="Release|*" Project="Release R27" />
+    <!-- TUnit needs .NET 8+, so the net48 (Revit 2021-2024) configurations are not built. Release builds skip the tests. -->
+    <Build Solution="Debug R21|*" Project="false" />
+    <Build Solution="Debug R22|*" Project="false" />
+    <Build Solution="Debug R23|*" Project="false" />
+    <Build Solution="Debug R24|*" Project="false" />
+    <Build Solution="Release|*" Project="false" />
+    <Build Solution="Release R21|*" Project="false" />
+    <Build Solution="Release R22|*" Project="false" />
+    <Build Solution="Release R23|*" Project="false" />
+    <Build Solution="Release R24|*" Project="false" />
+    <Build Solution="Release R25|*" Project="false" />
+    <Build Solution="Release R26|*" Project="false" />
+    <Build Solution="Release R27|*" Project="false" />
+  </Project>
   <Project Path="installer/TopoAlign.Setup.wixproj">
     <Platform Solution="Debug R21|ARM64" Project="Any CPU" />
     <Platform Solution="Debug R21|x64" Project="Any CPU" />

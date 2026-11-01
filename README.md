@@ -53,3 +53,16 @@ While you can select a family the add-in attempts to find the topmost or bottomm
 2024.2 is now the minimum supported 2024 version of this build of TopoAlign
 
 You cannot align an element to a toposurface that cross a sub-region or building pad.  
+
+
+# Running the unit tests
+The tests in `TopoAlign.Tests` use [RevitUnit](https://github.com/Nice3point/RevitUnit) (TUnit running inside a real Revit session), so a licensed Revit matching the configuration must be installed. They are available for the Revit 2025+ configurations only (TUnit needs .NET 8+).
+
+```
+cd TopoAlign.Tests
+dotnet run -c "Debug R27"
+```
+
+Building the tests also builds `TopoAlign`, which substitutes the Google Analytics keys into `App.cs` during the build, so `ApiSecret.txt` and `MeasurementId.txt` need to be present in the repository root as for a normal build.
+
+The settings and view model tests back up and restore the `HKCU\SOFTWARE\RGTools\TopoAlign` registry key, so your own TopoAlign settings are left as they were.
