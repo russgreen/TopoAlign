@@ -37,6 +37,24 @@ internal sealed class PiResult
     public bool IsValid => Errors.Count == 0;
 }
 
+internal sealed class SpiralResult
+{
+    public SpiralResult(List<PlanSegment> segments, int spiralledCurves, List<string> skipped)
+    {
+        Segments = segments;
+        SpiralledCurves = spiralledCurves;
+        Skipped = skipped;
+    }
+
+    public List<PlanSegment> Segments { get; }
+
+    /// <summary>How many arcs were given entry and exit spirals.</summary>
+    public int SpiralledCurves { get; }
+
+    /// <summary>User-readable reasons an arc was left without spirals.</summary>
+    public List<string> Skipped { get; }
+}
+
 /// <summary>
 /// Lays out an alignment from PIs in the usual road way: tangent lines between PIs, rounded at each interior PI with a
 /// circular arc of the given radius, optionally with a clothoid transition spiral on each side.
@@ -311,6 +329,127 @@ internal static class PiGeometry
         var last = segments[segments.Count - 1].EndPoint;
         pis.Add(new PiPoint(last.X, last.Y, 0.0, 0.0));
         return pis;
+    }
+
+    /// <summary>
+    /// Adds transition spirals to every arc that can take them and leaves the rest of the chain as drawn. A spiral needs a straight
+    /// on both sides of the arc, so an arc at the start or end of the chain, next to another arc, not tangent to its straights, or
+    /// too tight for the spiral length is kept as it is, and the reason is listed in <see cref="SpiralResult.Skipped"/>.
+    /// </summary>
+    public static SpiralResult AddSpirals(IReadOnlyList<PlanSegment> segments, double spiralLength)
+    {
+        var skipped = new List<string>();
+        if (segments is null || segments.Count == 0)
+        {
+            skipped.Add("There is no geometry to add spirals to.");
+            return new SpiralResult(new List<PlanSegment>(), 0, skipped);
+        }
+
+        if (segments.Any(s => s is PlanSpiral))
+        {
+            skipped.Add("The chain already contains spirals.");
+            return new SpiralResult(segments.ToList(), 0, skipped);
+        }
+
+        var count = segments.Count;
+        var starts = new PlanPoint[count];
+        var ends = new PlanPoint[count];
+        for (var i = 0; i < count; i++)
+        {
+            starts[i] = segments[i].StartPoint;
+            ends[i] = segments[i].EndPoint;
+        }
+
+        var replacements = new List<PlanSegment>[count];
+        var added = 0;
+        var curveNumber = 0;
+
+        for (var i = 0; i < count; i++)
+        {
+            if (segments[i] is not PlanArc arc)
+            {
+                continue;
+            }
+
+            curveNumber++;
+            var label = $"Curve {curveNumber}";
+
+            if (i == 0 || i == count - 1 || segments[i - 1] is not PlanLine before || segments[i + 1] is not PlanLine after)
+            {
+                skipped.Add($"{label} has no straight on both sides, so it has no spirals.");
+                continue;
+            }
+
+            if (Math.Abs(NormalizeAngle(before.HeadingAt(0.0) - arc.HeadingAt(0.0))) > 0.02 ||
+                Math.Abs(NormalizeAngle(after.HeadingAt(0.0) - arc.HeadingAt(arc.Length))) > 0.02)
+            {
+                skipped.Add($"{label} is not tangent to the straights either side of it, so it has no spirals.");
+                continue;
+            }
+
+            if (!TryIntersect(before, after, out var intersection))
+            {
+                skipped.Add($"The straights either side of {label.ToLowerInvariant()} do not meet, so it has no spirals.");
+                continue;
+            }
+
+            var corner = Create(new[]
+            {
+                new PiPoint(before.StartPoint.X, before.StartPoint.Y, 0.0, 0.0),
+                new PiPoint(intersection.X, intersection.Y, arc.Radius, spiralLength),
+                new PiPoint(after.EndPoint.X, after.EndPoint.Y, 0.0, 0.0)
+            });
+            if (!corner.IsValid)
+            {
+                skipped.Add($"The spirals do not fit {label.ToLowerInvariant()}: they are too long for its turn or for the straights beside it.");
+                continue;
+            }
+
+            var middle = corner.Segments.Where(s => s is not PlanLine).ToList();
+            var entry = middle[0].StartPoint;
+            var exit = corner.Segments[corner.Segments.Count - 1] is PlanLine last ? last.StartPoint : middle[middle.Count - 1].EndPoint;
+
+            // the straight before may already have been shortened by the previous curve, so check what is left of it
+            var lengthBefore = PlanPoint.Distance(before.StartPoint, before.EndPoint);
+            var remaining = ((entry.X - starts[i - 1].X) * (before.EndPoint.X - before.StartPoint.X) +
+                             (entry.Y - starts[i - 1].Y) * (before.EndPoint.Y - before.StartPoint.Y)) / lengthBefore;
+            if (remaining < -1e-6)
+            {
+                skipped.Add($"The spirals do not fit {label.ToLowerInvariant()}: the straight between it and the curve before is too short.");
+                continue;
+            }
+
+            ends[i - 1] = entry;
+            starts[i + 1] = exit;
+            replacements[i] = middle;
+            added++;
+        }
+
+        var result = new List<PlanSegment>();
+        for (var i = 0; i < count; i++)
+        {
+            if (replacements[i] is not null)
+            {
+                result.AddRange(replacements[i]);
+            }
+            else if (segments[i] is PlanLine line)
+            {
+                if (PlanPoint.Distance(starts[i], line.StartPoint) < 1e-12 && PlanPoint.Distance(ends[i], line.EndPoint) < 1e-12)
+                {
+                    result.Add(line);
+                }
+                else
+                {
+                    AddLine(result, starts[i], ends[i]);
+                }
+            }
+            else
+            {
+                result.Add(segments[i]);
+            }
+        }
+
+        return new SpiralResult(result, added, skipped);
     }
 
     private static bool TryIntersect(PlanLine a, PlanLine b, out PlanPoint point)

@@ -70,7 +70,13 @@ public class CommandCreateAlignment : IExternalCommand
 #else
             var createdElementId = createdId.IntegerValue;
 #endif
-            TaskDialog.Show("Create Alignment", $"Alignment '{request.Name}' created (Id: {createdElementId}).");
+            var summary = $"Alignment '{request.Name}' created (Id: {createdElementId}).";
+            if (!string.IsNullOrEmpty(request.Notice))
+            {
+                summary += Environment.NewLine + Environment.NewLine + request.Notice;
+            }
+
+            TaskDialog.Show("Create Alignment", summary);
             return Result.Succeeded;
         }
         catch (Exception ex)

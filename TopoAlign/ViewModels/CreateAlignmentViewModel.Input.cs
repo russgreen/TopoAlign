@@ -343,12 +343,16 @@ internal partial class CreateAlignmentViewModel
     /// <summary>The plan geometry for the current input: Revit curves where they can be used as picked, otherwise plan segments.</summary>
     private sealed class PlanLayout
     {
-        public PlanLayout(List<Curve> curves, List<PlanSegment> segments, double flatElevation)
+        public PlanLayout(List<Curve> curves, List<PlanSegment> segments, double flatElevation, string notice = "")
         {
             Curves = curves;
             Segments = segments;
             FlatElevation = flatElevation;
+            Notice = notice;
         }
+
+        /// <summary>Anything the user should be told about, such as curves that could not take spirals; empty when there is nothing.</summary>
+        public string Notice { get; }
 
         /// <summary>The picked curves (reversed if asked), or null when spirals were added or the points were laid out.</summary>
         public List<Curve> Curves { get; }
@@ -400,19 +404,28 @@ internal partial class CreateAlignmentViewModel
             throw new InvalidOperationException("Enter a spiral length greater than zero, or untick the transition spirals.");
         }
 
-        var pis = PiGeometry.FromSegments(segments, spiralLength, out var reason);
-        if (pis is null)
+        // spirals go where they fit; curves that can't take them are kept as drawn and reported
+        var spiralled = PiGeometry.AddSpirals(segments, spiralLength);
+        var notice = SpiralNotice(spiralled);
+        if (spiralled.SpiralledCurves == 0)
         {
-            throw new InvalidOperationException(reason);
+            return new PlanLayout(curves, segments, elevation, notice);
         }
 
-        var spiralled = PiGeometry.Create(pis);
-        if (!spiralled.IsValid)
+        return new PlanLayout(null, spiralled.Segments, elevation, notice);
+    }
+
+    private static string SpiralNotice(SpiralResult result)
+    {
+        if (result.Skipped.Count == 0)
         {
-            throw new InvalidOperationException(string.Join(Environment.NewLine, spiralled.Errors));
+            return string.Empty;
         }
 
-        return new PlanLayout(null, spiralled.Segments, elevation);
+        var text = result.SpiralledCurves == 0
+            ? "No spirals were added."
+            : $"Spirals were added to {result.SpiralledCurves} curve{(result.SpiralledCurves == 1 ? string.Empty : "s")}.";
+        return text + Environment.NewLine + string.Join(Environment.NewLine, result.Skipped);
     }
 
     private void LoadInputSettings()

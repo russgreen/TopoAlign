@@ -1,0 +1,125 @@
+<Window x:Class="TopoAlign.Views.EditProfileView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:TopoAlign.ViewModels"
+        xmlns:behaviours="clr-namespace:TopoAlign.Behaviours"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance {x:Type viewModels:EditProfileViewModel}, IsDesignTimeCreatable=False}"
+        Title="{Binding WindowTitle}"
+        FontSize="12" FontFamily="Segoe UI Light"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Height" Width="560"
+        WindowStyle="ToolWindow" ResizeMode="NoResize">
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="110"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="110"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <Style TargetType="TextBlock">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="TextBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="Height" Value="20"/>
+            </Style>
+            <Style TargetType="ComboBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="Height" Value="25"/>
+            </Style>
+        </Grid.Resources>
+
+        <Button Grid.Row="0" Grid.ColumnSpan="4" Content="Pick alignment" Command="{Binding PickAlignmentCommand}"/>
+
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="4" Text="{Binding AlignmentStatus}" TextWrapping="Wrap"/>
+
+        <TextBlock Grid.Row="2" Text="Units"/>
+        <ComboBox Grid.Row="2" Grid.Column="1"
+                  ItemsSource="{Binding DisplayUnits}"
+                  DisplayMemberPath="Label"
+                  SelectedValue="{Binding SelectedDisplayUnit, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <DataGrid Grid.Row="3" Grid.ColumnSpan="4" Height="220" Margin="0,0,0,6"
+                  ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
+                  AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                  CanUserSortColumns="False" CanUserReorderColumns="False"
+                  SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                  IsEnabled="{Binding HasAlignment}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="#" Binding="{Binding Number}" IsReadOnly="True" Width="30"/>
+                <DataGridTemplateColumn Header="Station" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Margin="0" Height="Auto" BorderThickness="0" HorizontalContentAlignment="Right"
+                                     IsEnabled="{Binding CanEditStation}"
+                                     Text="{Binding Station, UpdateSourceTrigger=PropertyChanged}"
+                                     MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Elevation" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Margin="0" Height="Auto" BorderThickness="0" HorizontalContentAlignment="Right"
+                                     Text="{Binding Elevation, UpdateSourceTrigger=PropertyChanged}"
+                                     MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Curve length" Width="85">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Margin="0" Height="Auto" BorderThickness="0" HorizontalContentAlignment="Right"
+                                     IsEnabled="{Binding CanEditCurveLength}"
+                                     Text="{Binding CurveLength, UpdateSourceTrigger=PropertyChanged}"
+                                     MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Curve used" Binding="{Binding CurveUsed}" IsReadOnly="True" Width="75"/>
+                <DataGridTextColumn Header="Grade to next" Binding="{Binding GradeToNext}" IsReadOnly="True" Width="85"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="4" Text="New station"/>
+        <TextBox Grid.Row="4" Grid.Column="1" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
+                 Text="{Binding NewStation, UpdateSourceTrigger=PropertyChanged}"
+                 MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"
+                 ToolTip="The station to add. Its height starts on the existing profile, so adding it changes nothing until you edit its elevation."/>
+        <TextBlock Grid.Row="4" Grid.Column="2" Text="Curve length" Margin="10,0,0,6"/>
+        <TextBox Grid.Row="4" Grid.Column="3" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
+                 Text="{Binding DefaultCurveLength, UpdateSourceTrigger=PropertyChanged}"
+                 MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
+                 ToolTip="Vertical curve length given to a new station. 0 leaves a sharp change of grade."/>
+
+        <Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Content="Add station" Command="{Binding AddStationCommand}" Margin="0,0,5,6"/>
+        <UniformGrid Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="2" Columns="2" Margin="5,0,0,0">
+            <Button Content="Remove station" Command="{Binding DeleteStationCommand}" Margin="0,0,5,6"/>
+            <Button Content="Reset" Command="{Binding ResetStationsCommand}" Margin="0,0,0,6"/>
+        </UniformGrid>
+
+        <TextBlock Grid.Row="6" Grid.ColumnSpan="4" Text="{Binding ProfileStatus}" TextWrapping="Wrap"/>
+
+        <Button Grid.Row="7" Grid.ColumnSpan="4" Content="Apply" IsDefault="True" Height="30"
+                Command="{Binding ApplyCommand}"/>
+    </Grid>
+</Window>

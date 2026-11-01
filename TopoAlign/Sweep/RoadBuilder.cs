@@ -30,11 +30,25 @@ internal sealed class RoadOptions
 
     /// <summary>Name of the profile type, kept with the road so it's easy to tell what made it.</summary>
     public string ProfileName { get; set; } = string.Empty;
+
+    /// <summary>Segmented lofts (default) or smooth surfaces without seams between sections.</summary>
+    public RoadGeometryMethod GeometryMethod { get; set; } = RoadGeometryMethod.SegmentedLoft;
+
+    /// <summary>A DirectShape (default) or a loadable family with an instance placed in the model.</summary>
+    public RoadOutput Output { get; set; } = RoadOutput.DirectShape;
 }
 
 internal sealed class RoadResult
 {
+    /// <summary>The DirectShape, or the family instance when the road was made as a family.</summary>
     public ElementId RoadId { get; set; } = ElementId.InvalidElementId;
+
+    /// <summary>The family, when the road was made as one.</summary>
+    public ElementId FamilyId { get; set; } = ElementId.InvalidElementId;
+
+    /// <summary>Something the user should know, for example that the smooth method fell back to segments.</summary>
+    public string Notice { get; set; } = string.Empty;
+
     public int StationCount { get; set; }
     public int SolidCount { get; set; }
 
@@ -191,12 +205,12 @@ internal static class RoadBuilder
         }
     }
 
-    /// <summary>The loops (one per section) along an alignment, ready to be lofted.</summary>
-    internal static List<CurveLoop> CreateLoops(AlignmentApi.PathReader path, SectionProfile profile, RoadOptions options, out int stationCount)
+    /// <summary>The stations where sections stand: evenly spaced, at the joins between curves, and extra ones wherever the path bends.</summary>
+    internal static List<double> PlanStations(AlignmentApi.PathReader path, RoadOptions options)
     {
         var interval = Math.Max(options.Interval, 0.1);
         var planned = StationPlanner.Plan(path.StartStation, path.EndStation, interval, path.HorizontalCurveStations());
-        var stations = StationPlanner.Refine(planned,
+        return StationPlanner.Refine(planned,
             station =>
             {
                 var point = path.PointAt(station);
@@ -204,7 +218,16 @@ internal static class RoadBuilder
             },
             ChordTolerance,
             Math.Max(interval / 16.0, 0.25));
+    }
 
+    /// <summary>The loops (one per section) along an alignment, ready to be lofted.</summary>
+    internal static List<CurveLoop> CreateLoops(AlignmentApi.PathReader path, SectionProfile profile, RoadOptions options, out int stationCount)
+    {
+        return CreateLoops(path, PlanStations(path, options), profile, options, out stationCount);
+    }
+
+    private static List<CurveLoop> CreateLoops(AlignmentApi.PathReader path, List<double> stations, SectionProfile profile, RoadOptions options, out int stationCount)
+    {
         stationCount = stations.Count;
         var loops = new List<CurveLoop>(stations.Count);
         foreach (var station in stations)
@@ -239,8 +262,30 @@ internal static class RoadBuilder
         options ??= new RoadOptions();
 
         var path = new AlignmentApi.PathReader(alignment);
-        var loops = CreateLoops(path, profile, options, out var stationCount);
-        var solids = RoadSolidBuilder.Build(loops);
+        var stations = PlanStations(path, options);
+
+        var notice = string.Empty;
+        var solids = new RoadSolidBuilder.SolidResult();
+        var smooth = false;
+        if (options.GeometryMethod == RoadGeometryMethod.SmoothSurfaces)
+        {
+            if (SmoothRoadBuilder.TryBuild(path, stations, profile, options, out var smoothSolids, out var problem))
+            {
+                solids.Solids.AddRange(smoothSolids);
+                smooth = true;
+            }
+            else
+            {
+                log.Warning("Smooth road along {alignment} fell back to segments: {problem}", alignment.UniqueId, problem);
+                notice = $"The smooth surfaces could not be made ({problem}), so the road was made from segments instead.";
+            }
+        }
+
+        if (!smooth)
+        {
+            solids = RoadSolidBuilder.Build(CreateLoops(path, stations, profile, options, out _));
+        }
+
         if (solids.Solids.Count == 0)
         {
             throw new InvalidOperationException(
@@ -251,38 +296,71 @@ internal static class RoadBuilder
             ? new ElementId(options.Category)
             : new ElementId(BuiltInCategory.OST_GenericModel);
 
-        var result = new RoadResult { StationCount = stationCount, SolidCount = solids.Solids.Count, SkippedSpans = solids.SkippedSpans };
-
-        using var transaction = new Transaction(document, "Create road");
-        transaction.Start();
-
-        var failureHandlingOptions = transaction.GetFailureHandlingOptions();
-        failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
-        transaction.SetFailureHandlingOptions(failureHandlingOptions);
-
-        var previous = FindRoads(document, alignment).Select(shape => shape.Id).ToList();
-        if (previous.Count > 0)
+        var result = new RoadResult
         {
-            document.Delete(previous);
-            result.ReplacedPrevious = true;
-        }
+            StationCount = stations.Count,
+            SolidCount = solids.Solids.Count,
+            SkippedSpans = solids.SkippedSpans,
+            Notice = notice
+        };
 
-        var shape = DirectShape.CreateElement(document, categoryId);
-        shape.ApplicationId = ApplicationId;
-        shape.ApplicationDataId = alignment.UniqueId;
-        shape.SetShape(solids.Solids.Cast<GeometryObject>().ToList());
+        var alignmentName = AlignmentApi.GetInfo(alignment)?.Name;
+        var description = string.IsNullOrWhiteSpace(options.ProfileName)
+            ? $"Road along {alignmentName}"
+            : $"Road along {alignmentName} ({options.ProfileName})";
 
-        var comments = shape.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
-        if (comments is not null && !comments.IsReadOnly)
+        // The family file is made before the model is touched, so a failure there leaves the model as it was.
+        string familyFile = null;
+        try
         {
-            var alignmentName = AlignmentApi.GetInfo(alignment)?.Name;
-            comments.Set(string.IsNullOrWhiteSpace(options.ProfileName)
-                ? $"Road along {alignmentName}"
-                : $"Road along {alignmentName} ({options.ProfileName})");
-        }
+            if (options.Output == RoadOutput.Family)
+            {
+                familyFile = RoadFamilyBuilder.CreateFamilyFile(document, RoadFamilyBuilder.FamilyName(alignment, alignmentName), solids.Solids, categoryId);
+            }
 
-        transaction.Commit();
-        result.RoadId = shape.Id;
+            using var transaction = new Transaction(document, "Create road");
+            transaction.Start();
+
+            var failureHandlingOptions = transaction.GetFailureHandlingOptions();
+            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
+            transaction.SetFailureHandlingOptions(failureHandlingOptions);
+
+            var previous = FindPreviousIds(document, alignment, alignmentName);
+            if (previous.Count > 0)
+            {
+                document.Delete(previous);
+                result.ReplacedPrevious = true;
+            }
+
+            Element road;
+            if (familyFile is not null)
+            {
+                var placed = RoadFamilyBuilder.Place(document, familyFile, solids.Solids);
+                result.FamilyId = placed.Family.Id;
+                road = placed.Instance;
+            }
+            else
+            {
+                var shape = DirectShape.CreateElement(document, categoryId);
+                shape.ApplicationId = ApplicationId;
+                shape.ApplicationDataId = alignment.UniqueId;
+                shape.SetShape(solids.Solids.Cast<GeometryObject>().ToList());
+                road = shape;
+            }
+
+            var comments = road.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
+            if (comments is not null && !comments.IsReadOnly)
+            {
+                comments.Set(description);
+            }
+
+            transaction.Commit();
+            result.RoadId = road.Id;
+        }
+        finally
+        {
+            RoadFamilyBuilder.DeleteFile(familyFile);
+        }
 
         if (result.SkippedSpans > 0)
         {
@@ -292,13 +370,47 @@ internal static class RoadBuilder
         return result;
     }
 
-    /// <summary>The roads this add-in has made for an alignment.</summary>
-    public static List<DirectShape> FindRoads(Document document, Element alignment)
+    /// <summary>The roads this add-in has made for an alignment: DirectShapes and instances of road families.</summary>
+    public static List<Element> FindRoads(Document document, Element alignment)
     {
-        return new FilteredElementCollector(document)
+        var roads = new List<Element>();
+        roads.AddRange(new FilteredElementCollector(document)
+            .OfClass(typeof(DirectShape))
+            .Cast<DirectShape>()
+            .Where(shape => shape.ApplicationId == ApplicationId && shape.ApplicationDataId == alignment.UniqueId));
+
+        var families = RoadFamilyBuilder.FindFamilies(document, alignment, AlignmentApi.GetInfo(alignment)?.Name);
+        if (families.Count > 0)
+        {
+            var familyIds = new HashSet<long>(families.Select(f => ElementIdValue(f.Id)));
+            roads.AddRange(new FilteredElementCollector(document)
+                .OfClass(typeof(FamilyInstance))
+                .Cast<FamilyInstance>()
+                .Where(instance => instance.Symbol?.Family is { } family && familyIds.Contains(ElementIdValue(family.Id))));
+        }
+
+        return roads;
+    }
+
+    /// <summary>Everything an earlier road for this alignment left in the model: the shapes, and the families (which take their instances with them).</summary>
+    private static List<ElementId> FindPreviousIds(Document document, Element alignment, string alignmentName)
+    {
+        var ids = new List<ElementId>();
+        ids.AddRange(new FilteredElementCollector(document)
             .OfClass(typeof(DirectShape))
             .Cast<DirectShape>()
             .Where(shape => shape.ApplicationId == ApplicationId && shape.ApplicationDataId == alignment.UniqueId)
-            .ToList();
+            .Select(shape => shape.Id));
+        ids.AddRange(RoadFamilyBuilder.FindFamilies(document, alignment, alignmentName).Select(family => family.Id));
+        return ids;
+    }
+
+    private static long ElementIdValue(ElementId id)
+    {
+#if REVIT2024_OR_GREATER
+        return id.Value;
+#else
+        return id.IntegerValue;
+#endif
     }
 }

@@ -143,7 +143,7 @@ class App : IExternalApplication
             Assembly.GetExecutingAssembly().Location,
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandCreateAlignment)}"));
         pbCreateAlignment.ToolTip = "Create a native Revit alignment from model/detail lines and arcs.";
-        pbCreateAlignment.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
+        pbCreateAlignment.LargeImage = PngImageSource("TopoAlign.Images.AlignmentFromCurve32.png");
         pbCreateAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandCreateAlignment.html"));
 
         PushButton pbEditAlignment = (PushButton)panel.AddItem(new PushButtonData(
@@ -152,8 +152,17 @@ class App : IExternalApplication
             Assembly.GetExecutingAssembly().Location,
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandEditAlignment)}"));
         pbEditAlignment.ToolTip = "Rename an alignment, change its start station or reverse its direction.";
-        pbEditAlignment.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
+        pbEditAlignment.LargeImage = PngImageSource("TopoAlign.Images.EditAlignment32.png");
         pbEditAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandEditAlignment.html"));
+
+        PushButton pbEditProfile = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandEditProfile),
+            $"Edit{Environment.NewLine}Profile",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandEditProfile)}"));
+        pbEditProfile.ToolTip = "Add stations to an alignment's profile and set the elevation of each.";
+        pbEditProfile.LargeImage = PngImageSource("TopoAlign.Images.EditProfile32.png");
+        pbEditProfile.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandEditProfile.html"));
 
         PushButton pbStationLabels = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandStationLabels),
@@ -161,7 +170,7 @@ class App : IExternalApplication
             Assembly.GetExecutingAssembly().Location,
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandStationLabels)}"));
         pbStationLabels.ToolTip = "Place a set of station labels along an alignment in the active view.";
-        pbStationLabels.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
+        pbStationLabels.LargeImage = PngImageSource("TopoAlign.Images.StationLabels32.png");
         pbStationLabels.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandStationLabels.html"));
 
         PushButton pbSweepAlignment = (PushButton)panel.AddItem(new PushButtonData(
@@ -170,17 +179,8 @@ class App : IExternalApplication
             Assembly.GetExecutingAssembly().Location,
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandSweepAlignment)}"));
         pbSweepAlignment.ToolTip = "Sweep a profile family along an alignment to make a road or path.";
-        pbSweepAlignment.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
+        pbSweepAlignment.LargeImage = PngImageSource("TopoAlign.Images.SweepAlongAlignment32.png");
         pbSweepAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepAlignment.html"));
-
-        PushButton pbAlignment = (PushButton)panel.AddItem(new PushButtonData(
-            nameof(Commands.CommandAlignmentTool),
-            $"Alignment{Environment.NewLine}Tool",
-            Assembly.GetExecutingAssembly().Location,
-            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandAlignmentTool)}"));
-        pbAlignment.ToolTip = "Inspect native alignment details and JSON.";
-        pbAlignment.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
-        pbAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandAlignmentTool.html"));
 
         return panel;
     }

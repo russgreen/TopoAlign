@@ -30,9 +30,40 @@ internal sealed class SweepAlignmentRequest
     public RoadOptions Options { get; }
 }
 
+/// <summary>A value with the name the dialog shows for it.</summary>
+internal sealed class RoadChoice<T>
+{
+    public RoadChoice(T value, string name)
+    {
+        Value = value;
+        Name = name;
+    }
+
+    public T Value { get; }
+    public string Name { get; }
+}
+
 internal partial class SweepAlignmentViewModel : BaseViewModel
 {
     private static readonly ILogger log = Log.ForContext<SweepAlignmentViewModel>();
+
+    public List<RoadChoice<RoadGeometryMethod>> GeometryMethods { get; } = new()
+    {
+        new RoadChoice<RoadGeometryMethod>(RoadGeometryMethod.SegmentedLoft, "Segmented loft"),
+        new RoadChoice<RoadGeometryMethod>(RoadGeometryMethod.SmoothSurfaces, "Smooth surfaces")
+    };
+
+    public List<RoadChoice<RoadOutput>> Outputs { get; } = new()
+    {
+        new RoadChoice<RoadOutput>(RoadOutput.DirectShape, "Direct shape"),
+        new RoadChoice<RoadOutput>(RoadOutput.Family, "Family")
+    };
+
+    [ObservableProperty]
+    private RoadChoice<RoadGeometryMethod> _selectedGeometryMethod;
+
+    [ObservableProperty]
+    private RoadChoice<RoadOutput> _selectedOutput;
 
     [ObservableProperty]
     private string _alignmentStatus = "No alignment selected.";
@@ -269,7 +300,9 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
                 Interval = ToInternal(Interval),
                 VerticalOffset = ToInternal(VerticalOffset),
                 Category = SelectedCategory?.Category ?? BuiltInCategory.OST_GenericModel,
-                ProfileName = SelectedProfileType?.Name ?? string.Empty
+                ProfileName = SelectedProfileType?.Name ?? string.Empty,
+                GeometryMethod = SelectedGeometryMethod?.Value ?? RoadGeometryMethod.SegmentedLoft,
+                Output = SelectedOutput?.Value ?? RoadOutput.DirectShape
             };
 
             SaveSettings();
@@ -298,6 +331,8 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
 
         SelectedCategory = Categories.FirstOrDefault(c => c.Category.ToString() == _settings.SweepCategory) ?? Categories.FirstOrDefault();
         SelectedProfileType = ProfileTypes.FirstOrDefault(t => t.Name == _settings.SweepProfileName) ?? ProfileTypes.FirstOrDefault();
+        SelectedGeometryMethod = GeometryMethods.FirstOrDefault(m => m.Value.ToString() == _settings.SweepGeometryMethod) ?? GeometryMethods[0];
+        SelectedOutput = Outputs.FirstOrDefault(o => o.Value.ToString() == _settings.SweepOutput) ?? Outputs[0];
     }
 
     private void SaveSettings()
@@ -308,6 +343,8 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         _settings.SweepMirrorProfile = MirrorProfile;
         _settings.SweepCategory = SelectedCategory?.Category.ToString() ?? string.Empty;
         _settings.SweepProfileName = SelectedProfileType?.Name ?? string.Empty;
+        _settings.SweepGeometryMethod = (SelectedGeometryMethod?.Value ?? RoadGeometryMethod.SegmentedLoft).ToString();
+        _settings.SweepOutput = (SelectedOutput?.Value ?? RoadOutput.DirectShape).ToString();
         _settings.SaveSettings();
     }
 }

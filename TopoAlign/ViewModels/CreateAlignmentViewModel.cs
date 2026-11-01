@@ -11,13 +11,17 @@ namespace TopoAlign.ViewModels;
 
 internal sealed class CreateAlignmentRequest
 {
-    public CreateAlignmentRequest(string name, string json, double planLength, IList<ElementId> sourceCurveIdsToDelete)
+    public CreateAlignmentRequest(string name, string json, double planLength, IList<ElementId> sourceCurveIdsToDelete, string notice = "")
     {
         Name = name;
         Json = json;
         PlanLength = planLength;
         SourceCurveIdsToDelete = sourceCurveIdsToDelete;
+        Notice = notice;
     }
+
+    /// <summary>Extra text for the summary, for example curves that could not take spirals.</summary>
+    public string Notice { get; }
 
     public string Name { get; }
     public string Json { get; }
@@ -436,7 +440,8 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
                 AlignmentName,
                 json,
                 planLength,
-                DeleteSourceLines ? _selectedCurveIds.ToList() : null);
+                DeleteSourceLines ? _selectedCurveIds.ToList() : null,
+                layout.Notice);
 
             SaveSettings(startStationInternal);
             OnClosingRequest();

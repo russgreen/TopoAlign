@@ -99,6 +99,11 @@
      <None Remove="Images\Reset32.png" />
      <None Remove="Images\TopoAlign32.png" />
      <None Remove="Images\TopoAlignPlane32.png" />
+     <None Remove="Images\AlignmentFromCurve32.png" />
+     <None Remove="Images\EditAlignment32.png" />
+     <None Remove="Images\SweepAlongAlignment32.png" />
+     <None Remove="Images\StationLabels32.png" />
+     <None Remove="Images\EditProfile32.png" />
    </ItemGroup>
   
    <ItemGroup>
@@ -108,6 +113,11 @@
      <EmbeddedResource Include="Images\Reset32.png" />
      <EmbeddedResource Include="Images\TopoAlign32.png" />
      <EmbeddedResource Include="Images\TopoAlignPlane32.png" />
+     <EmbeddedResource Include="Images\AlignmentFromCurve32.png" />
+     <EmbeddedResource Include="Images\EditAlignment32.png" />
+     <EmbeddedResource Include="Images\SweepAlongAlignment32.png" />
+     <EmbeddedResource Include="Images\StationLabels32.png" />
+     <EmbeddedResource Include="Images\EditProfile32.png" />
    </ItemGroup>
   
    <ItemGroup>

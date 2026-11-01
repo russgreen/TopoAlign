@@ -155,6 +155,150 @@ internal sealed class AlignmentJsonDocument
         ReverseOrder(profile);
     }
 
+    // ---- profile editing ----------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// True if the profile is made only of straights and parabolic vertical curves, the kinds <see cref="ReadProfile"/> and
+    /// <see cref="SetProfile"/> understand; otherwise the reason it can't be edited.
+    /// </summary>
+    public bool CanEditProfile(out string reason)
+    {
+        reason = null;
+        var curves = Curves(ProfileGeometry());
+        if (curves.Count == 0)
+        {
+            reason = "The alignment has no vertical profile.";
+            return false;
+        }
+
+        foreach (var curve in curves)
+        {
+            var typeId = TypeId(curve);
+            if (typeId != InfraJson.LineTypeId && typeId != InfraJson.VerticalCurveTypeId)
+            {
+                reason = $"The profile contains a '{typeId ?? "unknown"}' curve, which can't be edited here.";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>Distance along the alignment, in feet, where the profile starts (normally 0).</summary>
+    private double ProfileOrigin()
+    {
+        var first = Curves(ProfileGeometry()).FirstOrDefault();
+        if (first is null)
+        {
+            return 0.0;
+        }
+
+        return TypeId(first) == InfraJson.VerticalCurveTypeId
+            ? ReadPoint(first, InfraJson.Point2DKey, "startPoint").X
+            : ReadPoint(first, InfraJson.Point2DKey, "position").X;
+    }
+
+    /// <summary>
+    /// The profile as ordered points of vertical intersection: the start, each parabolic curve's PVI (with the curve's length),
+    /// each sharp change of grade and the end. Distances are measured from the start of the profile and elevations are the
+    /// JSON's own (shared) elevations in feet. Throws <see cref="InvalidOperationException"/> if <see cref="CanEditProfile"/> is false.
+    /// </summary>
+    public List<ProfileVertex> ReadProfile()
+    {
+        if (!CanEditProfile(out var reason))
+        {
+            throw new InvalidOperationException(reason);
+        }
+
+        var curves = Curves(ProfileGeometry());
+        var origin = ProfileOrigin();
+        var vertices = new List<ProfileVertex>();
+
+        void Add(double x, double y, double curveLength)
+        {
+            var distance = x - origin;
+            if (vertices.Count > 0 && distance - vertices[vertices.Count - 1].Distance <= 1e-9)
+            {
+                return;
+            }
+
+            vertices.Add(new ProfileVertex(distance, y, curveLength));
+        }
+
+        for (var i = 0; i < curves.Count; i++)
+        {
+            var curve = curves[i];
+            if (TypeId(curve) == InfraJson.VerticalCurveTypeId)
+            {
+                var start = ReadPoint(curve, InfraJson.Point2DKey, "startPoint");
+                var pvi = ReadPoint(curve, InfraJson.Point2DKey, "pvi");
+                var end = ReadPoint(curve, InfraJson.Point2DKey, "endPoint");
+
+                if (i == 0)
+                {
+                    Add(start.X, start.Y, 0.0);
+                }
+
+                Add(pvi.X, pvi.Y, Math.Max(end.X - start.X, 0.0));
+
+                if (i == curves.Count - 1)
+                {
+                    Add(end.X, end.Y, 0.0);
+                }
+            }
+            else
+            {
+                var position = ReadPoint(curve, InfraJson.Point2DKey, "position");
+                var direction = ReadPoint(curve, InfraJson.Vector2DKey, "direction");
+
+                if (i == 0)
+                {
+                    Add(position.X, position.Y, 0.0);
+                }
+
+                // a line that runs into a vertical curve ends at the curve's tangent point, which isn't a PVI
+                var nextIsCurve = i + 1 < curves.Count && TypeId(curves[i + 1]) == InfraJson.VerticalCurveTypeId;
+                if (!nextIsCurve)
+                {
+                    Add(position.X + direction.X, position.Y + direction.Y, 0.0);
+                }
+            }
+        }
+
+        if (vertices.Count < 2)
+        {
+            throw new InvalidOperationException("The alignment's profile is too short to edit.");
+        }
+
+        return vertices;
+    }
+
+    /// <summary>Length of the profile in feet (the distance of its last point).</summary>
+    public double ProfileLength => ReadProfile().Last().Distance;
+
+    /// <summary>
+    /// Replaces the profile with the given points and vertical curves. The first point must be at distance 0 and the last at the
+    /// current end of the profile, so the profile still covers the alignment. Throws <see cref="InvalidOperationException"/> if
+    /// the profile can't be edited or the points are invalid.
+    /// </summary>
+    public void SetProfile(IReadOnlyList<ProfileVertex> vertices)
+    {
+        var current = ReadProfile();
+        var errors = ProfileEditing.Validate(vertices, current[current.Count - 1].Distance);
+        if (errors.Count > 0)
+        {
+            throw new InvalidOperationException(errors[0]);
+        }
+
+        var origin = ProfileOrigin();
+        var points = vertices.Select(v => new ProfilePoint(v.Distance + origin, v.Elevation)).ToList();
+        var lengths = vertices.Select(v => v.CurveLength).ToList();
+
+        var nodes = ProfileJson.CreateCurves(points, lengths);
+        var holder = ProfileGeometry()[InfraJson.CurveArrayKey] as JsonObject;
+        holder["curves"] = nodes;
+    }
+
     public string ToJson()
     {
         return _root.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = false });

@@ -27,11 +27,20 @@ public class Settings
     public decimal SweepVerticalOffset { get; set; }
     public bool SweepMirrorProfile { get; set; }
 
+    // Edit profile, length in feet (internal units).
+    public decimal EditProfileCurveLength { get; set; } = Convert.ToDecimal(20.0 / 0.3048);              // 20 m
+
     /// <summary>Name of the last Revit category used for a road, such as OST_Roads; blank for the first one available.</summary>
     public string SweepCategory { get; set; } = string.Empty;
 
     /// <summary>Name of the last profile type used, as "Family : Type".</summary>
     public string SweepProfileName { get; set; } = string.Empty;
+
+    /// <summary>How the road solid is made: SegmentedLoft or SmoothSurfaces.</summary>
+    public string SweepGeometryMethod { get; set; } = "SegmentedLoft";
+
+    /// <summary>What the road is made into: DirectShape or Family.</summary>
+    public string SweepOutput { get; set; } = "DirectShape";
 
 #if REVIT2021_OR_GREATER
     public decimal CreateAlignmentStartStation { get; set; } = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(0, UnitTypeId.Meters));
@@ -67,6 +76,8 @@ public class Settings
                     SweepMirrorProfile = Convert.ToBoolean(key.GetValue("SweepMirrorProfile", SweepMirrorProfile));
                     SweepCategory = Convert.ToString(key.GetValue("SweepCategory", SweepCategory)) ?? string.Empty;
                     SweepProfileName = Convert.ToString(key.GetValue("SweepProfileName", SweepProfileName)) ?? string.Empty;
+                    SweepGeometryMethod = Convert.ToString(key.GetValue("SweepGeometryMethod", SweepGeometryMethod)) ?? "SegmentedLoft";
+                    SweepOutput = Convert.ToString(key.GetValue("SweepOutput", SweepOutput)) ?? "DirectShape";
 
                     _ = decimal.TryParse(key.GetValue("DivideEdgeDistance", DivideEdgeDistance).ToString(), out decimal divideEdgeDistance);
                     _ = decimal.TryParse(key.GetValue("VerticalOffset", VerticalOffset).ToString(), out decimal verticalOffset);
@@ -80,6 +91,7 @@ public class Settings
                     CreateAlignmentDefaultRadius = ReadDecimal(key, "CreateAlignmentDefaultRadius", CreateAlignmentDefaultRadius);
                     SweepInterval = ReadDecimal(key, "SweepInterval", SweepInterval);
                     SweepVerticalOffset = ReadDecimal(key, "SweepVerticalOffset", SweepVerticalOffset);
+                    EditProfileCurveLength = ReadDecimal(key, "EditProfileCurveLength", EditProfileCurveLength);
 
                     DivideEdgeDistance = divideEdgeDistance;
                     VerticalOffset = verticalOffset;
@@ -112,9 +124,12 @@ public class Settings
             key.SetValue("CreateAlignmentDefaultRadius", CreateAlignmentDefaultRadius, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("SweepInterval", SweepInterval, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("SweepVerticalOffset", SweepVerticalOffset, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("EditProfileCurveLength", EditProfileCurveLength, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("SweepMirrorProfile", SweepMirrorProfile, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("SweepCategory", SweepCategory ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("SweepProfileName", SweepProfileName ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("SweepGeometryMethod", SweepGeometryMethod ?? "SegmentedLoft", Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("SweepOutput", SweepOutput ?? "DirectShape", Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("DivideEdgeDistance", DivideEdgeDistance, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("VerticalOffset", VerticalOffset, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("CreateAlignmentStartStation", CreateAlignmentStartStation, Microsoft.Win32.RegistryValueKind.String);

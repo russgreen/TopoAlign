@@ -30,6 +30,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.Resources>
             <Style TargetType="TextBlock">
@@ -90,9 +92,23 @@
                   DisplayMemberPath="Name"
                   SelectedItem="{Binding SelectedCategory}"/>
 
-        <TextBlock Grid.Row="9" Grid.ColumnSpan="2" Text="{Binding ExistingRoadNote}" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="9" Text="Geometry"/>
+        <ComboBox Grid.Row="9" Grid.Column="1"
+                  ItemsSource="{Binding GeometryMethods}"
+                  DisplayMemberPath="Name"
+                  SelectedItem="{Binding SelectedGeometryMethod}"
+                  ToolTip="Segmented loft makes a solid between each pair of sections, so every section shows as a line. Smooth surfaces make continuous faces along the road; if Revit can't, the segmented loft is used."/>
 
-        <Button Grid.Row="10" Grid.ColumnSpan="2" Content="Create Road" IsDefault="True" Height="30"
+        <TextBlock Grid.Row="10" Text="Create as"/>
+        <ComboBox Grid.Row="10" Grid.Column="1"
+                  ItemsSource="{Binding Outputs}"
+                  DisplayMemberPath="Name"
+                  SelectedItem="{Binding SelectedOutput}"
+                  ToolTip="A direct shape is plain geometry. A family is loaded into the project with a type you can see in the Project Browser."/>
+
+        <TextBlock Grid.Row="11" Grid.ColumnSpan="2" Text="{Binding ExistingRoadNote}" TextWrapping="Wrap"/>
+
+        <Button Grid.Row="12" Grid.ColumnSpan="2" Content="Create Road" IsDefault="True" Height="30"
                 Command="{Binding CreateCommand}"/>
     </Grid>
 </Window>

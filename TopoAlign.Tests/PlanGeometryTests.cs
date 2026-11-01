@@ -570,6 +570,115 @@ public class PiGeometryTests : TopoAlignTest
         await Assert.That(PiGeometry.FromSegments(chain, 10, out var reason)).IsNull();
         await Assert.That(reason.Contains("already")).IsTrue();
     }
+
+    // ---- adding spirals where they fit --------------------------------------------------------------------------
+
+    [Test]
+    public async Task AddSpirals_ArcBetweenTwoStraights_GetsSpiralsAndKeepsTheEnds()
+    {
+        var chain = PiGeometry.Create(new[] { P(0, 0), P(500, 0, 300), P(800, 300) }).Segments;
+
+        var result = PiGeometry.AddSpirals(chain, 60);
+
+        await Assert.That(result.SpiralledCurves).IsEqualTo(1);
+        await Assert.That(result.Skipped.Count).IsEqualTo(0);
+        await Assert.That(result.Segments.OfType<PlanSpiral>().Count()).IsEqualTo(2);
+        await Assert.That(PlanPoint.Distance(result.Segments[0].StartPoint, chain[0].StartPoint)).IsLessThan(1e-6);
+        await Assert.That(PlanPoint.Distance(result.Segments[result.Segments.Count - 1].EndPoint, chain[chain.Count - 1].EndPoint)).IsLessThan(1e-6);
+    }
+
+    [Test]
+    public async Task AddSpirals_StartingAndEndingWithACurve_LeavesThoseCurvesAsDrawn()
+    {
+        var chain = new PlanSegment[]
+        {
+            new PlanArc(new PlanPoint(0, 50), 50, -Math.PI / 2, Math.PI / 2),            // ends at (50, 50) heading north
+            new PlanLine(new PlanPoint(50, 50), new PlanPoint(50, 350)),
+            new PlanArc(new PlanPoint(150, 350), 100, Math.PI, -Math.PI / 2)             // turns right, ends at (150, 450) heading east
+        };
+
+        var result = PiGeometry.AddSpirals(chain, 10);
+
+        await Assert.That(result.SpiralledCurves).IsEqualTo(0);
+        await Assert.That(result.Skipped.Count).IsEqualTo(2);
+        await Assert.That(result.Segments.Count).IsEqualTo(3);
+        await Assert.That(result.Segments.OfType<PlanSpiral>().Any()).IsFalse();
+    }
+
+    [Test]
+    public async Task AddSpirals_TwoArcsInARow_AreLeftAloneButOtherCurvesStillGetSpirals()
+    {
+        // a line and an arc, then a straight, then two arcs in a row: only the first arc sits between two straights
+        var lead = PiGeometry.Create(new[] { P(0, 0), P(500, 0, 300), P(900, 400) }).Segments; // line, arc, line
+        var chain = lead.ToList();
+        var join = chain[chain.Count - 1].EndPoint;
+        var heading = chain[chain.Count - 1].HeadingAt(0.0);
+        var straightEnd = new PlanPoint(join.X + 100 * Math.Cos(heading), join.Y + 100 * Math.Sin(heading));
+        chain.Add(new PlanLine(join, straightEnd));
+        var first = new PlanArc(new PlanPoint(straightEnd.X - 200 * Math.Sin(heading), straightEnd.Y + 200 * Math.Cos(heading)),
+            200, heading - Math.PI / 2, Math.PI / 6);
+        var second = new PlanArc(first.Center, 200, heading - Math.PI / 2 + Math.PI / 6, Math.PI / 6);
+        chain.Add(first);
+        chain.Add(second);
+
+        var result = PiGeometry.AddSpirals(chain, 40);
+
+        await Assert.That(result.SpiralledCurves).IsEqualTo(1);
+        await Assert.That(result.Skipped.Count).IsEqualTo(2);
+        await Assert.That(result.Segments.OfType<PlanSpiral>().Count()).IsEqualTo(2);
+        await Assert.That(result.Segments.OfType<PlanArc>().Count()).IsEqualTo(3);
+    }
+
+    [Test]
+    public async Task AddSpirals_ResultIsOneContinuousChain()
+    {
+        var chain = PiGeometry.Create(new[] { P(0, 0), P(500, 0, 300), P(800, 300, 250), P(800, 900) }).Segments;
+
+        var result = PiGeometry.AddSpirals(chain, 50);
+
+        await Assert.That(result.SpiralledCurves).IsEqualTo(2);
+        for (var i = 1; i < result.Segments.Count; i++)
+        {
+            await Assert.That(PlanPoint.Distance(result.Segments[i - 1].EndPoint, result.Segments[i].StartPoint)).IsLessThan(2e-3);
+        }
+    }
+
+    [Test]
+    public async Task AddSpirals_SpiralsTooLongForOneCurve_SkipOnlyThatCurve()
+    {
+        // the tight 20 degree turn can't take 400 ft spirals at 300 ft radius; the wide 90 degree turn can
+        var chain = PiGeometry.Create(new[] { P(0, 0), P(1000, 0, 300), P(1900, 330, 300), P(1900, 1900) }).Segments;
+
+        var result = PiGeometry.AddSpirals(chain, 120);
+
+        await Assert.That(result.SpiralledCurves + result.Skipped.Count).IsEqualTo(2);
+        await Assert.That(result.Segments.OfType<PlanArc>().Count()).IsEqualTo(2);
+    }
+
+    [Test]
+    public async Task AddSpirals_NothingToWorkWith_ExplainsWhy()
+    {
+        var empty = PiGeometry.AddSpirals(new List<PlanSegment>(), 10);
+        await Assert.That(empty.Skipped.Count).IsEqualTo(1);
+
+        var chain = PiGeometry.Create(new[] { P(0, 0), P(500, 0, 300, 80), P(800, 300) }).Segments;
+        var already = PiGeometry.AddSpirals(chain, 10);
+        await Assert.That(already.SpiralledCurves).IsEqualTo(0);
+        await Assert.That(already.Skipped[0].Contains("already")).IsTrue();
+        await Assert.That(already.Segments.Count).IsEqualTo(chain.Count);
+    }
+
+    [Test]
+    public async Task AddSpirals_StraightsOnlyChain_IsUnchanged()
+    {
+        var chain = PiGeometry.Create(new[] { P(0, 0), P(100, 0), P(100, 100) }).Segments;
+
+        var result = PiGeometry.AddSpirals(chain, 20);
+
+        await Assert.That(result.SpiralledCurves).IsEqualTo(0);
+        await Assert.That(result.Skipped.Count).IsEqualTo(0);
+        await Assert.That(result.Segments.Count).IsEqualTo(chain.Count);
+    }
 }
 
 public class PlanSegmentAdapterTests : TopoAlignTest

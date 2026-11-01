@@ -42,13 +42,17 @@
                 <li><strong>Units</strong> — The units used for the spacing and offset.</li>
                 <li><strong>Section spacing</strong> — Distance between sections along the alignment. Where the alignment curves or changes grade, extra sections are added automatically, and a section is always placed where a straight meets a curve.</li>
                 <li><strong>Vertical offset</strong> — Raises (positive) or lowers (negative) the whole road relative to the alignment's profile.</li>
-                <li><strong>Category</strong> — The Revit category the road is filed under: Roads, Hardscape or Generic Models, whichever your version of Revit accepts. The last choice is remembered.</li>
+                <li><strong>Geometry</strong> — <em>Segmented loft</em> makes a solid between each pair of sections, which is robust but leaves a visible edge at every section that can't be hidden. <em>Smooth surfaces</em> makes continuous faces along the road (one spline per corner of the section, with a surface between neighbouring splines), so there are no edges across the road except where it is cut into a few long pieces at the ends of the alignment's horizontal curves. If Revit can't make the smooth surfaces, for example when the section is wider than the tightest curve, the road is made as a segmented loft and the summary says so.</li>
+                <li><strong>Create as</strong> — <em>Direct shape</em> (the default) adds plain geometry. <em>Family</em> makes a Generic Model family from the road and places one instance of it, so the road has a family and a type in the Project Browser. Both are tagged with the alignment.</li>
+                <li><strong>Category</strong> — The Revit category the road is filed under: Roads, Hardscape or Generic Models, whichever your version of Revit accepts. The last choice is remembered. A family uses the same category where the family editor allows it, otherwise Generic Models.</li>
             </ul>
 
             <h2 id="notes">Notes</h2>
             <ul>
                 <li>Requires Autodesk Civil Alignments support in the installed Revit version.</li>
-                <li>The road is one Direct Shape element made of a solid for each span between two sections. It is tagged with the alignment it follows, so running the command again for the same alignment <strong>replaces</strong> the earlier road.</li>
+                <li>The road is one element (a Direct Shape or a family instance). It is tagged with the alignment it follows, so running the command again for the same alignment <strong>replaces</strong> the earlier road, whichever way it was made before.</li>
+                <li>With <em>Smooth surfaces</em>, rounded parts of the section (arcs) are cut into short straight facets, because a smooth surface can only be straight across the section. Straight sides of the section are exact. Section spacing affects how closely the surfaces follow the alignment.</li>
+                <li>A family is a snapshot: it doesn't update when the alignment changes. Run the command again to replace it.</li>
                 <li>The section always stands upright, across the horizontal direction of the alignment, so a thickness stays a vertical thickness on a slope.</li>
                 <li>If a curve is tighter than the road is wide, the inside of the road would fold back on itself. Revit cannot build those spans, so they are left as gaps and the summary says how many; use a narrower section or a larger radius.</li>
                 <li>Not included yet: a section that changes along the road, banking (superelevation), junctions, and cutting the road into the toposolid.</li>

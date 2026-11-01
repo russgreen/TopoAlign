@@ -41,9 +41,33 @@ internal static class ProfileLayout
     /// </summary>
     public static List<object> Create(IReadOnlyList<ProfilePoint> pvis, double minVerticalCurveLength)
     {
+        return Create(pvis, null, minVerticalCurveLength);
+    }
+
+    /// <summary>
+    /// As <see cref="Create(IReadOnlyList{ProfilePoint}, double)"/> but with a curve length for each PVI
+    /// (<paramref name="curveLengths"/> is indexed like <paramref name="pvis"/>; the first and last entries are ignored).
+    /// </summary>
+    public static List<object> Create(IReadOnlyList<ProfilePoint> pvis, IReadOnlyList<double> curveLengths)
+    {
+        if (curveLengths is null)
+        {
+            throw new ArgumentNullException(nameof(curveLengths));
+        }
+
+        return Create(pvis, curveLengths, 0.0);
+    }
+
+    private static List<object> Create(IReadOnlyList<ProfilePoint> pvis, IReadOnlyList<double> curveLengths, double minVerticalCurveLength)
+    {
         if (pvis is null || pvis.Count < 2)
         {
             throw new ArgumentException("A profile needs at least two points.", nameof(pvis));
+        }
+
+        if (curveLengths is not null && curveLengths.Count != pvis.Count)
+        {
+            throw new ArgumentException("There must be one curve length for each profile point.", nameof(curveLengths));
         }
 
         for (var i = 1; i < pvis.Count; i++)
@@ -66,7 +90,7 @@ internal static class ProfileLayout
             var gradeIn = (pvi.Elevation - previous.Elevation) / (pvi.Station - previous.Station);
             var gradeOut = (next.Elevation - pvi.Elevation) / (next.Station - pvi.Station);
 
-            var half = HalfLength(minVerticalCurveLength, pvi.Station - previous.Station, next.Station - pvi.Station);
+            var half = HalfLength(curveLengths is null ? minVerticalCurveLength : curveLengths[i], pvi.Station - previous.Station, next.Station - pvi.Station);
             if (half <= Eps || Math.Abs(gradeOut - gradeIn) <= Eps)
             {
                 AddLine(elements, cursor, pvi);

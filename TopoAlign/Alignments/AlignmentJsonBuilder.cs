@@ -22,7 +22,6 @@ internal static class AlignmentJsonBuilder
 
     private const string LineTypeId = InfraJson.LineTypeId;
     private const string CircleTypeId = InfraJson.CircleTypeId;
-    private const string VerticalCurveTypeId = InfraJson.VerticalCurveTypeId;
 
     private const string AecAlignmentDataKey = InfraJson.AecAlignmentDataKey;
     private const string AlignmentKey = InfraJson.AlignmentKey;
@@ -294,47 +293,12 @@ internal static class AlignmentJsonBuilder
             points.Add(new ProfilePoint(station, SharedElevation(pvis[i].Elevation, internalToShared)));
         }
 
-        var curves = new JsonArray();
-        foreach (var element in ProfileLayout.Create(points, minVerticalCurveLength))
-        {
-            switch (element)
-            {
-                case ProfileLine line:
-                    curves.Add(CreateLineNode(
-                        line.Start.Station,
-                        line.Start.Elevation,
-                        line.End.Station - line.Start.Station,
-                        line.End.Elevation - line.Start.Elevation));
-                    break;
-
-                case ProfileParabola parabola:
-                    curves.Add(CreateVerticalCurveNode(parabola));
-                    break;
-            }
-        }
-
-        return curves;
+        return ProfileJson.CreateCurves(points, minVerticalCurveLength);
     }
 
     private static double SharedElevation(double internalElevation, Transform internalToShared)
     {
         return internalToShared.OfPoint(new XYZ(0.0, 0.0, internalElevation)).Z;
-    }
-
-    private static JsonObject CreateVerticalCurveNode(ProfileParabola parabola)
-    {
-        return new JsonObject
-        {
-            [Point2DKey] = new JsonObject
-            {
-                ["endPoint"] = CreatePoint(parabola.End.Station, parabola.End.Elevation),
-                ["pvi"] = CreatePoint(parabola.Pvi.Station, parabola.Pvi.Elevation),
-                ["startPoint"] = CreatePoint(parabola.Start.Station, parabola.Start.Elevation)
-            },
-            ["String"] = new JsonObject { ["guid"] = Guid.NewGuid().ToString() },
-            [ParamRangeKey] = new JsonObject { ["range"] = CreateRange(0.0, 0.0, 0) },
-            ["typeid"] = VerticalCurveTypeId
-        };
     }
 
     private static JsonObject CreateGeometry(JsonArray curves)
@@ -361,17 +325,7 @@ internal static class AlignmentJsonBuilder
         return CreateLineNode(start.X, start.Y, end.X - start.X, end.Y - start.Y);
     }
 
-    private static JsonObject CreateLineNode(double x, double y, double dx, double dy)
-    {
-        return new JsonObject
-        {
-            [Point2DKey] = new JsonObject { ["position"] = CreatePoint(x, y) },
-            [Vector2DKey] = new JsonObject { ["direction"] = CreatePoint(dx, dy) },
-            ["String"] = new JsonObject { ["guid"] = Guid.NewGuid().ToString() },
-            [ParamRangeKey] = new JsonObject { ["range"] = CreateRange(0.0, 0.0, 0) },
-            ["typeid"] = LineTypeId
-        };
-    }
+    private static JsonObject CreateLineNode(double x, double y, double dx, double dy) => ProfileJson.CreateLineNode(x, y, dx, dy);
 
     private static JsonObject CreateCircle(Arc arc, Transform internalToShared)
     {
@@ -433,22 +387,9 @@ internal static class AlignmentJsonBuilder
         return (center, radius, sweep, clockwise);
     }
 
-    private static JsonObject CreatePoint(double x, double y)
-    {
-        return new JsonObject
-        {
-            ["Float64"] = new JsonObject { ["x"] = Number(x), ["y"] = Number(y) }
-        };
-    }
+    private static JsonObject CreatePoint(double x, double y) => ProfileJson.CreatePoint(x, y);
 
-    private static JsonObject CreateRange(double low, double high, int type)
-    {
-        return new JsonObject
-        {
-            ["Float64"] = new JsonObject { ["high"] = Number(high), ["low"] = Number(low) },
-            ["enum<Enum>"] = new JsonObject { ["type"] = type }
-        };
-    }
+    private static JsonObject CreateRange(double low, double high, int type) => ProfileJson.CreateRange(low, high, type);
 
     private static JsonNode Number(double value) => InfraJson.Number(value);
 

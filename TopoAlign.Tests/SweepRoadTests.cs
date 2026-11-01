@@ -632,7 +632,16 @@ public class RoadBuilderTests : TopoAlignTest
         var document = NewDocument();
         var alignment = RoadFixtures.CurvedAlignment(document);
 
-        var result = RoadBuilder.Create(document, alignment, RoadFixtures.Slab(), new RoadOptions { Interval = 25.0, Category = BuiltInCategory.OST_Walls });
+        // newer Revits accept Walls for a DirectShape, so look for a category this one really refuses
+        var refused = new[] { BuiltInCategory.OST_Cameras, BuiltInCategory.OST_Levels, BuiltInCategory.OST_Grids, BuiltInCategory.OST_Views }
+            .Cast<BuiltInCategory?>()
+            .FirstOrDefault(c => !DirectShape.IsValidCategoryId(new ElementId(c.Value), document));
+        if (refused is null)
+        {
+            Skip.Test("This Revit accepts every category tried for a DirectShape.");
+        }
+
+        var result = RoadBuilder.Create(document, alignment, RoadFixtures.Slab(), new RoadOptions { Interval = 25.0, Category = refused.Value });
 
         await Assert.That(document.GetElement(result.RoadId).Category.BuiltInCategory).IsEqualTo(BuiltInCategory.OST_GenericModel);
     }

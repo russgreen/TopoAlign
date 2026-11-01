@@ -75,6 +75,11 @@ public class CommandSweepAlignment : IExternalCommand
                 summary += " The earlier road for this alignment was replaced.";
             }
 
+            if (!string.IsNullOrEmpty(result.Notice))
+            {
+                summary += $"{Environment.NewLine}{Environment.NewLine}{result.Notice}";
+            }
+
             if (result.SkippedSpans > 0)
             {
                 summary += $"{Environment.NewLine}{Environment.NewLine}{result.SkippedSpans} span{(result.SkippedSpans == 1 ? string.Empty : "s")} could not be built, " +

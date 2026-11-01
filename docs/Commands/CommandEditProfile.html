@@ -1,0 +1,63 @@
+<!-- docs/Commands/CommandEditProfile.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – Edit Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <div class="brand"><h1>TopoAlign</h1></div>
+        <nav class="crumbs">
+            <ol>
+                <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+                <li class="crumb">Edit Profile</li>
+            </ol>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <article>
+            <h1 id="overview">Edit Profile</h1>
+            <p>Adds stations to the vertical profile of an existing alignment and sets the elevation of each one. Use it to refine a profile after it has been created: pull a crest up, lower a sag, or pin the road to a level at a particular station.</p>
+
+            <h2 id="usage">Usage / Steps</h2>
+            <ol>
+                <li>Select an alignment in the model first, or launch <strong>Edit Profile</strong> and click <strong>Pick alignment</strong>. The grid lists the stations of its profile.</li>
+                <li>To add a station, enter its station in <strong>New station</strong> (and a <strong>Curve length</strong> if you want it rounded) and click <strong>Add station</strong>. Its elevation starts on the existing profile, so adding it changes nothing until you edit the elevation.</li>
+                <li>Type new values in the <strong>Elevation</strong>, <strong>Station</strong> or <strong>Curve length</strong> cells. Select a station and click <strong>Remove station</strong> to delete it, or <strong>Reset</strong> to go back to the profile you started with.</li>
+                <li>Click <strong>Apply</strong>.</li>
+            </ol>
+
+            <h2 id="options">Options / Parameters</h2>
+            <ul>
+                <li><strong>Units</strong> — The units used to show and enter stations, elevations and curve lengths.</li>
+                <li><strong>Station</strong> — The station of the point of vertical intersection (PVI), including the alignment's start station. The first and last stations stay at the ends of the alignment.</li>
+                <li><strong>Elevation</strong> — The project elevation of the PVI. The first and last elevations can be changed too.</li>
+                <li><strong>Curve length</strong> — The length of the parabolic vertical curve rounding the PVI. 0 leaves a sharp change of grade.</li>
+                <li><strong>Curve used</strong> — The curve length that is actually written. A curve may use at most half of the straight on each side of it, so it is cut back when stations are close together, and it is blank where the grade does not change.</li>
+                <li><strong>Grade to next</strong> — The grade of the straight between this station and the next.</li>
+            </ul>
+
+            <h2 id="notes">Notes</h2>
+            <ul>
+                <li>Requires Autodesk Civil Alignments support in the installed Revit version.</li>
+                <li>Apply is only available once something has changed and the stations are valid: in order, at least two, and no negative curve lengths. The status line says what to fix.</li>
+                <li>Only the profile changes. The plan geometry, length, name and start station stay as they were, and so do station labels.</li>
+                <li>Existing vertical curves keep their length. If a curve is not symmetrical about its PVI it is rebuilt symmetrical.</li>
+                <li>Profiles that contain a kind of curve other than straights and parabolic vertical curves can't be edited here; the dialog says so.</li>
+                <li>A road made earlier with <strong>Sweep Along Alignment</strong> is not updated; run that command again to follow the new profile.</li>
+            </ul>
+        </article>
+    </div>
+</main>
+
+<footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>
