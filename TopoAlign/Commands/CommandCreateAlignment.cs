@@ -20,9 +20,9 @@ public class CommandCreateAlignment : IExternalCommand
         App.CachedUiApp = commandData.Application;
         App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
 
-        if (!Alignments.AlignmentApi.IsAvailable)
+        if (!Alignments.AlignmentApi.Supports(Alignments.AlignmentApi.AlignmentFeature.Read | Alignments.AlignmentApi.AlignmentFeature.Create, out var problem))
         {
-            TaskDialog.Show("Create Alignment", "The Autodesk Civil Alignments add-in is not available in this Revit installation.");
+            TaskDialog.Show("Create Alignment", problem);
             return Result.Cancelled;
         }
 

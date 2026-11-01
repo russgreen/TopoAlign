@@ -35,23 +35,35 @@ internal static class ProfileSampler
             throw new ArgumentException("At least one curve is required.", nameof(curves));
         }
 
+        return Sample(PlanSegmentAdapter.FromCurves(curves), surface, interval, elevationOffset);
+    }
+
+    /// <summary>
+    /// As the curve overload, for a chain of plan segments (lines, arcs and spirals).
+    /// </summary>
+    public static SampleResult Sample(IReadOnlyList<PlanSegment> segments, TriangleSurface surface, double interval, double elevationOffset)
+    {
+        if (segments is null || segments.Count == 0)
+        {
+            throw new ArgumentException("At least one segment is required.", nameof(segments));
+        }
+
         var step = Math.Max(interval, MinInterval);
         var samples = new List<ProfilePoint>();
         var missing = 0;
-        var curveStart = 0.0;
+        var segmentStart = 0.0;
         var startSampled = false;
 
-        for (var index = 0; index < curves.Count; index++)
+        foreach (var segment in segments)
         {
-            var curve = curves[index];
-            var length = AlignmentJsonBuilder.PlanLength(curve);
+            var length = segment.Length;
             if (length <= 1e-9)
             {
                 continue;
             }
 
-            // Stations along this curve: every step, plus its end. Only the first curve with length also samples its
-            // start; for the rest the start is the previous curve's end.
+            // Stations along this segment: every step, plus its end. Only the first segment with length also samples its
+            // start; for the rest the start is the previous segment's end.
             var distances = new List<double>();
             if (!startSampled)
             {
@@ -68,10 +80,10 @@ internal static class ProfileSampler
 
             foreach (var distance in distances)
             {
-                var point = curve.Evaluate(Math.Min(1.0, distance / length), true);
+                var point = segment.PointAt(distance);
                 if (surface.TryGetElevation(point.X, point.Y, out var ground))
                 {
-                    samples.Add(new ProfilePoint(curveStart + distance, ground + elevationOffset));
+                    samples.Add(new ProfilePoint(segmentStart + distance, ground + elevationOffset));
                 }
                 else
                 {
@@ -79,7 +91,7 @@ internal static class ProfileSampler
                 }
             }
 
-            curveStart += length;
+            segmentStart += length;
         }
 
         if (samples.Count < 2)
@@ -87,7 +99,7 @@ internal static class ProfileSampler
             throw new InvalidOperationException("Most of the alignment is outside the selected toposolid, so a profile can't be draped on it.");
         }
 
-        if (samples[0].Station > 1e-6 || samples[samples.Count - 1].Station < curveStart - 1e-6)
+        if (samples[0].Station > 1e-6 || samples[samples.Count - 1].Station < segmentStart - 1e-6)
         {
             throw new InvalidOperationException("The start or end of the alignment is outside the selected toposolid, so a profile can't be draped on it.");
         }

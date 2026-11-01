@@ -20,19 +20,19 @@ internal static class AlignmentJsonBuilder
     private const double FeetToMeters = 0.3048;
     private const double ShortCurveTolerance = 1e-6;
 
-    private const string LineTypeId = "autodesk.infra.geometry:line2d-1.0.0";
-    private const string CircleTypeId = "autodesk.infra.geometry:circle2d-1.0.0";
-    private const string VerticalCurveTypeId = "autodesk.infra.geometry:verticalCurve-1.0.0";
+    private const string LineTypeId = InfraJson.LineTypeId;
+    private const string CircleTypeId = InfraJson.CircleTypeId;
+    private const string VerticalCurveTypeId = InfraJson.VerticalCurveTypeId;
 
-    private const string AecAlignmentDataKey = "autodesk.infra:aecalignmentdata-1.0.0";
-    private const string AlignmentKey = "autodesk.infra:alignment-1.0.0";
-    private const string CurveGeometryKey = "autodesk.infra.geometry:curvegeometry-1.0.0";
-    private const string HorizontalGeometryKey = "autodesk.infra:horizontalcurvegeometry2d-1.0.0";
-    private const string ProfileGeometryKey = "autodesk.infra:profilecurvegeometry2d-1.0.0";
-    private const string CurveArrayKey = "array<autodesk.infra.geometry:curve2d-1.0.0>";
-    private const string ParamRangeKey = "autodesk.geometry:paramrange-1.0.0";
-    private const string Point2DKey = "autodesk.math:point2d-1.0.0";
-    private const string Vector2DKey = "autodesk.math:vector2d-1.0.0";
+    private const string AecAlignmentDataKey = InfraJson.AecAlignmentDataKey;
+    private const string AlignmentKey = InfraJson.AlignmentKey;
+    private const string CurveGeometryKey = InfraJson.CurveGeometryKey;
+    private const string HorizontalGeometryKey = InfraJson.HorizontalGeometryKey;
+    private const string ProfileGeometryKey = InfraJson.ProfileGeometryKey;
+    private const string CurveArrayKey = InfraJson.CurveArrayKey;
+    private const string ParamRangeKey = InfraJson.ParamRangeKey;
+    private const string Point2DKey = InfraJson.Point2DKey;
+    private const string Vector2DKey = InfraJson.Vector2DKey;
 
     /// <summary>
     /// Builds the alignment JSON for an ordered, continuous chain of lines and arcs.
@@ -93,20 +93,111 @@ internal static class AlignmentJsonBuilder
 
         planLength = length;
 
-        JsonArray profileCurves;
-        if (profilePvis is null)
+        var profileCurves = CreateProfile(profilePvis, minVerticalCurveLength, internalToShared, length,
+            () => orderedCurves[0].GetEndPoint(0).Z);
+
+        return AssembleDocument(name, horizontalCurves, profileCurves, startStation);
+    }
+
+    /// <summary>
+    /// Builds the alignment JSON for a chain of plan segments (lines, arcs and spirals) laid out in internal coordinates.
+    /// Autodesk's parser doesn't accept native spirals, so spirals are written as short straights within
+    /// <paramref name="spiralDeviation"/> feet of the true curve, the same way other alignment tools do.
+    /// </summary>
+    /// <param name="flatElevation">Internal elevation of the flat profile used when <paramref name="profilePvis"/> is null.</param>
+    public static string BuildFromSegments(string name, IReadOnlyList<PlanSegment> segments, Transform internalToShared, double startStation, double flatElevation,
+        IReadOnlyList<ProfilePoint> profilePvis, double minVerticalCurveLength, double spiralDeviation, out double planLength)
+    {
+        if (segments is null || segments.Count == 0)
         {
-            var elevation = internalToShared.OfPoint(orderedCurves[0].GetEndPoint(0)).Z;
-            profileCurves = new JsonArray
-            {
-                CreateLineNode(0.0, elevation, length, 0.0)
-            };
-        }
-        else
-        {
-            profileCurves = CreateProfileCurves(profilePvis, minVerticalCurveLength, internalToShared, length);
+            throw new ArgumentException("At least one segment is required.", nameof(segments));
         }
 
+        internalToShared ??= Transform.Identity;
+
+        var horizontalCurves = new JsonArray();
+        var length = 0.0;
+
+        foreach (var segment in segments)
+        {
+            switch (segment)
+            {
+                case PlanLine line:
+                    length += AddSharedLine(horizontalCurves, line.StartPoint, line.EndPoint, internalToShared);
+                    break;
+
+                case PlanArc arc:
+                    length += AddSharedArc(horizontalCurves, arc, internalToShared);
+                    break;
+
+                case PlanSpiral spiral:
+                    var points = spiral.Tessellate(spiralDeviation);
+                    for (var i = 1; i < points.Count; i++)
+                    {
+                        length += AddSharedLine(horizontalCurves, points[i - 1], points[i], internalToShared);
+                    }
+
+                    break;
+
+                default:
+                    throw new NotSupportedException($"Unsupported segment type '{segment.GetType().Name}'.");
+            }
+        }
+
+        if (horizontalCurves.Count == 0)
+        {
+            throw new InvalidOperationException("The alignment has no usable length.");
+        }
+
+        planLength = length;
+
+        var profileCurves = CreateProfile(profilePvis, minVerticalCurveLength, internalToShared, length, () => flatElevation);
+        return AssembleDocument(name, horizontalCurves, profileCurves, startStation);
+    }
+
+    private static double AddSharedLine(JsonArray target, PlanPoint start, PlanPoint end, Transform internalToShared)
+    {
+        var from = internalToShared.OfPoint(new XYZ(start.X, start.Y, 0.0));
+        var to = internalToShared.OfPoint(new XYZ(end.X, end.Y, 0.0));
+        var length = Distance2D(from, to);
+        if (length < ShortCurveTolerance)
+        {
+            return 0.0;
+        }
+
+        target.Add(CreateLineNode(from.X, from.Y, to.X - from.X, to.Y - from.Y));
+        return length;
+    }
+
+    private static double AddSharedArc(JsonArray target, PlanArc arc, Transform internalToShared)
+    {
+        if (arc.Length < ShortCurveTolerance)
+        {
+            return 0.0;
+        }
+
+        var center = internalToShared.OfPoint(new XYZ(arc.Center.X, arc.Center.Y, 0.0));
+        var start = internalToShared.OfPoint(new XYZ(arc.StartPoint.X, arc.StartPoint.Y, 0.0));
+        target.Add(CreateCircleNode(center.X, center.Y, start.X - center.X, start.Y - center.Y,
+            Math.Abs(arc.Sweep) / (2.0 * Math.PI), arc.IsClockwise));
+        return arc.Length;
+    }
+
+    private static JsonArray CreateProfile(IReadOnlyList<ProfilePoint> profilePvis, double minVerticalCurveLength, Transform internalToShared, double length, Func<double> flatElevation)
+    {
+        if (profilePvis is null)
+        {
+            return new JsonArray
+            {
+                CreateLineNode(0.0, SharedElevation(flatElevation(), internalToShared), length, 0.0)
+            };
+        }
+
+        return CreateProfileCurves(profilePvis, minVerticalCurveLength, internalToShared, length);
+    }
+
+    private static string AssembleDocument(string name, JsonArray horizontalCurves, JsonArray profileCurves, double startStation)
+    {
         var root = new JsonObject
         {
             ["String"] = new JsonObject { ["guid"] = Guid.NewGuid().ToString() },
@@ -292,14 +383,19 @@ internal static class AlignmentJsonBuilder
         }
 
         var start = internalToShared.OfPoint(arc.GetEndPoint(0));
+        return CreateCircleNode(center.X, center.Y, start.X - center.X, start.Y - center.Y, sweep / (2.0 * Math.PI), clockwise);
+    }
 
+    /// <summary>A circle2d curve: centre, the radius vector to the start point, the sweep as a fraction of a full turn, and the direction.</summary>
+    private static JsonObject CreateCircleNode(double centerX, double centerY, double startVectorX, double startVectorY, double turns, bool clockwise)
+    {
         return new JsonObject
         {
             ["Bool"] = new JsonObject { ["clockwise"] = clockwise },
-            [Point2DKey] = new JsonObject { ["center"] = CreatePoint(center.X, center.Y) },
-            [Vector2DKey] = new JsonObject { ["radius"] = CreatePoint(start.X - center.X, start.Y - center.Y) },
+            [Point2DKey] = new JsonObject { ["center"] = CreatePoint(centerX, centerY) },
+            [Vector2DKey] = new JsonObject { ["radius"] = CreatePoint(startVectorX, startVectorY) },
             ["String"] = new JsonObject { ["guid"] = Guid.NewGuid().ToString() },
-            [ParamRangeKey] = new JsonObject { ["range"] = CreateRange(0.0, sweep / (2.0 * Math.PI), 1) },
+            [ParamRangeKey] = new JsonObject { ["range"] = CreateRange(0.0, turns, 1) },
             ["typeid"] = CircleTypeId
         };
     }
@@ -308,7 +404,7 @@ internal static class AlignmentJsonBuilder
     /// Plan-view centre, radius, sweep angle (radians, 0..2π) and direction of an arc in shared coordinates.
     /// Direction comes from start→mid→end rather than the arc normal, which depends on how the arc was drawn.
     /// </summary>
-    private static (XYZ Center, double Radius, double Sweep, bool Clockwise) GetArcParameters(Arc arc, Transform internalToShared)
+    internal static (XYZ Center, double Radius, double Sweep, bool Clockwise) GetArcParameters(Arc arc, Transform internalToShared)
     {
         var center = internalToShared.OfPoint(arc.Center);
         var start = internalToShared.OfPoint(arc.GetEndPoint(0));
@@ -354,26 +450,7 @@ internal static class AlignmentJsonBuilder
         };
     }
 
-    /// <summary>
-    /// A JSON number that is always written with a decimal point or exponent ("100.0", never "100").
-    /// Autodesk's parser rejects integer tokens for Float64 values, and System.Text.Json writes a
-    /// whole-number double as an integer unless the token is kept verbatim.
-    /// </summary>
-    private static JsonNode Number(double value)
-    {
-        if (double.IsNaN(value) || double.IsInfinity(value))
-        {
-            throw new ArgumentOutOfRangeException(nameof(value), "Alignment geometry contains a non-finite value.");
-        }
-
-        var text = value.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
-        if (text.IndexOfAny(new[] { '.', 'E', 'e' }) < 0)
-        {
-            text += ".0";
-        }
-
-        return JsonNode.Parse(text);
-    }
+    private static JsonNode Number(double value) => InfraJson.Number(value);
 
     private static double Distance2D(XYZ a, XYZ b)
     {

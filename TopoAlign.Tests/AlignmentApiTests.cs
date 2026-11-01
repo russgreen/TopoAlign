@@ -243,3 +243,31 @@ public class AlignmentPickFilterTests : TopoAlignUiTest
         await Assert.That(filter.AllowReference(null, XYZ.Zero)).IsFalse();
     }
 }
+
+public class AlignmentApiSelfCheckTests : TopoAlignTest
+{
+    [Test]
+    public async Task Supports_EverythingTopoAlignUses_IsPresentInThisRevit()
+    {
+        var supported = AlignmentApi.Supports(AlignmentApi.AlignmentFeature.All, out var problem);
+
+        await Assert.That(supported).IsTrue();
+        await Assert.That(problem).IsNull();
+    }
+
+    [Test]
+    public async Task Supports_EachFeatureOnItsOwn_IsPresent()
+    {
+        foreach (var feature in new[] { AlignmentApi.AlignmentFeature.Read, AlignmentApi.AlignmentFeature.Create, AlignmentApi.AlignmentFeature.Update, AlignmentApi.AlignmentFeature.StationLabels })
+        {
+            await Assert.That(AlignmentApi.Supports(feature, out _)).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task Supports_NoFeatures_IsTriviallyTrue()
+    {
+        await Assert.That(AlignmentApi.Supports(0, out var problem)).IsTrue();
+        await Assert.That(problem).IsNull();
+    }
+}

@@ -25,13 +25,14 @@
     <div class="wrap">
         <article>
             <h1 id="overview">Create Alignment</h1>
-            <p>Creates a Revit native alignment from selected model/detail lines and arcs. The command validates curve continuity, lets you control start station and direction, can optionally drape the profile on a toposolid, and can delete the source lines after creation.</p>
+            <p>Creates a Revit native alignment from model/detail lines and arcs, from points picked in plan, or from curves on a CAD drawing. The command validates curve continuity, lets you control start station and direction, can optionally drape the profile on a toposolid, and can delete the source lines after creation.</p>
 
             <h2 id="usage">Usage / Steps</h2>
             <ol>
                 <li>Launch <strong>Create Alignment</strong> from the Topo Align ribbon panel.</li>
                 <li>Set alignment name, start station, and units.</li>
-                <li>Click <strong>Pick lines/arcs</strong> and select a continuous chain of model/detail curves.</li>
+                <li>Choose where the geometry comes from under <strong>Geometry from</strong>: lines/arcs, points or CAD.</li>
+                <li>Pick the geometry (see below), then optionally add transition spirals.</li>
                 <li>Optionally reverse direction and/or delete source lines.</li>
                 <li>Optionally tick <strong>Drape profile on toposolid</strong>, click <strong>Pick toposolid</strong>, set the sampling options and click <strong>Preview profile</strong> to check the result.</li>
                 <li>Click <strong>Create Alignment</strong>.</li>
@@ -41,7 +42,10 @@
             <ul>
                 <li><strong>Alignment name</strong> — Name for the new alignment element.</li>
                 <li><strong>Start station</strong> — Displayed start station value (converted using selected units).</li>
-                <li><strong>Pick lines/arcs</strong> — Accepts model and detail curves (line/arc only).</li>
+                <li><strong>Lines/arcs</strong> — Accepts model and detail curves (line/arc only), chained into one continuous run.</li>
+                <li><strong>Points</strong> — Pick the points of intersection (PIs) of the alignment in plan; press Esc when finished. The grid lists each point with a <strong>Radius</strong> and a <strong>Spiral</strong> length you can edit. A radius of 0 leaves a sharp corner, and the first and last points are the ends. <strong>Default radius</strong> is used for newly picked points.</li>
+                <li><strong>CAD</strong> — Pick lines, arcs or polylines on an imported or linked DWG/DXF. Splines and ellipses are not supported.</li>
+                <li><strong>Add transition spirals</strong> — Puts a clothoid spiral of the given length either side of every curve. The PIs and radii stay where they are, so the curve moves slightly inside the original lines. For picked lines/arcs this needs each arc to sit between two straights and be tangent to them.</li>
                 <li><strong>Reverse direction</strong> — Reverses stationing direction before creation.</li>
                 <li><strong>Delete source lines</strong> — Removes selected source curve elements after successful creation.</li>
                 <li><strong>Drape profile on toposolid</strong> — Builds the vertical profile from the ground instead of a flat profile. Works with a Toposolid (Revit 2024+) or a topography surface.</li>
@@ -56,6 +60,7 @@
             <h2 id="notes">Notes</h2>
             <ul>
                 <li>Requires Autodesk Civil Alignments support in the installed Revit version.</li>
+                <li>Revit stores spirals as a series of very short straights (within about 1.5 mm of the true curve); the alignment length is the length of those straights.</li>
                 <li>The alignment is generated directly from the picked lines and arcs; no existing alignment is needed. Without draping, the profile is flat at the elevation of the first curve.</li>
                 <li>The start and end of the alignment must be over the toposolid. If other stations fall off it, the profile is bridged across the gap and the preview says how many were affected.</li>
                 <li>Stations are measured along the plan length of the lines and arcs, so a sloping line is measured by its horizontal length.</li>

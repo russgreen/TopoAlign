@@ -17,6 +17,22 @@ public class Settings
     public decimal CreateAlignmentElevationOffset { get; set; }
     public decimal CreateAlignmentMinVerticalCurveLength { get; set; }
 
+    // Transition spirals and point (PI) input, lengths in feet (internal units).
+    public bool CreateAlignmentAddSpirals { get; set; }
+    public decimal CreateAlignmentSpiralLength { get; set; } = Convert.ToDecimal(30.0 / 0.3048);         // 30 m
+    public decimal CreateAlignmentDefaultRadius { get; set; } = Convert.ToDecimal(100.0 / 0.3048);       // 100 m
+
+    // Sweep along alignment (roads and paths), lengths in feet (internal units).
+    public decimal SweepInterval { get; set; } = Convert.ToDecimal(1.0 / 0.3048);                        // 1 m
+    public decimal SweepVerticalOffset { get; set; }
+    public bool SweepMirrorProfile { get; set; }
+
+    /// <summary>Name of the last Revit category used for a road, such as OST_Roads; blank for the first one available.</summary>
+    public string SweepCategory { get; set; } = string.Empty;
+
+    /// <summary>Name of the last profile type used, as "Family : Type".</summary>
+    public string SweepProfileName { get; set; } = string.Empty;
+
 #if REVIT2021_OR_GREATER
     public decimal CreateAlignmentStartStation { get; set; } = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(0, UnitTypeId.Meters));
 #else
@@ -47,6 +63,10 @@ public class Settings
                     CreateAlignmentReverseDirection = Convert.ToBoolean(key.GetValue("CreateAlignmentReverseDirection", CreateAlignmentReverseDirection));
                     CreateAlignmentDeleteSourceLines = Convert.ToBoolean(key.GetValue("CreateAlignmentDeleteSourceLines", CreateAlignmentDeleteSourceLines));
                     CreateAlignmentDrapeOnTopo = Convert.ToBoolean(key.GetValue("CreateAlignmentDrapeOnTopo", CreateAlignmentDrapeOnTopo));
+                    CreateAlignmentAddSpirals = Convert.ToBoolean(key.GetValue("CreateAlignmentAddSpirals", CreateAlignmentAddSpirals));
+                    SweepMirrorProfile = Convert.ToBoolean(key.GetValue("SweepMirrorProfile", SweepMirrorProfile));
+                    SweepCategory = Convert.ToString(key.GetValue("SweepCategory", SweepCategory)) ?? string.Empty;
+                    SweepProfileName = Convert.ToString(key.GetValue("SweepProfileName", SweepProfileName)) ?? string.Empty;
 
                     _ = decimal.TryParse(key.GetValue("DivideEdgeDistance", DivideEdgeDistance).ToString(), out decimal divideEdgeDistance);
                     _ = decimal.TryParse(key.GetValue("VerticalOffset", VerticalOffset).ToString(), out decimal verticalOffset);
@@ -56,6 +76,10 @@ public class Settings
                     CreateAlignmentVerticalTolerance = ReadDecimal(key, "CreateAlignmentVerticalTolerance", CreateAlignmentVerticalTolerance);
                     CreateAlignmentElevationOffset = ReadDecimal(key, "CreateAlignmentElevationOffset", CreateAlignmentElevationOffset);
                     CreateAlignmentMinVerticalCurveLength = ReadDecimal(key, "CreateAlignmentMinVerticalCurveLength", CreateAlignmentMinVerticalCurveLength);
+                    CreateAlignmentSpiralLength = ReadDecimal(key, "CreateAlignmentSpiralLength", CreateAlignmentSpiralLength);
+                    CreateAlignmentDefaultRadius = ReadDecimal(key, "CreateAlignmentDefaultRadius", CreateAlignmentDefaultRadius);
+                    SweepInterval = ReadDecimal(key, "SweepInterval", SweepInterval);
+                    SweepVerticalOffset = ReadDecimal(key, "SweepVerticalOffset", SweepVerticalOffset);
 
                     DivideEdgeDistance = divideEdgeDistance;
                     VerticalOffset = verticalOffset;
@@ -83,6 +107,14 @@ public class Settings
             key.SetValue("CreateAlignmentVerticalTolerance", CreateAlignmentVerticalTolerance, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("CreateAlignmentElevationOffset", CreateAlignmentElevationOffset, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("CreateAlignmentMinVerticalCurveLength", CreateAlignmentMinVerticalCurveLength, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("CreateAlignmentAddSpirals", CreateAlignmentAddSpirals, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("CreateAlignmentSpiralLength", CreateAlignmentSpiralLength, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("CreateAlignmentDefaultRadius", CreateAlignmentDefaultRadius, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("SweepInterval", SweepInterval, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("SweepVerticalOffset", SweepVerticalOffset, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("SweepMirrorProfile", SweepMirrorProfile, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("SweepCategory", SweepCategory ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("SweepProfileName", SweepProfileName ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("DivideEdgeDistance", DivideEdgeDistance, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("VerticalOffset", VerticalOffset, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("CreateAlignmentStartStation", CreateAlignmentStartStation, Microsoft.Win32.RegistryValueKind.String);

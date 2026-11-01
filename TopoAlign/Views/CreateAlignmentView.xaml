@@ -10,8 +10,12 @@
         Title="{Binding WindowTitle}"
         FontSize="12" FontFamily="Segoe UI Light"
         WindowStartupLocation="CenterScreen"
-        SizeToContent="Height" Width="380"
+        SizeToContent="Height" Width="420"
         WindowStyle="ToolWindow" ResizeMode="NoResize">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+    </Window.Resources>
 
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
@@ -19,6 +23,11 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -50,6 +59,9 @@
             <Style TargetType="CheckBox">
                 <Setter Property="Margin" Value="0,0,0,6"/>
             </Style>
+            <Style TargetType="RadioButton">
+                <Setter Property="Margin" Value="0,0,12,6"/>
+            </Style>
             <Style TargetType="Button">
                 <Setter Property="Margin" Value="0,0,0,6"/>
                 <Setter Property="Height" Value="25"/>
@@ -71,71 +83,131 @@
                   DisplayMemberPath="Label"
                   SelectedValue="{Binding SelectedDisplayUnit, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <Button Grid.Row="3" Grid.ColumnSpan="2" Content="Pick lines/arcs"
+        <Separator Grid.Row="3" Grid.ColumnSpan="2" Margin="0,2,0,8"/>
+
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal">
+            <TextBlock Text="Geometry from" Margin="0,0,12,6"/>
+            <RadioButton Content="Lines/arcs" GroupName="InputSource" IsChecked="{Binding IsLinesInput}"/>
+            <RadioButton Content="Points" GroupName="InputSource" IsChecked="{Binding IsPointsInput}"/>
+            <RadioButton Content="CAD" GroupName="InputSource" IsChecked="{Binding IsCadInput}"/>
+        </StackPanel>
+
+        <Button Grid.Row="5" Grid.ColumnSpan="2" Content="Pick lines/arcs"
+                Visibility="{Binding IsLinesInput, Converter={StaticResource BoolToVisibility}}"
                 Command="{Binding PickLinesCommand}"/>
 
-        <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Text="{Binding ChainStatus}" TextWrapping="Wrap"/>
+        <Button Grid.Row="6" Grid.ColumnSpan="2" Content="Pick CAD lines/arcs/polylines"
+                Visibility="{Binding IsCadInput, Converter={StaticResource BoolToVisibility}}"
+                Command="{Binding PickCadCommand}"/>
 
-        <CheckBox Grid.Row="5" Grid.ColumnSpan="2"
+        <Button Grid.Row="7" Grid.ColumnSpan="2" Content="Pick points"
+                Visibility="{Binding IsPointsInput, Converter={StaticResource BoolToVisibility}}"
+                Command="{Binding PickPointsCommand}"/>
+
+        <TextBlock Grid.Row="8" Grid.ColumnSpan="2" Text="{Binding ChainStatus}" TextWrapping="Wrap"
+                   Visibility="{Binding IsCurveInput, Converter={StaticResource BoolToVisibility}}"/>
+
+        <StackPanel Grid.Row="9" Grid.ColumnSpan="2"
+                    Visibility="{Binding IsPointsInput, Converter={StaticResource BoolToVisibility}}">
+            <DataGrid ItemsSource="{Binding PiPoints}" AutoGenerateColumns="False" Height="120" Margin="0,0,0,6"
+                      CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal" SelectionMode="Single">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="#" Binding="{Binding Number}" IsReadOnly="True" Width="30"/>
+                    <DataGridTextColumn Header="Location" Binding="{Binding Location}" IsReadOnly="True" Width="*"/>
+                    <DataGridTextColumn Header="Radius" Binding="{Binding Radius, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                    <DataGridTextColumn Header="Spiral" Binding="{Binding SpiralLength, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Remove last point" Margin="0,0,3,6" Command="{Binding RemoveLastPointCommand}"/>
+                <Button Grid.Column="1" Content="Clear points" Margin="3,0,0,6" Command="{Binding ClearPointsCommand}"/>
+            </Grid>
+            <TextBlock Text="{Binding PointsStatus}" TextWrapping="Wrap"/>
+            <TextBlock Text="Radius 0 leaves a sharp corner. The first and last points are the ends of the alignment."
+                       TextWrapping="Wrap" FontSize="11" Opacity="0.7"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="10" Text="Default radius"
+                   Visibility="{Binding IsPointsInput, Converter={StaticResource BoolToVisibility}}"/>
+        <TextBox Grid.Row="10" Grid.Column="1" HorizontalContentAlignment="Right"
+                 Visibility="{Binding IsPointsInput, Converter={StaticResource BoolToVisibility}}"
+                 Text="{Binding DefaultRadius, UpdateSourceTrigger=PropertyChanged}"
+                 MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
+
+        <CheckBox Grid.Row="11" Content="Add transition spirals"
+                  IsChecked="{Binding AddSpirals}"/>
+        <TextBox Grid.Row="11" Grid.Column="1" HorizontalContentAlignment="Right"
+                 IsEnabled="{Binding AddSpirals}"
+                 Text="{Binding SpiralLength, UpdateSourceTrigger=PropertyChanged}"
+                 MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
+                 ToolTip="Length of each spiral (entry and exit) at every curve"/>
+
+        <CheckBox Grid.Row="12" Grid.ColumnSpan="2"
                   Content="Reverse direction"
                   IsChecked="{Binding ReverseDirection}"/>
 
-        <CheckBox Grid.Row="6" Grid.ColumnSpan="2"
+        <CheckBox Grid.Row="13" Grid.ColumnSpan="2"
                   Content="Delete source lines after create"
+                  IsEnabled="{Binding IsLinesInput}"
                   IsChecked="{Binding DeleteSourceLines}"/>
 
-        <Separator Grid.Row="7" Grid.ColumnSpan="2" Margin="0,2,0,8"/>
+        <Separator Grid.Row="14" Grid.ColumnSpan="2" Margin="0,2,0,8"/>
 
-        <CheckBox Grid.Row="8" Grid.ColumnSpan="2"
+        <CheckBox Grid.Row="15" Grid.ColumnSpan="2"
                   Content="Drape profile on toposolid"
                   IsChecked="{Binding DrapeOnTopo}"/>
 
-        <Button Grid.Row="9" Grid.ColumnSpan="2" Content="Pick toposolid"
-                IsEnabled="{Binding DrapeOnTopo}"
-                Command="{Binding PickToposolidCommand}"/>
+        <StackPanel Grid.Row="16" Grid.ColumnSpan="2">
+            <Button Content="Pick toposolid"
+                    IsEnabled="{Binding DrapeOnTopo}"
+                    Command="{Binding PickToposolidCommand}"/>
+            <TextBlock Text="{Binding TopoStatus}" TextWrapping="Wrap"/>
+            <Grid IsEnabled="{Binding DrapeOnTopo}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="170"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="10" Grid.ColumnSpan="2" Text="{Binding TopoStatus}" TextWrapping="Wrap"/>
+                <TextBlock Grid.Row="0" Text="Sample interval"/>
+                <TextBox Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Right"
+                         Text="{Binding SampleInterval, UpdateSourceTrigger=PropertyChanged}"
+                         MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
 
-        <Grid Grid.Row="11" Grid.ColumnSpan="2" IsEnabled="{Binding DrapeOnTopo}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="170"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+                <TextBlock Grid.Row="1" Text="Vertical tolerance"/>
+                <TextBox Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Right"
+                         Text="{Binding VerticalTolerance, UpdateSourceTrigger=PropertyChanged}"
+                         MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
 
-            <TextBlock Grid.Row="0" Text="Sample interval"/>
-            <TextBox Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Right"
-                     Text="{Binding SampleInterval, UpdateSourceTrigger=PropertyChanged}"
-                     MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
+                <TextBlock Grid.Row="2" Text="Elevation offset"/>
+                <TextBox Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Right"
+                         Text="{Binding ElevationOffset, UpdateSourceTrigger=PropertyChanged}"
+                         MaxLength="12" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
 
-            <TextBlock Grid.Row="1" Text="Vertical tolerance"/>
-            <TextBox Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Right"
-                     Text="{Binding VerticalTolerance, UpdateSourceTrigger=PropertyChanged}"
-                     MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
+                <TextBlock Grid.Row="3" Text="Min vertical curve length"/>
+                <TextBox Grid.Row="3" Grid.Column="1" HorizontalContentAlignment="Right"
+                         Text="{Binding MinVerticalCurveLength, UpdateSourceTrigger=PropertyChanged}"
+                         MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
+            </Grid>
+        </StackPanel>
 
-            <TextBlock Grid.Row="2" Text="Elevation offset"/>
-            <TextBox Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Right"
-                     Text="{Binding ElevationOffset, UpdateSourceTrigger=PropertyChanged}"
-                     MaxLength="12" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
-
-            <TextBlock Grid.Row="3" Text="Min vertical curve length"/>
-            <TextBox Grid.Row="3" Grid.Column="1" HorizontalContentAlignment="Right"
-                     Text="{Binding MinVerticalCurveLength, UpdateSourceTrigger=PropertyChanged}"
-                     MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
-        </Grid>
-
-        <Button Grid.Row="12" Grid.ColumnSpan="2" Content="Preview profile"
+        <Button Grid.Row="17" Grid.ColumnSpan="2" Content="Preview profile"
                 IsEnabled="{Binding DrapeOnTopo}"
                 Command="{Binding PreviewProfileCommand}"/>
 
-        <TextBlock Grid.Row="13" Grid.ColumnSpan="2" Text="{Binding ProfilePreview}" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="18" Grid.ColumnSpan="2" Text="{Binding ProfilePreview}" TextWrapping="Wrap"/>
 
-        <Button Grid.Row="14" Grid.ColumnSpan="2" Content="Create Alignment" IsDefault="True" Height="30"
+        <Button Grid.Row="19" Grid.ColumnSpan="2" Content="Create Alignment" IsDefault="True" Height="30"
                 Command="{Binding CreateAlignmentCommand}"/>
     </Grid>
 </Window>

@@ -130,6 +130,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel value)
     {
         UpdateChainStatus();
+        RefreshPoints();
     }
 
     // any change to what the profile depends on makes the last preview stale
@@ -142,8 +143,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
 
     private bool CanCreateAlignment()
     {
-        return IsChainContinuous &&
-               _orderedCurves.Count > 0 &&
+        return HasGeometry &&
                !string.IsNullOrWhiteSpace(AlignmentName) &&
                (!DrapeOnTopo || _topography is not null);
     }
@@ -153,14 +153,15 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     {
         // Hiding a ShowDialog window ends ShowDialog, so the command does the pick (inside the
         // Revit API context) and then shows this same window again.
+        ResetPickKind();
         PickRequested = true;
-        PickToposolidRequested = false;
         HideRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
     private void PickToposolid()
     {
+        ResetPickKind();
         PickRequested = true;
         PickToposolidRequested = true;
         HideRequested?.Invoke(this, EventArgs.Empty);
@@ -172,6 +173,14 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         if (PickToposolidRequested)
         {
             PickToposolidElement();
+        }
+        else if (PickPointsRequested)
+        {
+            PickPointsInPlan();
+        }
+        else if (PickCadRequested)
+        {
+            PickCadCurves();
         }
         else
         {
@@ -268,22 +277,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
                 }
             }
 
-            var chainResult = CurveChainer.TryChain(curves);
-            if (!chainResult.IsContinuous)
-            {
-                _orderedCurves.Clear();
-                IsChainContinuous = false;
-                SelectedCurveCount = 0;
-                ChainStatus = chainResult.ErrorMessage ?? "Selected curves are not continuous.";
-                return;
-            }
-
-            _orderedCurves = chainResult.Curves;
-            IsChainContinuous = true;
-            SelectedCurveCount = _orderedCurves.Count;
-
-            var displayLength = UnitUtils.ConvertFromInternalUnits(chainResult.TotalLength, SelectedDisplayUnit.DisplayUnit);
-            ChainStatus = $"{SelectedCurveCount} lines, continuous, {displayLength:N2} {SelectedDisplayUnit.Label}";
+            ApplyCurveChain(curves);
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)
         {
@@ -294,6 +288,27 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
             log.Error(ex, "Failed while selecting curves for alignment creation");
             TaskDialog.Show("Create Alignment", ex.Message);
         }
+    }
+
+    /// <summary>Chains the curves into one continuous run and updates the status; shared by the line and CAD picks.</summary>
+    private void ApplyCurveChain(List<Curve> curves)
+    {
+        var chainResult = CurveChainer.TryChain(curves);
+        if (!chainResult.IsContinuous)
+        {
+            _orderedCurves.Clear();
+            IsChainContinuous = false;
+            SelectedCurveCount = 0;
+            ChainStatus = chainResult.ErrorMessage ?? "Selected curves are not continuous.";
+            return;
+        }
+
+        _orderedCurves = chainResult.Curves;
+        IsChainContinuous = true;
+        SelectedCurveCount = _orderedCurves.Count;
+
+        var displayLength = UnitUtils.ConvertFromInternalUnits(chainResult.TotalLength, SelectedDisplayUnit.DisplayUnit);
+        ChainStatus = $"{SelectedCurveCount} lines, continuous, {displayLength:N2} {SelectedDisplayUnit.Label}";
     }
 
     /// <summary>The draped profile for the current chain: simplified PVIs plus the vertical curve length to apply.</summary>
@@ -317,7 +332,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     }
 
     /// <summary>Samples the toposolid along the chain and reduces it to PVIs. Throws with a user-readable message on bad input.</summary>
-    private DrapedProfile ComputeProfile(IReadOnlyList<Curve> curves)
+    private DrapedProfile ComputeProfile(IReadOnlyList<PlanSegment> segments)
     {
         if (_topography is null)
         {
@@ -343,7 +358,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         }
 
         var surface = TopographyReader.Read(_topography);
-        var sampled = ProfileSampler.Sample(curves, surface, interval, ToInternal(ElevationOffset));
+        var sampled = ProfileSampler.Sample(segments, surface, interval, ToInternal(ElevationOffset));
         var pvis = ProfileSimplifier.Simplify(sampled.Samples, tolerance);
 
         return new DrapedProfile(pvis, sampled.MissingCount, minCurve);
@@ -352,19 +367,10 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     [RelayCommand]
     private void PreviewProfile()
     {
-        if (!IsChainContinuous || _orderedCurves.Count == 0)
-        {
-            ProfilePreview = "Pick lines first.";
-            return;
-        }
-
         try
         {
-            var curves = ReverseDirection
-                ? CurveChainer.ReverseChain(_orderedCurves)
-                : _orderedCurves.ToList();
-
-            var profile = ComputeProfile(curves);
+            var layout = BuildLayout();
+            var profile = ComputeProfile(layout.Segments);
             var unit = SelectedDisplayUnit.DisplayUnit;
             var minElevation = UnitUtils.ConvertFromInternalUnits(profile.Pvis.Min(p => p.Elevation), unit);
             var maxElevation = UnitUtils.ConvertFromInternalUnits(profile.Pvis.Max(p => p.Elevation), unit);
@@ -390,7 +396,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     {
         try
         {
-            if (_orderedCurves.Count == 0)
+            if (InputSource != AlignmentInputSource.Points && _orderedCurves.Count == 0)
             {
                 TaskDialog.Show("Create Alignment", "Pick lines first.");
                 return;
@@ -402,9 +408,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
                 return;
             }
 
-            var curves = ReverseDirection
-                ? CurveChainer.ReverseChain(_orderedCurves)
-                : _orderedCurves.ToList();
+            var layout = BuildLayout();
 
             var startStationInternal = UnitUtils.ConvertToInternalUnits((double)StartStation, SelectedDisplayUnit.DisplayUnit);
 
@@ -412,14 +416,18 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
             var internalToShared = App.RevitDocument.ActiveProjectLocation.GetTotalTransform().Inverse;
             double planLength;
             string json;
-            if (DrapeOnTopo)
+            var profile = DrapeOnTopo ? ComputeProfile(layout.Segments) : null;
+            if (layout.Curves is not null)
             {
-                var profile = ComputeProfile(curves);
-                json = AlignmentJsonBuilder.Build(AlignmentName, curves, internalToShared, startStationInternal, profile.Pvis, profile.MinVerticalCurveLength, out planLength);
+                // the picked lines and arcs are used exactly as drawn
+                json = profile is null
+                    ? AlignmentJsonBuilder.Build(AlignmentName, layout.Curves, internalToShared, startStationInternal, out planLength)
+                    : AlignmentJsonBuilder.Build(AlignmentName, layout.Curves, internalToShared, startStationInternal, profile.Pvis, profile.MinVerticalCurveLength, out planLength);
             }
             else
             {
-                json = AlignmentJsonBuilder.Build(AlignmentName, curves, internalToShared, startStationInternal, out planLength);
+                json = AlignmentJsonBuilder.BuildFromSegments(AlignmentName, layout.Segments, internalToShared, startStationInternal, layout.FlatElevation,
+                    profile?.Pvis, profile?.MinVerticalCurveLength ?? 0.0, SpiralDeviation, out planLength);
             }
 
             // The alignment is created by the command once this dialog has closed, so the transaction
@@ -480,6 +488,8 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         VerticalTolerance = ToDisplay(_settings.CreateAlignmentVerticalTolerance);
         ElevationOffset = ToDisplay(_settings.CreateAlignmentElevationOffset);
         MinVerticalCurveLength = ToDisplay(_settings.CreateAlignmentMinVerticalCurveLength);
+
+        LoadInputSettings();
     }
 
     private decimal ToDisplay(decimal internalValue)
@@ -498,6 +508,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         _settings.CreateAlignmentVerticalTolerance = (decimal)ToInternal(VerticalTolerance);
         _settings.CreateAlignmentElevationOffset = (decimal)ToInternal(ElevationOffset);
         _settings.CreateAlignmentMinVerticalCurveLength = (decimal)ToInternal(MinVerticalCurveLength);
+        SaveInputSettings();
         _settings.SaveSettings();
     }
 

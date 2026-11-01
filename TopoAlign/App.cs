@@ -146,6 +146,33 @@ class App : IExternalApplication
         pbCreateAlignment.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
         pbCreateAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandCreateAlignment.html"));
 
+        PushButton pbEditAlignment = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandEditAlignment),
+            $"Edit{Environment.NewLine}Alignment",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandEditAlignment)}"));
+        pbEditAlignment.ToolTip = "Rename an alignment, change its start station or reverse its direction.";
+        pbEditAlignment.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
+        pbEditAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandEditAlignment.html"));
+
+        PushButton pbStationLabels = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandStationLabels),
+            $"Station{Environment.NewLine}Labels",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandStationLabels)}"));
+        pbStationLabels.ToolTip = "Place a set of station labels along an alignment in the active view.";
+        pbStationLabels.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
+        pbStationLabels.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandStationLabels.html"));
+
+        PushButton pbSweepAlignment = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandSweepAlignment),
+            $"Sweep Along{Environment.NewLine}Alignment",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandSweepAlignment)}"));
+        pbSweepAlignment.ToolTip = "Sweep a profile family along an alignment to make a road or path.";
+        pbSweepAlignment.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
+        pbSweepAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepAlignment.html"));
+
         PushButton pbAlignment = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandAlignmentTool),
             $"Alignment{Environment.NewLine}Tool",

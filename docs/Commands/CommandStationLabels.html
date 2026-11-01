@@ -1,0 +1,59 @@
+<!-- docs/Commands/CommandStationLabels.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – Station Labels</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <div class="brand"><h1>TopoAlign</h1></div>
+        <nav class="crumbs">
+            <ol>
+                <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+                <li class="crumb">Station Labels</li>
+            </ol>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <article>
+            <h1 id="overview">Station Labels</h1>
+            <p>Places a set of station labels along a native Revit alignment in the active view, using Autodesk's own station label type.</p>
+
+            <h2 id="usage">Usage / Steps</h2>
+            <ol>
+                <li>Open the plan, section or elevation view that should show the labels.</li>
+                <li>Select an alignment first, or launch <strong>Station Labels</strong> and click <strong>Pick alignment</strong>.</li>
+                <li>Choose a label type, the interval and the range, then click <strong>Create Labels</strong>.</li>
+            </ol>
+
+            <h2 id="options">Options / Parameters</h2>
+            <ul>
+                <li><strong>Label type</strong> — The spot dimension types that Autodesk accepts for alignment station labels. If the model has none suited to label sets, <em>New recommended type</em> creates one (labels that rotate with the alignment, vertical text, station value, heavy tick leader).</li>
+                <li><strong>Units</strong> — The units used for the interval, offset and stations below.</li>
+                <li><strong>Interval</strong> — The distance between labels. Leave blank for the default (100 ft in imperial projects, 1000 m in metric).</li>
+                <li><strong>Offset (paper)</strong> — The distance from the alignment on the printed sheet. Positive is to the right of the alignment, negative to the left. Leave blank for the default (1/8 inch or 5 mm).</li>
+                <li><strong>From station / To station</strong> — Limits the labels to part of the alignment. Leave blank to use its full range.</li>
+                <li><strong>Leader line</strong> — Draws a leader from each label to the alignment.</li>
+            </ul>
+
+            <h2 id="notes">Notes</h2>
+            <ul>
+                <li>Labels can only be placed in plan, section and elevation views; 3D views, schedules and sheets are not supported.</li>
+                <li>Requires Autodesk Civil Alignments support in the installed Revit version.</li>
+                <li>Each label is a normal Revit element and can be moved, edited or deleted afterwards.</li>
+            </ul>
+        </article>
+    </div>
+</main>
+
+<footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>

@@ -46,7 +46,9 @@
           <li>Use <strong>Align to Element</strong> to add points to topography from selected model elements.</li>
           <li>Use <strong>Align to Topo</strong> to shape a floor slab to the terrain, with an optional vertical offset.</li>
           <li>Use <strong>Points Along Contours</strong> or <strong>Points On Surface</strong> to add points to topography from selected lines.</li>
-          <li>Use <strong>Create Alignment</strong> to build native Revit alignments from continuous model/detail curves.</li>
+          <li>Use <strong>Create Alignment</strong> to build native Revit alignments from model/detail curves, picked points or CAD curves, with optional spirals and a profile draped on a toposolid.</li>
+          <li>Use <strong>Edit Alignment</strong> to rename an alignment, change its start station or reverse it, and <strong>Station Labels</strong> to place station labels along it.</li>
+          <li>Use <strong>Sweep Along Alignment</strong> to build a road or path by sweeping a profile family along an alignment.</li>
           <li>Use <strong>Points At Intersection</strong> to place points where a face intersects the topography.</li>
           <li>Use <strong>Reset Topo Region</strong> to replace points within a rectangle from a source topo into a target topo.</li>
         </ol>
@@ -86,7 +88,22 @@
                   <div class="card">
             <img src="./assets/PointsOnSurface.png" alt="Create Alignment" class="card-icon">
             <h3><a href="./Commands/CommandCreateAlignment.html">Create Alignment</a></h3>
-            <p class="muted">Creates native Revit alignments from a continuous chain of model/detail lines and arcs.</p>
+            <p class="muted">Creates native Revit alignments from lines and arcs, picked points or CAD curves, with optional spirals and a draped profile.</p>
+          </div>
+          <div class="card">
+            <img src="./assets/PointsOnSurface.png" alt="Edit Alignment" class="card-icon">
+            <h3><a href="./Commands/CommandEditAlignment.html">Edit Alignment</a></h3>
+            <p class="muted">Renames an alignment, changes its start station or reverses its direction.</p>
+          </div>
+          <div class="card">
+            <img src="./assets/PointsOnSurface.png" alt="Station Labels" class="card-icon">
+            <h3><a href="./Commands/CommandStationLabels.html">Station Labels</a></h3>
+            <p class="muted">Places a set of station labels along an alignment in the active view.</p>
+          </div>
+          <div class="card">
+            <img src="./assets/PointsOnSurface.png" alt="Sweep Along Alignment" class="card-icon">
+            <h3><a href="./Commands/CommandSweepAlignment.html">Sweep Along Alignment</a></h3>
+            <p class="muted">Sweeps a profile family along an alignment, following its plan and profile, to make a road or path.</p>
           </div>
         </div>
 
@@ -110,6 +127,9 @@
         <ul>
           <li>Recent fixes and improvements to topography point handling.</li>
           <li>Updates for Revit2026 compatibility.</li>
+          <li>Create Alignment: point (PI) and CAD input, transition spirals, and draping the profile on a toposolid.</li>
+          <li>New Edit Alignment and Station Labels commands.</li>
+          <li>New Sweep Along Alignment command to make roads and paths from a profile family.</li>
         </ul>
       </article>
 

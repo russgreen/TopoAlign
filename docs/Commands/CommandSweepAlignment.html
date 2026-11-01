@@ -1,0 +1,62 @@
+<!-- docs/Commands/CommandSweepAlignment.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – Sweep Along Alignment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <div class="brand"><h1>TopoAlign</h1></div>
+        <nav class="crumbs">
+            <ol>
+                <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+                <li class="crumb">Sweep Along Alignment</li>
+            </ol>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <article>
+            <h1 id="overview">Sweep Along Alignment</h1>
+            <p>Makes a road or path by sweeping a cross-section along an alignment. The road follows the alignment in plan and the alignment's profile in height, so it climbs, dips and rounds crests and sags with it.</p>
+
+            <h2 id="usage">Usage / Steps</h2>
+            <ol>
+                <li>Draw the cross-section in a <strong>profile family</strong> (a Profile family template): one closed shape of lines and arcs, with the family's origin at the centreline of the road at finished level. Load the family into the project.</li>
+                <li>Select an alignment first, or launch <strong>Sweep Along Alignment</strong> and click <strong>Pick alignment</strong>.</li>
+                <li>Choose the <strong>Road section</strong>. The dialog reads the shape and shows its width and height.</li>
+                <li>Set the section spacing, an optional vertical offset and the category, then click <strong>Create Road</strong>.</li>
+            </ol>
+
+            <h2 id="options">Options / Parameters</h2>
+            <ul>
+                <li><strong>Road section</strong> — A profile family type loaded in the project. Its shape must be a single closed loop of straight lines and arcs. X across the family is across the road (positive to the right of the direction of travel) and Y is up.</li>
+                <li><strong>Flip section left to right</strong> — Mirrors the shape, for a profile drawn the other way round.</li>
+                <li><strong>Units</strong> — The units used for the spacing and offset.</li>
+                <li><strong>Section spacing</strong> — Distance between sections along the alignment. Where the alignment curves or changes grade, extra sections are added automatically, and a section is always placed where a straight meets a curve.</li>
+                <li><strong>Vertical offset</strong> — Raises (positive) or lowers (negative) the whole road relative to the alignment's profile.</li>
+                <li><strong>Category</strong> — The Revit category the road is filed under: Roads, Hardscape or Generic Models, whichever your version of Revit accepts. The last choice is remembered.</li>
+            </ul>
+
+            <h2 id="notes">Notes</h2>
+            <ul>
+                <li>Requires Autodesk Civil Alignments support in the installed Revit version.</li>
+                <li>The road is one Direct Shape element made of a solid for each span between two sections. It is tagged with the alignment it follows, so running the command again for the same alignment <strong>replaces</strong> the earlier road.</li>
+                <li>The section always stands upright, across the horizontal direction of the alignment, so a thickness stays a vertical thickness on a slope.</li>
+                <li>If a curve is tighter than the road is wide, the inside of the road would fold back on itself. Revit cannot build those spans, so they are left as gaps and the summary says how many; use a narrower section or a larger radius.</li>
+                <li>Not included yet: a section that changes along the road, banking (superelevation), junctions, and cutting the road into the toposolid.</li>
+            </ul>
+        </article>
+    </div>
+</main>
+
+<footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>
