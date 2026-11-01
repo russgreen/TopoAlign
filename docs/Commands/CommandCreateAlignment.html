@@ -25,7 +25,7 @@
     <div class="wrap">
         <article>
             <h1 id="overview">Create Alignment</h1>
-            <p>Creates a Revit native alignment from selected model/detail lines and arcs. The command validates curve continuity, lets you control start station and direction, and can optionally delete source lines after creation.</p>
+            <p>Creates a Revit native alignment from selected model/detail lines and arcs. The command validates curve continuity, lets you control start station and direction, can optionally drape the profile on a toposolid, and can delete the source lines after creation.</p>
 
             <h2 id="usage">Usage / Steps</h2>
             <ol>
@@ -33,6 +33,7 @@
                 <li>Set alignment name, start station, and units.</li>
                 <li>Click <strong>Pick lines/arcs</strong> and select a continuous chain of model/detail curves.</li>
                 <li>Optionally reverse direction and/or delete source lines.</li>
+                <li>Optionally tick <strong>Drape profile on toposolid</strong>, click <strong>Pick toposolid</strong>, set the sampling options and click <strong>Preview profile</strong> to check the result.</li>
                 <li>Click <strong>Create Alignment</strong>.</li>
             </ol>
 
@@ -43,12 +44,21 @@
                 <li><strong>Pick lines/arcs</strong> — Accepts model and detail curves (line/arc only).</li>
                 <li><strong>Reverse direction</strong> — Reverses stationing direction before creation.</li>
                 <li><strong>Delete source lines</strong> — Removes selected source curve elements after successful creation.</li>
+                <li><strong>Drape profile on toposolid</strong> — Builds the vertical profile from the ground instead of a flat profile. Works with a Toposolid (Revit 2024+) or a topography surface.</li>
+                <li><strong>Pick toposolid</strong> — Selects the ground to drape on. A toposolid you have already selected is used without asking.</li>
+                <li><strong>Sample interval</strong> — Distance between ground elevation samples along the alignment. The end of every line and arc is always sampled.</li>
+                <li><strong>Vertical tolerance</strong> — How far the profile may stray from the sampled ground. Larger values give fewer, simpler PVIs; smaller values follow the ground more closely.</li>
+                <li><strong>Elevation offset</strong> — Added to the ground elevation. Positive values lift the profile above the ground, negative values lower it.</li>
+                <li><strong>Min vertical curve length</strong> — Rounds each change of grade with a parabolic vertical curve at least this long (shortened where PVIs are close together). Leave at 0 for straight grades between PVIs.</li>
+                <li><strong>Preview profile</strong> — Reports the number of PVIs, the elevation range and the steepest grade before anything is created.</li>
             </ul>
 
             <h2 id="notes">Notes</h2>
             <ul>
                 <li>Requires Autodesk Civil Alignments support in the installed Revit version.</li>
-                <li>The alignment is generated directly from the picked lines and arcs; no existing alignment is needed. The profile is flat at the elevation of the first curve.</li>
+                <li>The alignment is generated directly from the picked lines and arcs; no existing alignment is needed. Without draping, the profile is flat at the elevation of the first curve.</li>
+                <li>The start and end of the alignment must be over the toposolid. If other stations fall off it, the profile is bridged across the gap and the preview says how many were affected.</li>
+                <li>Stations are measured along the plan length of the lines and arcs, so a sloping line is measured by its horizontal length.</li>
             </ul>
         </article>
     </div>

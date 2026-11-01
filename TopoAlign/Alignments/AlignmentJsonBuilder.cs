@@ -22,6 +22,7 @@ internal static class AlignmentJsonBuilder
 
     private const string LineTypeId = "autodesk.infra.geometry:line2d-1.0.0";
     private const string CircleTypeId = "autodesk.infra.geometry:circle2d-1.0.0";
+    private const string VerticalCurveTypeId = "autodesk.infra.geometry:verticalCurve-1.0.0";
 
     private const string AecAlignmentDataKey = "autodesk.infra:aecalignmentdata-1.0.0";
     private const string AlignmentKey = "autodesk.infra:alignment-1.0.0";
@@ -43,6 +44,19 @@ internal static class AlignmentJsonBuilder
     /// <param name="startStation">Station at the start of the alignment, in feet (internal units).</param>
     /// <param name="planLength">Plan length of the alignment in feet, as written to the JSON.</param>
     public static string Build(string name, IReadOnlyList<Curve> orderedCurves, Transform internalToShared, double startStation, out double planLength)
+    {
+        return Build(name, orderedCurves, internalToShared, startStation, null, 0.0, out planLength);
+    }
+
+    /// <summary>
+    /// Builds the alignment JSON with an explicit profile.
+    /// </summary>
+    /// <param name="profilePvis">
+    /// Profile points (distance along the alignment, elevation in internal feet) starting at 0 and ending at the plan
+    /// length; or null for a flat profile at the elevation of the first curve.
+    /// </param>
+    /// <param name="minVerticalCurveLength">Minimum parabolic vertical curve length in feet at each PVI; 0 for a polyline profile.</param>
+    public static string Build(string name, IReadOnlyList<Curve> orderedCurves, Transform internalToShared, double startStation, IReadOnlyList<ProfilePoint> profilePvis, double minVerticalCurveLength, out double planLength)
     {
         if (orderedCurves is null || orderedCurves.Count == 0)
         {
@@ -79,11 +93,19 @@ internal static class AlignmentJsonBuilder
 
         planLength = length;
 
-        var elevation = internalToShared.OfPoint(orderedCurves[0].GetEndPoint(0)).Z;
-        var profileCurves = new JsonArray
+        JsonArray profileCurves;
+        if (profilePvis is null)
         {
-            CreateLineNode(0.0, elevation, length, 0.0)
-        };
+            var elevation = internalToShared.OfPoint(orderedCurves[0].GetEndPoint(0)).Z;
+            profileCurves = new JsonArray
+            {
+                CreateLineNode(0.0, elevation, length, 0.0)
+            };
+        }
+        else
+        {
+            profileCurves = CreateProfileCurves(profilePvis, minVerticalCurveLength, internalToShared, length);
+        }
 
         var root = new JsonObject
         {
@@ -136,6 +158,12 @@ internal static class AlignmentJsonBuilder
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = false });
     }
 
+    /// <summary>Plan length (feet) of a line/arc after dropping Z. This is the alignment's stationing length.</summary>
+    internal static double PlanLength(Curve curve)
+    {
+        return Length2D(curve, Transform.Identity);
+    }
+
     /// <summary>Plan length (feet) of a line/arc after dropping Z; used for the profile extent.</summary>
     private static double Length2D(Curve curve, Transform internalToShared)
     {
@@ -148,6 +176,74 @@ internal static class AlignmentJsonBuilder
         var start = internalToShared.OfPoint(curve.GetEndPoint(0));
         var end = internalToShared.OfPoint(curve.GetEndPoint(1));
         return Distance2D(start, end);
+    }
+
+    /// <summary>
+    /// Profile curves (lines and parabolic vertical curves) for the PVIs. Stations are distances along the alignment;
+    /// elevations are converted to shared coordinates (the project location's vertical offset).
+    /// </summary>
+    private static JsonArray CreateProfileCurves(IReadOnlyList<ProfilePoint> pvis, double minVerticalCurveLength, Transform internalToShared, double planLength)
+    {
+        if (pvis.Count < 2)
+        {
+            throw new ArgumentException("A profile needs at least two points.", nameof(pvis));
+        }
+
+        const double endTolerance = 1e-3;
+        if (Math.Abs(pvis[0].Station) > endTolerance || Math.Abs(pvis[pvis.Count - 1].Station - planLength) > endTolerance)
+        {
+            throw new ArgumentException("The profile must run from the start to the end of the alignment.", nameof(pvis));
+        }
+
+        // lock the ends to exactly 0 and the written plan length so the profile always covers the alignment
+        var points = new List<ProfilePoint>(pvis.Count);
+        for (var i = 0; i < pvis.Count; i++)
+        {
+            var station = i == 0 ? 0.0 : i == pvis.Count - 1 ? planLength : pvis[i].Station;
+            points.Add(new ProfilePoint(station, SharedElevation(pvis[i].Elevation, internalToShared)));
+        }
+
+        var curves = new JsonArray();
+        foreach (var element in ProfileLayout.Create(points, minVerticalCurveLength))
+        {
+            switch (element)
+            {
+                case ProfileLine line:
+                    curves.Add(CreateLineNode(
+                        line.Start.Station,
+                        line.Start.Elevation,
+                        line.End.Station - line.Start.Station,
+                        line.End.Elevation - line.Start.Elevation));
+                    break;
+
+                case ProfileParabola parabola:
+                    curves.Add(CreateVerticalCurveNode(parabola));
+                    break;
+            }
+        }
+
+        return curves;
+    }
+
+    private static double SharedElevation(double internalElevation, Transform internalToShared)
+    {
+        return internalToShared.OfPoint(new XYZ(0.0, 0.0, internalElevation)).Z;
+    }
+
+    private static JsonObject CreateVerticalCurveNode(ProfileParabola parabola)
+    {
+        return new JsonObject
+        {
+            [Point2DKey] = new JsonObject
+            {
+                ["endPoint"] = CreatePoint(parabola.End.Station, parabola.End.Elevation),
+                ["pvi"] = CreatePoint(parabola.Pvi.Station, parabola.Pvi.Elevation),
+                ["startPoint"] = CreatePoint(parabola.Start.Station, parabola.Start.Elevation)
+            },
+            ["String"] = new JsonObject { ["guid"] = Guid.NewGuid().ToString() },
+            [ParamRangeKey] = new JsonObject { ["range"] = CreateRange(0.0, 0.0, 0) },
+            ["typeid"] = VerticalCurveTypeId
+        };
     }
 
     private static JsonObject CreateGeometry(JsonArray curves)

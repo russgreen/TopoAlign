@@ -61,6 +61,28 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     [ObservableProperty]
     private Models.DisplayUnitModel _selectedDisplayUnit;
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CreateAlignmentCommand))]
+    private bool _drapeOnTopo;
+
+    [ObservableProperty]
+    private string _topoStatus = "No toposolid selected.";
+
+    [ObservableProperty]
+    private decimal _sampleInterval;
+
+    [ObservableProperty]
+    private decimal _verticalTolerance;
+
+    [ObservableProperty]
+    private decimal _elevationOffset;
+
+    [ObservableProperty]
+    private decimal _minVerticalCurveLength;
+
+    [ObservableProperty]
+    private string _profilePreview = string.Empty;
+
     public string WindowTitle { get; }
 
     /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
@@ -69,12 +91,16 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     /// <summary>True when the dialog was hidden to pick lines; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
 
+    /// <summary>With <see cref="PickRequested"/>: the requested pick is the toposolid rather than the lines.</summary>
+    public bool PickToposolidRequested { get; set; }
+
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
     public CreateAlignmentRequest Request { get; private set; }
 
     private readonly Models.Settings _settings = new();
     private readonly List<ElementId> _selectedCurveIds = new();
     private List<Curve> _orderedCurves = new();
+    private Element _topography;
 
 #if REVIT2018 || REVIT2019 || REVIT2020
     private DisplayUnitType _docDisplayUnits;
@@ -106,11 +132,20 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         UpdateChainStatus();
     }
 
+    // any change to what the profile depends on makes the last preview stale
+    partial void OnReverseDirectionChanged(bool value) => ProfilePreview = string.Empty;
+    partial void OnDrapeOnTopoChanged(bool value) => ProfilePreview = string.Empty;
+    partial void OnSampleIntervalChanged(decimal value) => ProfilePreview = string.Empty;
+    partial void OnVerticalToleranceChanged(decimal value) => ProfilePreview = string.Empty;
+    partial void OnElevationOffsetChanged(decimal value) => ProfilePreview = string.Empty;
+    partial void OnMinVerticalCurveLengthChanged(decimal value) => ProfilePreview = string.Empty;
+
     private bool CanCreateAlignment()
     {
         return IsChainContinuous &&
                _orderedCurves.Count > 0 &&
-               !string.IsNullOrWhiteSpace(AlignmentName);
+               !string.IsNullOrWhiteSpace(AlignmentName) &&
+               (!DrapeOnTopo || _topography is not null);
     }
 
     [RelayCommand]
@@ -119,7 +154,78 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         // Hiding a ShowDialog window ends ShowDialog, so the command does the pick (inside the
         // Revit API context) and then shows this same window again.
         PickRequested = true;
+        PickToposolidRequested = false;
         HideRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void PickToposolid()
+    {
+        PickRequested = true;
+        PickToposolidRequested = true;
+        HideRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Runs whichever pick the dialog asked for. Called by the command while the dialog is hidden.</summary>
+    internal void RunPendingPick()
+    {
+        if (PickToposolidRequested)
+        {
+            PickToposolidElement();
+        }
+        else
+        {
+            PickCurves();
+        }
+    }
+
+    /// <summary>Selects the toposolid (pre-selection or interactive pick) the profile is draped on.</summary>
+    internal void PickToposolidElement()
+    {
+        try
+        {
+            var uidoc = App.CachedUiApp.ActiveUIDocument;
+            var filter = new TopoPickFilter();
+
+            Element topography = null;
+            foreach (var id in uidoc.Selection.GetElementIds())
+            {
+                var element = App.RevitDocument.GetElement(id);
+                if (filter.AllowElement(element))
+                {
+                    topography = element;
+                    break;
+                }
+            }
+
+            if (topography is null)
+            {
+                var reference = uidoc.Selection.PickObject(ObjectType.Element, filter, "Select the toposolid to drape the profile on");
+                topography = App.RevitDocument.GetElement(reference);
+            }
+
+            _topography = topography;
+#if REVIT2024_OR_GREATER
+            var topographyId = topography.Id.Value;
+#else
+            var topographyId = topography.Id.IntegerValue;
+#endif
+            TopoStatus = $"{topography.Category?.Name ?? "Topography"} (Id {topographyId})";
+            ProfilePreview = string.Empty;
+        }
+        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+        {
+            // user cancelled selection
+        }
+        catch (Exception ex)
+        {
+            log.Error(ex, "Failed while selecting the toposolid");
+            TaskDialog.Show("Create Alignment", ex.Message);
+        }
+        finally
+        {
+            CreateAlignmentCommand.NotifyCanExecuteChanged();
+        }
     }
 
     /// <summary>Selects the curves (pre-selection or interactive pick) and chains them. Called by the command.</summary>
@@ -190,6 +296,95 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         }
     }
 
+    /// <summary>The draped profile for the current chain: simplified PVIs plus the vertical curve length to apply.</summary>
+    private sealed class DrapedProfile
+    {
+        public DrapedProfile(List<ProfilePoint> pvis, int missingCount, double minVerticalCurveLength)
+        {
+            Pvis = pvis;
+            MissingCount = missingCount;
+            MinVerticalCurveLength = minVerticalCurveLength;
+        }
+
+        public List<ProfilePoint> Pvis { get; }
+        public int MissingCount { get; }
+        public double MinVerticalCurveLength { get; }
+    }
+
+    private double ToInternal(decimal displayValue)
+    {
+        return UnitUtils.ConvertToInternalUnits((double)displayValue, SelectedDisplayUnit.DisplayUnit);
+    }
+
+    /// <summary>Samples the toposolid along the chain and reduces it to PVIs. Throws with a user-readable message on bad input.</summary>
+    private DrapedProfile ComputeProfile(IReadOnlyList<Curve> curves)
+    {
+        if (_topography is null)
+        {
+            throw new InvalidOperationException("Pick a toposolid to drape the profile on.");
+        }
+
+        var interval = ToInternal(SampleInterval);
+        if (interval <= 0.0)
+        {
+            throw new InvalidOperationException("The sample interval must be greater than zero.");
+        }
+
+        var tolerance = ToInternal(VerticalTolerance);
+        if (tolerance < 0.0)
+        {
+            throw new InvalidOperationException("The vertical tolerance can't be negative.");
+        }
+
+        var minCurve = ToInternal(MinVerticalCurveLength);
+        if (minCurve < 0.0)
+        {
+            throw new InvalidOperationException("The minimum vertical curve length can't be negative.");
+        }
+
+        var surface = TopographyReader.Read(_topography);
+        var sampled = ProfileSampler.Sample(curves, surface, interval, ToInternal(ElevationOffset));
+        var pvis = ProfileSimplifier.Simplify(sampled.Samples, tolerance);
+
+        return new DrapedProfile(pvis, sampled.MissingCount, minCurve);
+    }
+
+    [RelayCommand]
+    private void PreviewProfile()
+    {
+        if (!IsChainContinuous || _orderedCurves.Count == 0)
+        {
+            ProfilePreview = "Pick lines first.";
+            return;
+        }
+
+        try
+        {
+            var curves = ReverseDirection
+                ? CurveChainer.ReverseChain(_orderedCurves)
+                : _orderedCurves.ToList();
+
+            var profile = ComputeProfile(curves);
+            var unit = SelectedDisplayUnit.DisplayUnit;
+            var minElevation = UnitUtils.ConvertFromInternalUnits(profile.Pvis.Min(p => p.Elevation), unit);
+            var maxElevation = UnitUtils.ConvertFromInternalUnits(profile.Pvis.Max(p => p.Elevation), unit);
+            var maxGrade = ProfileSimplifier.MaxAbsGrade(profile.Pvis);
+
+            var text = $"{profile.Pvis.Count} PVIs, elevation {minElevation:N2} to {maxElevation:N2} {SelectedDisplayUnit.Label}, max grade {maxGrade:P1}";
+            if (profile.MissingCount > 0)
+            {
+                text += $". {profile.MissingCount} stations are off the toposolid and were bridged.";
+            }
+
+            ProfilePreview = text;
+        }
+        catch (Exception ex)
+        {
+            log.Warning(ex, "Profile preview failed");
+            ProfilePreview = ex.Message;
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(CanCreateAlignment))]
     private void CreateAlignment()
     {
@@ -215,7 +410,17 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
 
             // Alignment JSON is written in shared coordinates; the profile elevation takes the same offset.
             var internalToShared = App.RevitDocument.ActiveProjectLocation.GetTotalTransform().Inverse;
-            var json = AlignmentJsonBuilder.Build(AlignmentName, curves, internalToShared, startStationInternal, out var planLength);
+            double planLength;
+            string json;
+            if (DrapeOnTopo)
+            {
+                var profile = ComputeProfile(curves);
+                json = AlignmentJsonBuilder.Build(AlignmentName, curves, internalToShared, startStationInternal, profile.Pvis, profile.MinVerticalCurveLength, out planLength);
+            }
+            else
+            {
+                json = AlignmentJsonBuilder.Build(AlignmentName, curves, internalToShared, startStationInternal, out planLength);
+            }
 
             // The alignment is created by the command once this dialog has closed, so the transaction
             // runs inside the Revit API context rather than from a WPF button handler.
@@ -269,6 +474,17 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
 
         var displayStation = UnitUtils.ConvertFromInternalUnits((double)_settings.CreateAlignmentStartStation, SelectedDisplayUnit.DisplayUnit);
         StartStation = decimal.Round((decimal)displayStation, 2);
+
+        DrapeOnTopo = _settings.CreateAlignmentDrapeOnTopo;
+        SampleInterval = ToDisplay(_settings.CreateAlignmentSampleInterval);
+        VerticalTolerance = ToDisplay(_settings.CreateAlignmentVerticalTolerance);
+        ElevationOffset = ToDisplay(_settings.CreateAlignmentElevationOffset);
+        MinVerticalCurveLength = ToDisplay(_settings.CreateAlignmentMinVerticalCurveLength);
+    }
+
+    private decimal ToDisplay(decimal internalValue)
+    {
+        return decimal.Round((decimal)UnitUtils.ConvertFromInternalUnits((double)internalValue, SelectedDisplayUnit.DisplayUnit), 3);
     }
 
     private void SaveSettings(double startStationInternal)
@@ -277,6 +493,11 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         _settings.CreateAlignmentReverseDirection = ReverseDirection;
         _settings.CreateAlignmentDeleteSourceLines = DeleteSourceLines;
         _settings.CreateAlignmentStartStation = (decimal)startStationInternal;
+        _settings.CreateAlignmentDrapeOnTopo = DrapeOnTopo;
+        _settings.CreateAlignmentSampleInterval = (decimal)ToInternal(SampleInterval);
+        _settings.CreateAlignmentVerticalTolerance = (decimal)ToInternal(VerticalTolerance);
+        _settings.CreateAlignmentElevationOffset = (decimal)ToInternal(ElevationOffset);
+        _settings.CreateAlignmentMinVerticalCurveLength = (decimal)ToInternal(MinVerticalCurveLength);
         _settings.SaveSettings();
     }
 

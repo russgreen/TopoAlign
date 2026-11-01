@@ -29,7 +29,7 @@ public class CommandCreateAlignment : IExternalCommand
         var viewModel = new CreateAlignmentViewModel();
         var view = new CreateAlignmentView(viewModel);
 
-        // The dialog hides itself to let the user pick lines; the pick runs here in the API context,
+        // The dialog hides itself to let the user pick lines or a toposolid; the pick runs here in the API context,
         // then the same dialog is shown again.
         bool? dialogResult;
         do
@@ -39,7 +39,7 @@ public class CommandCreateAlignment : IExternalCommand
 
             if (viewModel.PickRequested)
             {
-                viewModel.PickCurves();
+                viewModel.RunPendingPick();
             }
         }
         while (viewModel.PickRequested);
