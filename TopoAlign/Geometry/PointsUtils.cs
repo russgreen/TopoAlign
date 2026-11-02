@@ -8,12 +8,12 @@ namespace TopoAlign.Geometry;
 
 public class PointsUtils
 {
-    private static View3D _v3d;
+    private static View3D? _v3d;
 
 #if REVIT2024_OR_GREATER
 
 
-    public static bool PointsAlongLines(UIDocument uidoc, Document doc, Autodesk.Revit.DB.Toposolid topoSolid, double divide, double offset = 0)
+    public static bool PointsAlongLines(UIDocument uidoc, Document doc, Autodesk.Revit.DB.Toposolid? topoSolid, double divide, double offset = 0)
     {
         //check the active view is a 3D view
         if (doc.ActiveView is View3D)
@@ -36,7 +36,13 @@ public class PointsUtils
         try
         {
             var refToposurface = uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
-            topoSolid = doc.GetElement(refToposurface) as Autodesk.Revit.DB.Toposolid;
+            var picked = doc.GetElement(refToposurface) as Autodesk.Revit.DB.Toposolid;
+            if (picked is null)
+            {
+                return false;
+            }
+
+            topoSolid = picked;
         }
         catch (Exception)
         {
@@ -49,9 +55,9 @@ public class PointsUtils
         {
             foreach (Reference r in uidoc.Selection.PickObjects(ObjectType.Element, lineFilter, "Select lines(s) to add topo points along"))
             {
-                Curve curve = null;
-                ModelLine modelLine = doc.GetElement(r) as ModelLine;
-                ModelCurve modelCurve = doc.GetElement(r) as ModelCurve;
+                Curve? curve = null;
+                ModelLine? modelLine = doc.GetElement(r) as ModelLine;
+                ModelCurve? modelCurve = doc.GetElement(r) as ModelCurve;
                 if (modelLine is not null)
                 {
                     try
@@ -150,7 +156,7 @@ public class PointsUtils
     }
 
 #else
-    public static bool PointsAlongLines(UIDocument uidoc, Document doc, Autodesk.Revit.DB.Architecture.TopographySurface topoSurface, double divide, double offset = 0)
+    public static bool PointsAlongLines(UIDocument uidoc, Document doc, Autodesk.Revit.DB.Architecture.TopographySurface? topoSurface, double divide, double offset = 0)
     {
         //check the active view is a 3D view
         if (doc.ActiveView is View3D)
@@ -173,7 +179,13 @@ public class PointsUtils
         try
         {
             var refToposurface = uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
-            topoSurface = doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
+            var picked = doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
+            if (picked is null)
+            {
+                return false;
+            }
+
+            topoSurface = picked;
         }
         catch (Exception)
         {
@@ -186,9 +198,9 @@ public class PointsUtils
         {
             foreach (Reference r in uidoc.Selection.PickObjects(ObjectType.Element, lineFilter, "Select lines(s) to add topo points along"))
             {
-                Curve curve = null;
-                ModelLine modelLine = doc.GetElement(r) as ModelLine;
-                ModelCurve modelCurve = doc.GetElement(r) as ModelCurve;
+                Curve? curve = null;
+                ModelLine? modelLine = doc.GetElement(r) as ModelLine;
+                ModelCurve? modelCurve = doc.GetElement(r) as ModelCurve;
                 if (modelLine is not null)
                 {
                     try
@@ -293,12 +305,12 @@ public class PointsUtils
         var points = new List<XYZ>();
 
         // we have selected a family instance so try and get the geometry from it
-        PlanarFace face = null;
+        PlanarFace? face = null;
         var faces = new List<Face>();
 
         foreach (GeometryObject geometryObject in geometryElements)
         {
-            Solid solid = geometryObject as Solid;
+            Solid? solid = geometryObject as Solid;
             if (solid == null)
             {
                 return points;
@@ -374,6 +386,11 @@ public class PointsUtils
             //        }
             //    }
             //}
+        }
+
+        if (face is null)
+        {
+            return points;
         }
 
         // For Each lf As Face In m_LowestFaces
@@ -535,7 +552,7 @@ public class PointsUtils
         // bounding box of curves and topo for elevation
         var bb = new JtBoundingBoxXyz();
         bb = JtBoundingBoxXyz.GetBoundingBoxOf(polygons);
-        Autodesk.Revit.DB.View v = null;
+        Autodesk.Revit.DB.View? v = null;
         var min = new XYZ(bb.Min.X, bb.Min.Y, topoSolid.get_BoundingBox(v).Min.Z);
         var max = new XYZ(bb.Max.X, bb.Max.Y, topoSolid.get_BoundingBox(v).Max.Z);
 
@@ -649,7 +666,7 @@ public class PointsUtils
         // bounding box of curves and topo for elevation
         //var bb = new JtBoundingBoxXyz();
         var bb = JtBoundingBoxXyz.GetBoundingBoxOf(polygons);
-        Autodesk.Revit.DB.View v = null;
+        Autodesk.Revit.DB.View? v = null;
         var min = new XYZ(bb.Min.X, bb.Min.Y, topoSurface.get_BoundingBox(v).Min.Z);
         var max = new XYZ(bb.Max.X, bb.Max.Y, topoSurface.get_BoundingBox(v).Max.Z);
 
@@ -657,7 +674,7 @@ public class PointsUtils
         var outline = new Outline(min, max);
         var points = new List<XYZ>();
         var pts = new List<XYZ>();
-        pts = topoSurface.GetInteriorPoints() as List<XYZ>;
+        pts = new List<XYZ>(topoSurface.GetInteriorPoints());
         foreach (XYZ pt in pts)
         {
             if (outline.Contains(pt, 0.000000001d))

@@ -14,23 +14,23 @@ public class CommandPointsAtIntersection : IExternalCommand
 {
     private static readonly ILogger log = Log.ForContext<CommandPointsAtIntersection>();
 
-    private UIApplication _uiapp;
-    private UIDocument _uidoc;
-    private Autodesk.Revit.ApplicationServices.Application _app;
-    private Document _doc;
-    private Selection _sel;
+    private UIApplication _uiapp = null!;
+    private UIDocument _uidoc = null!;
+    private Autodesk.Revit.ApplicationServices.Application _app = null!;
+    private Document _doc = null!;
+    private Selection _sel = null!;
     //private decimal _offset;
     private decimal _divide;
     //private Element _element;
     //private Edge _edge;
-    private Face _face;
-    private View3D _v3d;
-    private Units _docUnits;
+    private Face? _face;
+    private View3D _v3d = null!;
+    private Units _docUnits = null!;
 
 #if REVIT2024_OR_GREATER
-    private Toposolid _topoSolid;
+    private Toposolid? _topoSolid;
 #else
-    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+    private Autodesk.Revit.DB.Architecture.TopographySurface? _topoSurface;
 #endif
 
 
@@ -38,11 +38,11 @@ public class CommandPointsAtIntersection : IExternalCommand
     private DisplayUnitType _docDisplayUnits; 
     //private DisplayUnitType _useDisplayUnits;
 #else
-    private ForgeTypeId _docDisplayUnits;
+    private ForgeTypeId _docDisplayUnits = null!;
     //private ForgeTypeId _useDisplayUnits;
 #endif
 
-    public Models.Settings cSettings;
+    public Models.Settings cSettings = null!;
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
@@ -136,6 +136,11 @@ public class CommandPointsAtIntersection : IExternalCommand
             topoTriangles = TriTriIntersect.TrianglesFromTopo(_topoSurface);
         }
 #endif
+
+        if (_face is null)
+        {
+            return false;
+        }
 
         List<g3.Triangle3d> faceTriangles = TriTriIntersect.TrianglesFromGeoObj(_face);
 

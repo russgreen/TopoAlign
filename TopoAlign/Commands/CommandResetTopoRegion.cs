@@ -18,10 +18,10 @@ public class CommandResetTopoRegion : IExternalCommand
 {
     private static readonly ILogger log = Serilog.Log.ForContext<CommandResetTopoRegion>();
 
-    private UIApplication _uiapp;
-    private UIDocument _uidoc;
-    private Autodesk.Revit.ApplicationServices.Application _app;
-    private Document _doc;
+    private UIApplication _uiapp = null!;
+    private UIDocument _uidoc = null!;
+    private Autodesk.Revit.ApplicationServices.Application _app = null!;
+    private Document _doc = null!;
     private string _sourcePhaseName = "Existing";
     private string _targetPhaseName = "New Construction";
 
@@ -58,8 +58,8 @@ public class CommandResetTopoRegion : IExternalCommand
 
         if (phasesView.ShowDialog() == true)
         {
-            _sourcePhaseName = phasesViewModel.SourcePhase;
-            _targetPhaseName = phasesViewModel.TargetPhase;
+            _sourcePhaseName = phasesViewModel.SourcePhase ?? string.Empty;
+            _targetPhaseName = phasesViewModel.TargetPhase ?? string.Empty;
 
             var sourcePhase = new FilteredElementCollector(_doc)
                 .OfClass(typeof(Phase))
@@ -149,6 +149,11 @@ public class CommandResetTopoRegion : IExternalCommand
 
                 if (resetView.ShowDialog() == true)
                 {
+                    if (resetViewModel.SelectedSource is null || resetViewModel.SelectedTarget is null)
+                    {
+                        return Result.Failed;
+                    }
+
                     // pick region
                     var pb = _uidoc.Selection.PickBox(PickBoxStyle.Enclosing, "Pick a rectatangle (lower left to upper right) within which the target topo points will be reset from the source topo");
 
@@ -185,8 +190,8 @@ public class CommandResetTopoRegion : IExternalCommand
 
 #if REVIT2024_OR_GREATER
                     // established the bounding box of the source and target topos to get min max Z values
-                    Toposolid topoSource = null;
-                    Toposolid topoTarget = null;
+                    Toposolid? topoSource = null;
+                    Toposolid? topoTarget = null;
                     foreach (Element topo in topoList)
                     {
                         if ((topo.Id.ToString() ?? "") == resetViewModel.SelectedSource.Id.ToString())
@@ -200,8 +205,8 @@ public class CommandResetTopoRegion : IExternalCommand
                     }
 #else
                     // established the bounding box of the source and target topos to get min max Z values
-                    TopographySurface topoSource = null;
-                    TopographySurface topoTarget = null;
+                    TopographySurface? topoSource = null;
+                    TopographySurface? topoTarget = null;
                     foreach (Element topo in topoList)
                     {
                         if ((topo.Id.ToString() ?? "") == resetViewModel.SelectedSource.Id.ToString())
@@ -215,7 +220,7 @@ public class CommandResetTopoRegion : IExternalCommand
                     }
 #endif
 
-                    if (topoSource is null | topoTarget is null)
+                    if (topoSource is null || topoTarget is null)
                     {
                         return Result.Failed;
                     }
@@ -348,7 +353,7 @@ public class CommandResetTopoRegion : IExternalCommand
                         // ptsExisting = TryCast(topoSource.FindPoints(m_Outline), List(Of XYZ))
 
                         var pts = new List<XYZ>();
-                        pts = topoSource.GetInteriorPoints() as List<XYZ>;
+                        pts = new List<XYZ>(topoSource.GetInteriorPoints());
                         foreach (XYZ pt in pts)
                         {
                             if (m_Outline.Contains(pt, 0.000000001d))
@@ -377,7 +382,7 @@ public class CommandResetTopoRegion : IExternalCommand
                         // ptsToDelete = TryCast(topoTarget.FindPoints(m_Outline), List(Of XYZ))
 
                         var pts = new List<XYZ>();
-                        pts = topoTarget.GetInteriorPoints() as List<XYZ>;
+                        pts = new List<XYZ>(topoTarget.GetInteriorPoints());
                         foreach (XYZ pt in pts)
                         {
                             if (outline.Contains(pt, 0.000000001d))

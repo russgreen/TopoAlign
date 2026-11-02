@@ -12,11 +12,11 @@ internal partial class ResetTopoViewModel : BaseViewModel
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(OkCommand))]
-    private Models.TopoItemModel _selectedSource;
+    private Models.TopoItemModel? _selectedSource;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(OkCommand))]
-    private Models.TopoItemModel _selectedTarget;
+    private Models.TopoItemModel? _selectedTarget;
 
     public ResetTopoViewModel(IEnumerable<Models.TopoItemModel> sourceTopos, IEnumerable<Models.TopoItemModel> targetTopos)
     {

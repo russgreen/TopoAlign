@@ -1,0 +1,133 @@
+<!-- docs/Commands/CommandCreateAlignment.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – Create Alignment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=Fragment+Mono&amp;display=swap">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="../index.html">
+      <span class="brand-wordmark">russ green</span>
+      <span class="brand-product">TopoAlign</span>
+    </a>
+    <nav class="side-nav" aria-label="Documentation">
+      <section>
+        <h2>Getting started</h2>
+        <ul>
+          <li><a href="../index.html#requirements">System requirements</a></li>
+          <li><a href="../index.html#installation">Installation</a></li>
+          <li><a href="../index.html#quick-start">Quick start</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>Commands</h2>
+        <ul>
+          <li><a href="./CommandAlignTopo.html">Align to Element</a></li>
+          <li><a href="./CommandAlignFloor.html">Align to Topo</a></li>
+          <li><a href="./CommandPointsOnSurface.html">Points from Lines</a></li>
+          <li><a href="./CommandPointsAlongContours.html">Points Along Contours</a></li>
+          <li><a href="./CommandPointsAtIntersection.html">Points At Intersection</a></li>
+          <li><a href="./CommandResetTopoRegion.html">Reset Topo Region</a></li>
+          <li><a href="./CommandCreateAlignment.html" aria-current="page">Create Alignment</a></li>
+          <li><a href="./CommandEditAlignment.html">Edit Alignment</a></li>
+          <li><a href="./CommandEditProfile.html">Edit Profile</a></li>
+          <li><a href="./CommandStationLabels.html">Station Labels</a></li>
+          <li><a href="./CommandSweepAlignment.html">Sweep Along Alignment</a></li>
+          <li><a href="./CommandSweepToToposolid.html">Sweep to Toposolid</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="../index.html#config">Configuration &amp; paths</a></li>
+          <li><a href="../index.html#logging">Logging</a></li>
+          <li><a href="../index.html#support">Support</a></li>
+          <li><a href="../index.html#whats-new">What's new</a></li>
+        </ul>
+      </section>
+    </nav>
+  </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Create Alignment</li>
+          </ol>
+        </nav>
+        <article>
+            <h1 id="overview">Create Alignment</h1>
+            <p>Creates a Revit native alignment from model/detail lines and arcs, from points picked in plan, or from curves on a CAD drawing. The command validates curve continuity, lets you control start station and direction, can optionally drape the profile on a toposolid, and can delete the source lines after creation.</p>
+
+            <h2 id="usage">Usage / Steps</h2>
+            <ol>
+                <li>Launch <strong>Create Alignment</strong> from the Topo Align ribbon panel.</li>
+                <li>Set alignment name, start station, and units.</li>
+                <li>Choose where the geometry comes from under <strong>Geometry from</strong>: lines/arcs, points or CAD.</li>
+                <li>Pick the geometry (see below), then optionally add transition spirals.</li>
+                <li>Optionally reverse direction and/or delete source lines.</li>
+                <li>Optionally tick <strong>Drape profile on toposolid</strong>, click <strong>Pick toposolid</strong>, set the sampling options and click <strong>Preview profile</strong> to check the result.</li>
+                <li>Click <strong>Create Alignment</strong>.</li>
+            </ol>
+
+            <script src="../assets/video-loader.js"></script>
+            <script>
+              const VIDEO_URL = 'https://russgreen.github.io/TopoAlign/assets/createalignment.mp4';
+            </script>
+            <div id="video-section" style="display: none;">
+              <h2>Demo Video</h2>
+              <video width="1000" controls preload="metadata" muted>
+                <source src="" type="video/mp4">
+                <!-- Add additional source formats if available -->
+                <!-- <source src="" type="video/webm"> -->
+                Your browser does not support the video tag.
+              </video>
+            </div>
+
+            <h2 id="options">Options / Parameters</h2>
+            <ul>
+                <li><strong>Alignment name</strong> — Name for the new alignment element.</li>
+                <li><strong>Start station</strong> — Displayed start station value (converted using selected units).</li>
+                <li><strong>Lines/arcs</strong> — Accepts model and detail curves (line/arc only), chained into one continuous run.</li>
+                <li><strong>Points</strong> — Pick the points of intersection (PIs) of the alignment in plan; press Esc when finished. The grid lists each point with a <strong>Radius</strong> and a <strong>Spiral</strong> length you can edit. A radius of 0 leaves a sharp corner, and the first and last points are the ends. <strong>Default radius</strong> is used for newly picked points.</li>
+                <li><strong>CAD</strong> — Pick lines, arcs or polylines on an imported or linked DWG/DXF. Splines and ellipses are not supported.</li>
+                <li><strong>Add transition spirals</strong> — Puts a clothoid spiral of the given length either side of every curve. The PIs and radii stay where they are, so the curve moves slightly inside the original lines. For picked lines/arcs, spirals are added to every arc that sits between two straights and is tangent to them. Any other arc (at the start or end of the chain, next to another arc, or too tight for the spiral length) is kept as drawn, and the summary after creating lists which ones were skipped.</li>
+                <li><strong>Reverse direction</strong> — Reverses stationing direction before creation.</li>
+                <li><strong>Delete source lines</strong> — Removes selected source curve elements after successful creation.</li>
+                <li><strong>Drape profile on toposolid</strong> — Builds the vertical profile from the ground instead of a flat profile. Works with a Toposolid (Revit 2024+) or a topography surface.</li>
+                <li><strong>Pick toposolid</strong> — Selects the ground to drape on. A toposolid you have already selected is used without asking.</li>
+                <li><strong>Sample interval</strong> — Distance between ground elevation samples along the alignment. The end of every line and arc is always sampled.</li>
+                <li><strong>Vertical tolerance</strong> — How far the profile may stray from the sampled ground. Larger values give fewer, simpler PVIs; smaller values follow the ground more closely.</li>
+                <li><strong>Elevation offset</strong> — Added to the ground elevation. Positive values lift the profile above the ground, negative values lower it.</li>
+                <li><strong>Min vertical curve length</strong> — Rounds each change of grade with a parabolic vertical curve at least this long (shortened where PVIs are close together). Leave at 0 for straight grades between PVIs.</li>
+                <li><strong>Preview profile</strong> — Reports the number of PVIs, the elevation range and the steepest grade before anything is created.</li>
+            </ul>
+
+            <h2 id="notes">Notes</h2>
+            <ul>
+                <li>Revit stores spirals as a series of very short straights (within about 1.5 mm of the true curve); the alignment length is the length of those straights.</li>
+                <li>The alignment is generated directly from the picked lines and arcs; no existing alignment is needed. Without draping, the profile is flat at the elevation of the first curve.</li>
+                <li>The start and end of the alignment must be over the toposolid. If other stations fall off it, the profile is bridged across the gap and the preview says how many were affected.</li>
+                <li>Stations are measured along the plan length of the lines and arcs, so a sloping line is measured by its horizontal length.</li>
+            </ul>
+      </article>
+        <nav class="pager" aria-label="Previous and next page">
+          <a class="pager-prev" href="./CommandResetTopoRegion.html">&larr; Reset Topo Region</a>
+          <a class="pager-next" href="./CommandEditAlignment.html">Edit Alignment &rarr;</a>
+        </nav>
+    </div>
+  </main>
+
+<footer><div class="wrap">TopoAlign • Documentation</div></footer>
+</body>
+</html>

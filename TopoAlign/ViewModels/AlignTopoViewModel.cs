@@ -42,24 +42,24 @@ internal partial class AlignTopoViewModel : BaseViewModel
     private List<Models.DisplayUnitModel> _displayUnits = new();
 
     [ObservableProperty]
-    private Models.DisplayUnitModel _selectedDisplayUnit;
+    private Models.DisplayUnitModel _selectedDisplayUnit = null!;
 
 
 #if REVIT2018 || REVIT2019 || REVIT2020
     private DisplayUnitType _docDisplayUnits; 
 #else
-    private ForgeTypeId _docDisplayUnits;
+    private ForgeTypeId _docDisplayUnits = null!;
 #endif
 
     Models.Settings _settings = new();
 
-    private Element _element;
+    private Element? _element;
     //private Edge _edge;
 
 #if REVIT2024_OR_GREATER
-    private Toposolid _topoSolid;
+    private Toposolid? _topoSolid;
 #else
-    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+    private Autodesk.Revit.DB.Architecture.TopographySurface? _topoSurface;
 #endif
 
     //private Units _docUnits;
@@ -69,7 +69,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
     {
         var informationVersion = Assembly.GetExecutingAssembly()
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            .InformationalVersion;
+            ?.InformationalVersion;
 
         WindowTitle = $"TopoAlign {informationVersion}";
 
@@ -148,7 +148,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
         }
 #endif
 
-        SelectedDisplayUnit = DisplayUnits.Where(x => x.DisplayUnit == _docDisplayUnits).FirstOrDefault();
+        SelectedDisplayUnit = DisplayUnits.Where(x => x.DisplayUnit == _docDisplayUnits).FirstOrDefault() ?? DisplayUnits.First();
     }
 
     private void AlignTopoSurface()
@@ -308,7 +308,8 @@ internal partial class AlignTopoViewModel : BaseViewModel
                 foreach (Reference r in App.CachedUiApp.ActiveUIDocument.Selection.PickObjects(ObjectType.Edge, "Select edge(s) to align to"))
                 {
                     var element = App.RevitDocument.GetElement(r.ElementId);
-                    Edge selectedEdge = element.GetGeometryObjectFromReference(r) as Edge;
+                    var selectedEdge = element.GetGeometryObjectFromReference(r) as Edge
+                                       ?? throw new InvalidOperationException("The reference is not an edge.");
                     var m_Curve = selectedEdge.AsCurve();
                     if (element is FamilyInstance fi)
                     {
@@ -357,7 +358,8 @@ internal partial class AlignTopoViewModel : BaseViewModel
                 foreach (Reference r in App.CachedUiApp.ActiveUIDocument.Selection.PickObjects(ObjectType.Edge, "Select edge(s) to align to"))
                 {
                     var element = App.RevitDocument.GetElement(r.ElementId);
-                    Edge selectedEdge = element.GetGeometryObjectFromReference(r) as Edge;
+                    var selectedEdge = element.GetGeometryObjectFromReference(r) as Edge
+                                       ?? throw new InvalidOperationException("The reference is not an edge.");
                     var m_Curve = selectedEdge.AsCurve();
                     if (element is FamilyInstance fi)
                     {
@@ -388,7 +390,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
         var m_GeometryElement = element.get_Geometry(opt);
         foreach (GeometryObject m_GeometryObject in m_GeometryElement)
         {
-            Solid m_Solid = m_GeometryObject as Solid;
+            Solid? m_Solid = m_GeometryObject as Solid;
             var m_Faces = new List<Face>();
             if (m_Solid == null)
             {
@@ -461,16 +463,21 @@ internal partial class AlignTopoViewModel : BaseViewModel
         var points = new List<XYZ>();
 
         // we have selected a family instance so try and get the geometry from it
-        PlanarFace face = null;
+        PlanarFace? face = null;
         var faces = new List<Face>();
 
         foreach (GeometryObject geometryObject in geometryElements)
         {
-            GeometryInstance geometryInstance = geometryObject as GeometryInstance;
+            var geometryInstance = geometryObject as GeometryInstance;
+            if (geometryInstance is null)
+            {
+                continue;
+            }
+
             var geometryInstanceElement = geometryInstance.GetInstanceGeometry();
             foreach (GeometryObject geometryInstanceObject in geometryInstanceElement)
             {
-                Solid solid = geometryInstanceObject as Solid;
+                Solid? solid = geometryInstanceObject as Solid;
                 if (solid == null)
                 {
                     return points;
@@ -573,7 +580,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
         var uvLoops = GetUvLoops(polygons);
 
         // Get topo points withing bounding box of element
-        Autodesk.Revit.DB.View v = null;
+        Autodesk.Revit.DB.View? v = null;
         var bb = element.get_BoundingBox(v);
 
         XYZ min = new();
@@ -610,7 +617,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
 #else
         if (_topoSurface != null)
         {
-            topoPoints = _topoSurface.GetInteriorPoints() as List<XYZ>;
+            topoPoints = new List<XYZ>(_topoSurface.GetInteriorPoints());
         }
 #endif
 
@@ -789,12 +796,17 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
         foreach (GeometryObject geometryObject in geometryElement)
         {
-            Solid solid = geometryObject as Solid;
+            Solid? solid = geometryObject as Solid;
             var faces = new List<Face>();
             if (solid == null)
             {
                 //check if we can get SymbolGeometry from GeometryObject
                 var geometryInstance = geometryObject as GeometryInstance;
+                if (geometryInstance is null)
+                {
+                    continue;
+                }
+
                 var geometryInstanceElement = geometryInstance.GetInstanceGeometry();
 
                 foreach (GeometryObject geometryInstanceObject in geometryInstanceElement)
