@@ -18,7 +18,8 @@ partial class Build
 
         foreach (var configuration in GlobBuildConfigurations())
         {
-            if (!configuration.StartsWith("Release"))
+            // the solution also has a plain "Release" build type that the project has no output for
+            if (!configuration.StartsWith("Release "))
             {
                 continue;
             }
