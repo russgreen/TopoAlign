@@ -21,12 +21,12 @@
   <main>
     <div class="wrap">
       <article>
-        <p>TopoAlign provides a set of Revit add-in commands to align and manage topographic surfaces and slabs. Typical outcomes include adding sampled points to topography from curves or intersections, aligning floor slab shapes to the underlying terrain, and resetting regions of topography based on source/target selections.</p>
+        <p>TopoAlign provides a set of Revit add-in commands to align and manage topographic surfaces and slabs, and to create and edit native Revit alignments. Typical outcomes include adding sampled points to topography from curves or intersections, aligning floor slab shapes to the underlying terrain, resetting regions of topography based on source/target selections, and creating alignments with a profile draped on the ground, labelling them and sweeping a road or path along them.</p>
 
         <h2 id="requirements">System Requirements</h2>
         <ul>
-          <li>Autodesk Revit: 2022, 2023, 2024, 2025, or 2026</li>
-          <li>.NET Framework 4.8 for Revit 2022–2024; .NET 8.0 (Windows) for Revit 2025–2026</li>
+          <li>Autodesk Revit: 2022, 2023, 2024, 2025, 2026 or 2027</li>
+          <li>.NET Framework 4.8 for Revit 2022–2024; .NET 10 (Windows) for Revit 2025–2027</li>
           <li>Permissions to install Revit add-ins under your user profile</li>
         </ul>
 
@@ -57,57 +57,57 @@
         <h2 id="commands">Commands</h2>
         <div class="cards">
           <div class="card">
-            <img src="./assets/AlignTopo.png" alt="Align to Element" class="card-icon">
+            <img src="./assets/TopoAlign32.png" alt="Align to Element" class="card-icon">
             <h3><a href="./Commands/CommandAlignTopo.html">Align to Element</a></h3>
             <p class="muted">Dialog-driven alignment of topography to selected elements. Provides a guided workflow.</p>
           </div>
           <div class="card">
-            <img src="./assets/AlignFloor.png" alt="Align to Topo" class="card-icon">
+            <img src="./assets/FloorToTopo32.png" alt="Align to Topo" class="card-icon">
             <h3><a href="./Commands/CommandAlignFloor.html">Align to Topo</a></h3>
             <p class="muted">Shapes a floor slab to match the terrain within its outline, with optional vertical offset.</p>
           </div>
           <div class="card">
-              <img src="./assets/PointsOnSurface.png" alt="Points from Lines" class="card-icon">
+              <img src="./assets/PointsFromLines32.png" alt="Points from Lines" class="card-icon">
               <h3><a href="./Commands/CommandPointsOnSurface.html">Points from Lines</a></h3>
               <p class="muted">Samples points on the topographic surface beneath selected curves and places them on the topo.</p>
           </div>
           <div class="card">
-            <img src="./assets/PointsAlongContours.png" alt="Points Along Contours" class="card-icon">
+            <img src="./assets/PointsFromContours32.png" alt="Points Along Contours" class="card-icon">
             <h3><a href="./Commands/CommandPointsAlongContours.html">Points Along Contours</a></h3>
             <p class="muted">Adds points to topography at a fixed interval along selected model lines/curves.</p>
           </div>
           <div class="card">
-            <img src="./assets/PointsAtIntersection.png" alt="Points At Intersection" class="card-icon">
+            <img src="./assets/TopoAlignPlane32.png" alt="Points At Intersection" class="card-icon">
             <h3><a href="./Commands/CommandPointsAtIntersection.html">Points At Intersection</a></h3>
             <p class="muted">Computes and adds points where a selected face intersects the topography.</p>
           </div>
           <div class="card">
-            <img src="./assets/ResetTopoRegion.png" alt="Reset Topo Region" class="card-icon">
+            <img src="./assets/Reset32.png" alt="Reset Topo Region" class="card-icon">
             <h3><a href="./Commands/CommandResetTopoRegion.html">Reset Topo Region</a></h3>
             <p class="muted">Replaces points in a rectangular region of a target topo with points from a source topo.</p>
           </div>
                   <div class="card">
-            <img src="./assets/PointsOnSurface.png" alt="Create Alignment" class="card-icon">
+            <img src="./assets/AlignmentFromCurve32.png" alt="Create Alignment" class="card-icon">
             <h3><a href="./Commands/CommandCreateAlignment.html">Create Alignment</a></h3>
             <p class="muted">Creates native Revit alignments from lines and arcs, picked points or CAD curves, with optional spirals and a draped profile.</p>
           </div>
           <div class="card">
-            <img src="./assets/PointsOnSurface.png" alt="Edit Alignment" class="card-icon">
+            <img src="./assets/EditAlignment32.png" alt="Edit Alignment" class="card-icon">
             <h3><a href="./Commands/CommandEditAlignment.html">Edit Alignment</a></h3>
             <p class="muted">Renames an alignment, changes its start station or reverses its direction.</p>
           </div>
           <div class="card">
-            <img src="./assets/PointsOnSurface.png" alt="Edit Profile" class="card-icon">
+            <img src="./assets/EditProfile32.png" alt="Edit Profile" class="card-icon">
             <h3><a href="./Commands/CommandEditProfile.html">Edit Profile</a></h3>
             <p class="muted">Adds stations to an alignment's profile and sets the elevation of each.</p>
           </div>
           <div class="card">
-            <img src="./assets/PointsOnSurface.png" alt="Station Labels" class="card-icon">
+            <img src="./assets/StationLabels32.png" alt="Station Labels" class="card-icon">
             <h3><a href="./Commands/CommandStationLabels.html">Station Labels</a></h3>
             <p class="muted">Places a set of station labels along an alignment in the active view.</p>
           </div>
           <div class="card">
-            <img src="./assets/PointsOnSurface.png" alt="Sweep Along Alignment" class="card-icon">
+            <img src="./assets/SweepAlongAlignment32.png" alt="Sweep Along Alignment" class="card-icon">
             <h3><a href="./Commands/CommandSweepAlignment.html">Sweep Along Alignment</a></h3>
             <p class="muted">Sweeps a profile family along an alignment, following its plan and profile, to make a road or path.</p>
           </div>
@@ -117,7 +117,7 @@
         <ul>
           <li>Add-in manifest: <code>%AppData%\Autodesk\Revit\Addins\&lt;RevitYear&gt;\TopoAlign.addin</code></li>
           <li>Installed binaries: same folder as manifest unless configured otherwise.</li>
-          <li>Settings: stored per-user (Placeholder) and persisted between runs for unit/offset/divide inputs.</li>
+          <li>Settings: stored per-user in the registry under <code>HKEY_CURRENT_USER\SOFTWARE\RGTools\TopoAlign</code> and persisted between runs. This covers the divide, offset and alignment inputs, plus the choices made in Sweep Along Alignment (section family, category, geometry and output).</li>
         </ul>
 
         <h2 id="logging">Logging</h2>
@@ -135,7 +135,7 @@
           <li>Updates for Revit2026 compatibility.</li>
           <li>Create Alignment: point (PI) and CAD input, transition spirals, and draping the profile on a toposolid.</li>
           <li>New Edit Alignment and Station Labels commands.</li>
-          <li>New Sweep Along Alignment command to make roads and paths from a profile family.</li>
+          <li>New Sweep Along Alignment command to make roads and paths from a profile family, with a choice of segmented loft or smooth surfaces, and of a direct shape or a family as the result.</li>
           <li>New Edit Profile command to add stations to an alignment's profile and set their elevations.</li>
         </ul>
       </article>

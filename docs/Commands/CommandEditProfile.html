@@ -31,23 +31,23 @@
             <ol>
                 <li>Select an alignment in the model first, or launch <strong>Edit Profile</strong> and click <strong>Pick alignment</strong>. The grid lists the stations of its profile.</li>
                 <li>To add a station, enter its station in <strong>New station</strong> (and a <strong>Curve length</strong> if you want it rounded) and click <strong>Add station</strong>. Its elevation starts on the existing profile, so adding it changes nothing until you edit the elevation.</li>
-                <li>Type new values in the <strong>Elevation</strong>, <strong>Station</strong> or <strong>Curve length</strong> cells. Select a station and click <strong>Remove station</strong> to delete it, or <strong>Reset</strong> to go back to the profile you started with.</li>
+                <li>Type new values in the <strong>Elevation</strong>, <strong>Station</strong> or <strong>Curve length</strong> cells. Select a station between the first and the last and click <strong>Remove station</strong> to delete it, or <strong>Reset</strong> to go back to the profile you started with.</li>
                 <li>Click <strong>Apply</strong>.</li>
             </ol>
 
             <h2 id="options">Options / Parameters</h2>
             <ul>
                 <li><strong>Units</strong> — The units used to show and enter stations, elevations and curve lengths.</li>
-                <li><strong>Station</strong> — The station of the point of vertical intersection (PVI), including the alignment's start station. The first and last stations stay at the ends of the alignment.</li>
+                <li><strong>Station</strong> — The station of the point of vertical intersection (PVI), including the alignment's start station. The first and last stations stay at the ends of the alignment, so their station and curve length can't be edited.</li>
                 <li><strong>Elevation</strong> — The project elevation of the PVI. The first and last elevations can be changed too.</li>
-                <li><strong>Curve length</strong> — The length of the parabolic vertical curve rounding the PVI. 0 leaves a sharp change of grade.</li>
+                <li><strong>Curve length</strong> — The length of the parabolic vertical curve rounding the PVI. 0 leaves a sharp change of grade. The value in the box next to <strong>New station</strong> is the curve length given to each station you add; it is remembered between runs.</li>
                 <li><strong>Curve used</strong> — The curve length that is actually written. A curve may use at most half of the straight on each side of it, so it is cut back when stations are close together, and it is blank where the grade does not change.</li>
                 <li><strong>Grade to next</strong> — The grade of the straight between this station and the next.</li>
             </ul>
 
             <h2 id="notes">Notes</h2>
             <ul>
-                <li>Requires Autodesk Civil Alignments support in the installed Revit version.</li>
+                <li>The status line under the grid shows the number of stations, the elevation range and the steepest grade of the profile as you edit it.</li>
                 <li>Apply is only available once something has changed and the stations are valid: in order, at least two, and no negative curve lengths. The status line says what to fix.</li>
                 <li>Only the profile changes. The plan geometry, length, name and start station stay as they were, and so do station labels.</li>
                 <li>Existing vertical curves keep their length. If a curve is not symmetrical about its PVI it is rebuilt symmetrical.</li>
