@@ -14,11 +14,11 @@ partial class Build
         var bundleDirectory = RootDirectory / "Bundle" / "RG tools Topo Align.bundle";
         var bundleContentsDirectory = bundleDirectory / "Contents";
         var bundlePackageContents = bundleDirectory / "PackageContents.xml";
-        var topoAlignProjectFile = Path.Combine(RootDirectory, "TopoAlign", "TopoAlign.csproj");
 
         foreach (var configuration in GlobBuildConfigurations())
         {
-            if (!configuration.StartsWith("Release"))
+            // the solution also has a plain "Release" build type that the project has no output for
+            if (!configuration.StartsWith("Release "))
             {
                 continue;
             }
@@ -68,7 +68,7 @@ partial class Build
             var packageContents = new _build.ApplicationPackage();
             packageContents.LoadFromXml(bundlePackageContents);
 
-            var version = GetProjectVersion(topoAlignProjectFile);
+            var version = GetProjectVersion(Path.Combine(RootDirectory, @"TopoAlign\TopoAlign.csproj"));
 
             packageContents.AppVersion = version;
             packageContents.FriendlyVersion = version;
@@ -88,5 +88,6 @@ partial class Build
             File.Delete(bundleZip);
         }
         System.IO.Compression.ZipFile.CreateFromDirectory(bundleDirectory, bundleZip);
+        Log.Information("Created bundle zip: {bundleZip}", bundleZip);
     });
 }

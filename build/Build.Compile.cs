@@ -15,7 +15,7 @@ partial class Build
         {
             Log.Information("Configuration name: {configuration}", configuration);
 
-            if (configuration.StartsWith("Release"))
+            if (configuration.StartsWith("Release "))
             {
                 DotNetBuild(settings => settings
                     .SetProjectFile(Solution)
