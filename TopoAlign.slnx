@@ -77,7 +77,7 @@
     <Build Solution="Release R26|*" Project="false" />
     <Build Solution="Release R27|*" Project="false" />
   </Project>
-  <Project Path="installer/TopoAlign.Setup.wixproj">
+  <Project Path="installer/TopoAlign.Setup.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
     <Platform Solution="Debug R21|ARM64" Project="Any CPU" />
     <Platform Solution="Debug R21|x64" Project="Any CPU" />
     <Platform Solution="Debug R21|x86" Project="Any CPU" />
@@ -122,10 +122,19 @@
     <Platform Solution="Release R27|x64" Project="Any CPU" />
     <Platform Solution="Release R27|x86" Project="Any CPU" />
     <Platform Solution="Release|Any CPU" Project="x64" />
-    <Build Solution="*|ARM64" />
-    <Build Solution="*|x64" />
-    <Build Solution="*|x86" />
-    <Build Solution="Debug|Any CPU" />
-    <Build Solution="Release|Any CPU" />
+    <Build Solution="Debug R21|Any CPU" Project="false" />
+    <Build Solution="Debug R22|Any CPU" Project="false" />
+    <Build Solution="Debug R23|Any CPU" Project="false" />
+    <Build Solution="Debug R24|Any CPU" Project="false" />
+    <Build Solution="Debug R25|Any CPU" Project="false" />
+    <Build Solution="Debug R26|Any CPU" Project="false" />
+    <Build Solution="Debug R27|Any CPU" Project="false" />
+    <Build Solution="Release R21|Any CPU" Project="false" />
+    <Build Solution="Release R22|Any CPU" Project="false" />
+    <Build Solution="Release R23|Any CPU" Project="false" />
+    <Build Solution="Release R24|Any CPU" Project="false" />
+    <Build Solution="Release R25|Any CPU" Project="false" />
+    <Build Solution="Release R26|Any CPU" Project="false" />
+    <Build Solution="Release R27|Any CPU" Project="false" />
   </Project>
 </Solution>
