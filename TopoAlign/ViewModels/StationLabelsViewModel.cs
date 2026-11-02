@@ -76,7 +76,7 @@ internal partial class StationLabelsViewModel : BaseViewModel
     private List<StationLabelTypeItem> _labelTypes = new();
 
     [ObservableProperty]
-    private StationLabelTypeItem _selectedLabelType;
+    private StationLabelTypeItem? _selectedLabelType;
 
     [ObservableProperty]
     private string _intervalText = string.Empty;
@@ -97,21 +97,21 @@ internal partial class StationLabelsViewModel : BaseViewModel
     private List<Models.DisplayUnitModel> _displayUnits = new();
 
     [ObservableProperty]
-    private Models.DisplayUnitModel _selectedDisplayUnit;
+    private Models.DisplayUnitModel _selectedDisplayUnit = null!;
 
     public string WindowTitle { get; }
 
     /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler HideRequested;
+    public event EventHandler? HideRequested;
 
     /// <summary>True when the dialog was hidden to pick an alignment; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
 
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
-    public StationLabelsRequest Request { get; private set; }
+    public StationLabelsRequest? Request { get; private set; }
 
     private readonly View _view;
-    private Element _alignment;
+    private Element? _alignment;
     private string _alignmentName = string.Empty;
 
     public StationLabelsViewModel()
@@ -132,7 +132,7 @@ internal partial class StationLabelsViewModel : BaseViewModel
             });
         }
 
-        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == documentUnits) ?? DisplayUnits.FirstOrDefault();
+        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == documentUnits) ?? DisplayUnits.First();
 
         _view = App.RevitDocument.ActiveView;
         ViewStatus = DescribeView(_view);
@@ -199,7 +199,7 @@ internal partial class StationLabelsViewModel : BaseViewModel
         SelectedLabelType = items.FirstOrDefault();
     }
 
-    partial void OnSelectedLabelTypeChanged(StationLabelTypeItem value) => CreateCommand.NotifyCanExecuteChanged();
+    partial void OnSelectedLabelTypeChanged(StationLabelTypeItem? value) => CreateCommand.NotifyCanExecuteChanged();
 
     // ---- choosing the alignment ---------------------------------------------------------------------------------
 
@@ -292,6 +292,11 @@ internal partial class StationLabelsViewModel : BaseViewModel
     private void Create()
     {
         InputMessage = string.Empty;
+
+        if (_alignment is null || SelectedLabelType is null)
+        {
+            return;
+        }
 
         if (!TryParse(IntervalText, "interval", true, out var interval) ||
             !TryParse(OffsetText, "offset", false, out var offset) ||

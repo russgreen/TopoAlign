@@ -33,7 +33,7 @@ public class CommandAlignmentTool : IExternalCommand
             return Result.Cancelled;
         }
 
-        Element element = uidoc.Selection.GetElementIds()
+        Element? element = uidoc.Selection.GetElementIds()
             .Select(id => doc.GetElement(id))
             .FirstOrDefault(AlignmentApi.IsValid);
 
@@ -84,7 +84,7 @@ public class CommandAlignmentTool : IExternalCommand
         var info = AlignmentApi.GetInfo(element);
         var json = AlignmentApi.GetJson(element);
 
-        string jsonPath = null;
+        string? jsonPath = null;
         if (!string.IsNullOrEmpty(json))
         {
             jsonPath = Path.Combine(Path.GetTempPath(), $"TopoAlign_Alignment_{element.Id}.json");

@@ -47,7 +47,7 @@ internal static class SectionProfileReader
     /// road and Y runs up, from the family's origin.
     /// </summary>
     /// <param name="error">Why the shape couldn't be read, ready to show to the user, or null on success.</param>
-    public static SectionProfile Read(Document document, ElementId symbolId, out string error)
+    public static SectionProfile? Read(Document document, ElementId symbolId, out string? error)
     {
         error = null;
 
@@ -64,7 +64,7 @@ internal static class SectionProfileReader
             return null;
         }
 
-        Document familyDocument = null;
+        Document? familyDocument = null;
         try
         {
             familyDocument = document.EditFamily(family);
@@ -105,7 +105,7 @@ internal static class SectionProfileReader
     }
 
     /// <summary>Chains lines and arcs into a closed section. Z is ignored: the profile is read as drawn in plan.</summary>
-    internal static SectionProfile FromCurves(IReadOnlyList<Curve> curves, string name, out string error)
+    internal static SectionProfile? FromCurves(IReadOnlyList<Curve> curves, string name, out string? error)
     {
         error = null;
 

@@ -12,7 +12,7 @@ internal static class CurveChainer
 
         public double TotalLength { get; set; }
 
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
 
         public bool IsContinuous => Curves.Count > 0 && string.IsNullOrEmpty(ErrorMessage);
     }

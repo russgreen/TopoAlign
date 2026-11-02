@@ -19,16 +19,16 @@ internal static class RoadFamilyBuilder
         .ToArray();
 
     /// <summary>The family name for an alignment's road. The id on the end keeps two alignments with the same name apart and survives renaming.</summary>
-    public static string FamilyName(Element alignment, string alignmentName)
+    public static string FamilyName(Element alignment, string? alignmentName)
     {
-        var cleaned = new string((string.IsNullOrWhiteSpace(alignmentName) ? "Alignment" : alignmentName.Trim())
+        var cleaned = new string((alignmentName is null || string.IsNullOrWhiteSpace(alignmentName) ? "Alignment" : alignmentName.Trim())
             .Select(c => InvalidNameCharacters.Contains(c) ? '_' : c)
             .ToArray());
         return $"{NamePrefix}{cleaned} ({IdOf(alignment)})";
     }
 
     /// <summary>The road families this add-in has made for an alignment.</summary>
-    public static List<Family> FindFamilies(Document document, Element alignment, string alignmentName)
+    public static List<Family> FindFamilies(Document document, Element alignment, string? alignmentName)
     {
         var suffix = $" ({IdOf(alignment)})";
         return new FilteredElementCollector(document)
@@ -204,7 +204,7 @@ internal static class RoadFamilyBuilder
     }
 
     /// <summary>Removes the family file and the temporary folder made for it. Never throws.</summary>
-    public static void DeleteFile(string file)
+    public static void DeleteFile(string? file)
     {
         if (string.IsNullOrEmpty(file))
         {
@@ -231,10 +231,10 @@ internal static class RoadFamilyBuilder
     }
 
     /// <summary>A template to use instead of looking in the family template folder. For tests on machines without the template installed.</summary>
-    internal static string TemplateOverride { get; set; }
+    internal static string? TemplateOverride { get; set; }
 
     /// <summary>The Generic Model template installed with this Revit, or null if there isn't one.</summary>
-    internal static string FindTemplate(Autodesk.Revit.ApplicationServices.Application application)
+    internal static string? FindTemplate(Autodesk.Revit.ApplicationServices.Application application)
     {
         if (!string.IsNullOrEmpty(TemplateOverride) && File.Exists(TemplateOverride))
         {
@@ -290,7 +290,7 @@ internal static class RoadFamilyBuilder
     /// The plain Generic Model template in a folder. Metric installs call it "Metric Generic Model.rft"
     /// and imperial ones "Generic Model.rft"; the face, wall, line-based and similar variants are not wanted.
     /// </summary>
-    internal static string FindTemplateIn(string folder)
+    internal static string? FindTemplateIn(string folder)
     {
         var templates = Directory.EnumerateFiles(folder, "*Generic Model*.rft", SearchOption.AllDirectories).ToList();
         return templates.FirstOrDefault(t => IsPlainName(t, "Metric Generic Model"))

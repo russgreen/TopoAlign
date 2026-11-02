@@ -10,11 +10,11 @@ internal partial class ProjectPhasesViewModel : BaseViewModel
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(OkCommand))]
-    private string _sourcePhase;
+    private string? _sourcePhase;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(OkCommand))]
-    private string _targetPhase;
+    private string? _targetPhase;
 
     public ProjectPhasesViewModel(IEnumerable<string> phaseNames)
     {

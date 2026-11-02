@@ -270,7 +270,7 @@ internal static class PiGeometry
     /// so transition spirals can be added with <see cref="Create"/>. Returns null, with a reason, when the chain is not that shape
     /// (it starts or ends with an arc, has two arcs in a row, or an arc is not tangent to its neighbours).
     /// </summary>
-    public static List<PiPoint> FromSegments(IReadOnlyList<PlanSegment> segments, double spiralLength, out string reason)
+    public static List<PiPoint>? FromSegments(IReadOnlyList<PlanSegment> segments, double spiralLength, out string? reason)
     {
         reason = null;
         if (segments is null || segments.Count == 0)

@@ -58,7 +58,7 @@ internal static class ProfileLayout
         return Create(pvis, curveLengths, 0.0);
     }
 
-    private static List<object> Create(IReadOnlyList<ProfilePoint> pvis, IReadOnlyList<double> curveLengths, double minVerticalCurveLength)
+    private static List<object> Create(IReadOnlyList<ProfilePoint> pvis, IReadOnlyList<double>? curveLengths, double minVerticalCurveLength)
     {
         if (pvis is null || pvis.Count < 2)
         {

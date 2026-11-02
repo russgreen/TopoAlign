@@ -55,7 +55,7 @@ internal static class AlignmentJsonBuilder
     /// length; or null for a flat profile at the elevation of the first curve.
     /// </param>
     /// <param name="minVerticalCurveLength">Minimum parabolic vertical curve length in feet at each PVI; 0 for a polyline profile.</param>
-    public static string Build(string name, IReadOnlyList<Curve> orderedCurves, Transform internalToShared, double startStation, IReadOnlyList<ProfilePoint> profilePvis, double minVerticalCurveLength, out double planLength)
+    public static string Build(string name, IReadOnlyList<Curve> orderedCurves, Transform internalToShared, double startStation, IReadOnlyList<ProfilePoint>? profilePvis, double minVerticalCurveLength, out double planLength)
     {
         if (orderedCurves is null || orderedCurves.Count == 0)
         {
@@ -105,7 +105,7 @@ internal static class AlignmentJsonBuilder
     /// </summary>
     /// <param name="flatElevation">Internal elevation of the flat profile used when <paramref name="profilePvis"/> is null.</param>
     public static string BuildFromSegments(string name, IReadOnlyList<PlanSegment> segments, Transform internalToShared, double startStation, double flatElevation,
-        IReadOnlyList<ProfilePoint> profilePvis, double minVerticalCurveLength, double spiralDeviation, out double planLength)
+        IReadOnlyList<ProfilePoint>? profilePvis, double minVerticalCurveLength, double spiralDeviation, out double planLength)
     {
         if (segments is null || segments.Count == 0)
         {
@@ -182,7 +182,7 @@ internal static class AlignmentJsonBuilder
         return arc.Length;
     }
 
-    private static JsonArray CreateProfile(IReadOnlyList<ProfilePoint> profilePvis, double minVerticalCurveLength, Transform internalToShared, double length, Func<double> flatElevation)
+    private static JsonArray CreateProfile(IReadOnlyList<ProfilePoint>? profilePvis, double minVerticalCurveLength, Transform internalToShared, double length, Func<double> flatElevation)
     {
         if (profilePvis is null)
         {
@@ -312,7 +312,7 @@ internal static class AlignmentJsonBuilder
         };
     }
 
-    private static JsonObject CreateLine(Line line, Transform internalToShared)
+    private static JsonObject? CreateLine(Line line, Transform internalToShared)
     {
         var start = internalToShared.OfPoint(line.GetEndPoint(0));
         var end = internalToShared.OfPoint(line.GetEndPoint(1));
@@ -327,7 +327,7 @@ internal static class AlignmentJsonBuilder
 
     private static JsonObject CreateLineNode(double x, double y, double dx, double dy) => ProfileJson.CreateLineNode(x, y, dx, dy);
 
-    private static JsonObject CreateCircle(Arc arc, Transform internalToShared)
+    private static JsonObject? CreateCircle(Arc arc, Transform internalToShared)
     {
         var (center, radius, sweep, clockwise) = GetArcParameters(arc, internalToShared);
 

@@ -15,7 +15,7 @@ internal partial class DivideLinesViewModel : BaseViewModel
     private List<Models.DisplayUnitModel> _displayUnits = new();
 
     [ObservableProperty]
-    private Models.DisplayUnitModel _selectedDisplayUnit;
+    private Models.DisplayUnitModel _selectedDisplayUnit = null!;
 
     public string WindowTitle { get; } = "Divide Lines";
 
@@ -66,7 +66,7 @@ internal partial class DivideLinesViewModel : BaseViewModel
             });
         }
 
-        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == docDisplayUnits);
+        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == docDisplayUnits) ?? DisplayUnits.First();
     }
 #else
     private void PopulateDisplayUnitList(ForgeTypeId docDisplayUnits)
@@ -80,7 +80,7 @@ internal partial class DivideLinesViewModel : BaseViewModel
             });
         }
 
-        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == docDisplayUnits);
+        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == docDisplayUnits) ?? DisplayUnits.First();
     }
 #endif
 

@@ -26,7 +26,7 @@ internal static class CadCurveReader
     /// one that lies on the point the user clicked is used.
     /// </summary>
     /// <param name="error">Why nothing could be read (unsupported curve type, not CAD), or null on success.</param>
-    public static List<Curve> Read(Document document, IEnumerable<Reference> references, out string error)
+    public static List<Curve> Read(Document document, IEnumerable<Reference> references, out string? error)
     {
         error = null;
         var curves = new List<Curve>();
@@ -56,7 +56,7 @@ internal static class CadCurveReader
     }
 
     /// <summary>Line, Arc and PolyLine become curves; anything else reports its type in <paramref name="unsupported"/>.</summary>
-    internal static List<Curve> ToCurves(GeometryObject geometry, out string unsupported)
+    internal static List<Curve> ToCurves(GeometryObject geometry, out string? unsupported)
     {
         unsupported = null;
         var curves = new List<Curve>();

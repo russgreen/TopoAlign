@@ -19,22 +19,22 @@ public class CommndAlignFloor : IExternalCommand
 {
     private static readonly ILogger log = Log.ForContext<CommndAlignFloor>();
 
-    private UIApplication _uiapp;
-    private UIDocument _uidoc;
-    private Autodesk.Revit.ApplicationServices.Application _app; 
-    private Document _doc;
-    private Selection _sel;
+    private UIApplication _uiapp = null!;
+    private UIDocument _uidoc = null!;
+    private Autodesk.Revit.ApplicationServices.Application _app = null!; 
+    private Document _doc = null!;
+    private Selection _sel = null!;
     private decimal _offset;
-    private Floor _floor;
+    private Floor _floor = null!;
 
 
 #if REVIT2024_OR_GREATER
-    private Toposolid _topoSolid;
+    private Toposolid _topoSolid = null!;
 #else
-    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface = null!;
 #endif
 
-    public Models.Settings cSettings;
+    public Models.Settings cSettings = null!;
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
@@ -80,7 +80,8 @@ public class CommndAlignFloor : IExternalCommand
         try
         {
             var refElement = _uidoc.Selection.PickObject(ObjectType.Element, elemFilter, "Select an object to align to");
-            _floor = _doc.GetElement(refElement) as Floor;
+            _floor = _doc.GetElement(refElement) as Floor
+                     ?? throw new InvalidOperationException("The selected element is not a floor.");
         }
         catch (Exception)
         {
@@ -93,9 +94,11 @@ public class CommndAlignFloor : IExternalCommand
             var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
 
 #if REVIT2024_OR_GREATER
-            _topoSolid = _doc.GetElement(refToposurface) as Toposolid;
+            _topoSolid = _doc.GetElement(refToposurface) as Toposolid
+                         ?? throw new InvalidOperationException("The selected element is not a toposolid.");
 #else
-            _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
+            _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface
+                           ?? throw new InvalidOperationException("The selected element is not a topography surface.");
 #endif
         }
         catch (Exception)
@@ -121,7 +124,7 @@ public class CommndAlignFloor : IExternalCommand
         var points = GetPointsFromSubDivision(siteSubDivision, offset);
 #else
         //create a sub-region that matches the floor to get all the topo surface points
-        SiteSubRegion siteSubRegion = CreateSubRegion(floorBoundaryCurves);
+        SiteSubRegion? siteSubRegion = CreateSubRegion(floorBoundaryCurves);
 
         if (siteSubRegion == null)
         {
@@ -209,7 +212,7 @@ public class CommndAlignFloor : IExternalCommand
     }
 
 #if !REVIT2024_OR_GREATER
-    private SiteSubRegion CreateSubRegion(IList<CurveLoop> floorBoundaryCurves)
+    private SiteSubRegion? CreateSubRegion(IList<CurveLoop> floorBoundaryCurves)
     {
         try
         {
@@ -246,9 +249,9 @@ public class CommndAlignFloor : IExternalCommand
 #endif
 
 #if REVIT2024_OR_GREATER
-    private Toposolid CreateSubDivision(IList<CurveLoop> floorBoundaryCurves)
+    private Toposolid? CreateSubDivision(IList<CurveLoop> floorBoundaryCurves)
     {
-        Toposolid siteSubDivision = null;
+        Toposolid? siteSubDivision = null;
         using (var t = new Transaction(_doc, "Make SubRegion"))
         {
             t.Start();
@@ -352,9 +355,9 @@ public class CommndAlignFloor : IExternalCommand
 
         foreach (GeometryObject geometryObject in geometryElement)
         {
-            if (geometryObject is Solid)
+            if (geometryObject is Solid solid)
             {
-                foreach (Face face in (geometryObject as Solid).Faces)
+                foreach (Face face in solid.Faces)
                 {
                     if (GeometryCalculation.IsTopFace(face))
                     {
@@ -373,17 +376,22 @@ public class CommndAlignFloor : IExternalCommand
         //get the outline of the floor to make a sub-region on the topo
         //curveLoops = (IList<CurveLoop>)new List<CurveLoop>();
         //curveLoopList = (IList<CurveLoop>)new List<CurveLoop>();
-        var face1 = (Face)null;
+        Face? face1 = null;
         foreach (GeometryObject geometryObject in geometryElement)
         {
-            if (geometryObject is Solid)
+            if (geometryObject is Solid solid)
             {
-                foreach (Face face2 in (geometryObject as Solid).Faces)
+                foreach (Face face2 in solid.Faces)
                 {
                     if (face2.Evaluate(face2.GetBoundingBox().Max).Z == face2.Evaluate(face2.GetBoundingBox().Min).Z)
                         face1 = face2;
                 }
             }
+        }
+
+        if (face1 is null)
+        {
+            throw new InvalidOperationException("The floor has no flat face to take an outline from.");
         }
 
         return face1.GetEdgesAsCurveLoops().ToList();

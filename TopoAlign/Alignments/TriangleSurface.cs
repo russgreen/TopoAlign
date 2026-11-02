@@ -10,7 +10,7 @@ internal sealed class TriangleSurface
     private const int MaxCellsPerAxis = 512;
 
     private readonly List<double[]> _triangles = new();
-    private List<int>[] _cells;
+    private List<int>[]? _cells;
     private int _columns;
     private int _rows;
     private double _minX;
@@ -37,10 +37,7 @@ internal sealed class TriangleSurface
             return false;
         }
 
-        if (_cells is null)
-        {
-            BuildIndex();
-        }
+        var cells = _cells ?? BuildIndex();
 
         var column = (int)Math.Floor((x - _minX) / _cellWidth);
         var row = (int)Math.Floor((y - _minY) / _cellHeight);
@@ -55,7 +52,7 @@ internal sealed class TriangleSurface
 
         var found = false;
         var best = double.MinValue;
-        foreach (var index in _cells[row * _columns + column])
+        foreach (var index in cells[row * _columns + column])
         {
             if (TryInterpolate(_triangles[index], x, y, out var z) && z > best)
             {
@@ -72,7 +69,7 @@ internal sealed class TriangleSurface
         return found;
     }
 
-    private void BuildIndex()
+    private List<int>[] BuildIndex()
     {
         var minX = double.MaxValue;
         var minY = double.MaxValue;
@@ -95,10 +92,10 @@ internal sealed class TriangleSurface
         _cellWidth = Math.Max((maxX - minX) / _columns, Epsilon);
         _cellHeight = Math.Max((maxY - minY) / _rows, Epsilon);
 
-        _cells = new List<int>[_columns * _rows];
-        for (var i = 0; i < _cells.Length; i++)
+        var cells = new List<int>[_columns * _rows];
+        for (var i = 0; i < cells.Length; i++)
         {
-            _cells[i] = new List<int>();
+            cells[i] = new List<int>();
         }
 
         for (var index = 0; index < _triangles.Count; index++)
@@ -113,10 +110,13 @@ internal sealed class TriangleSurface
             {
                 for (var c = c0; c <= c1; c++)
                 {
-                    _cells[r * _columns + c].Add(index);
+                    cells[r * _columns + c].Add(index);
                 }
             }
         }
+
+        _cells = cells;
+        return cells;
     }
 
     private int ClampColumn(double x) => Math.Max(0, Math.Min(_columns - 1, (int)Math.Floor((x - _minX) / _cellWidth)));

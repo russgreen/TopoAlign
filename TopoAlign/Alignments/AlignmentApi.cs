@@ -24,12 +24,16 @@ internal static class AlignmentApi
     private const BindingFlags AnyMember = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
 
     private static bool _initialised;
-    private static Type _alignmentType;
-    private static Type _schemaType;
-    private static Type _alignmentDataType;
-    private static Type _utilitiesType;
-    private static Type _labelType;
-    private static Type _labelSetOptionsType;
+    private static Type? _alignmentType;
+    private static Type? _schemaType;
+    private static Type? _alignmentDataType;
+    private static Type? _utilitiesType;
+    private static Type? _labelType;
+    private static Type? _labelSetOptionsType;
+
+    private static Type AlignmentType => _alignmentType ?? throw new InvalidOperationException("Civil Alignments API is not available.");
+    private static Type LabelType => _labelType ?? throw new InvalidOperationException("Civil Alignments station labels are not available.");
+    private static Type LabelSetOptionsType => _labelSetOptionsType ?? throw new InvalidOperationException("Civil Alignments station labels are not available.");
 
     public static bool IsAvailable
     {
@@ -109,7 +113,7 @@ internal static class AlignmentApi
     /// version that changed them gives one clear message instead of an obscure failure half way through. The result is logged.
     /// </summary>
     /// <param name="problem">What is missing, ready to show to the user, or null when everything needed is there.</param>
-    public static bool Supports(AlignmentFeature features, out string problem)
+    public static bool Supports(AlignmentFeature features, out string? problem)
     {
         problem = null;
         if (!IsAvailable)
@@ -128,15 +132,15 @@ internal static class AlignmentApi
             }
         }
 
-        bool HasStatic(Type type, string method, Type[] arguments) =>
+        bool HasStatic(Type? type, string method, Type[] arguments) =>
             type?.GetMethod(method, AnyMember, null, arguments, null) is not null;
 
-        bool HasProperty(Type type, string property) => type?.GetProperty(property, AnyMember) is not null;
+        bool HasProperty(Type? type, string property) => type?.GetProperty(property, AnyMember) is not null;
 
         if (features.HasFlag(AlignmentFeature.Read))
         {
             Require(HasStatic(_alignmentType, "Get", new[] { typeof(Element) }), "Alignment.Get");
-            Require(_alignmentType.GetMethod("GetPointAtStation", AnyMember) is not null, "Alignment.GetPointAtStation");
+            Require(_alignmentType?.GetMethod("GetPointAtStation", AnyMember) is not null, "Alignment.GetPointAtStation");
             Require(_schemaType?.GetMethod("GetJSON", AnyMember, null, new[] { typeof(Element) }, null) is not null, "AlignmentSchema.GetJSON");
         }
 
@@ -189,8 +193,8 @@ internal static class AlignmentApi
 
         try
         {
-            var method = _alignmentType.GetMethod("IsValid", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
-            return method is not null && (bool)method.Invoke(null, new object[] { element });
+            var method = AlignmentType.GetMethod("IsValid", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
+            return method is not null && method.Invoke(null, new object[] { element }) is true;
         }
         catch (Exception ex)
         {
@@ -219,7 +223,7 @@ internal static class AlignmentApi
     }
 
     /// <summary>Basic read-only info for an alignment element, or null.</summary>
-    public static AlignmentInfo GetInfo(Element element)
+    public static AlignmentInfo? GetInfo(Element element)
     {
         if (!IsValid(element))
         {
@@ -228,7 +232,7 @@ internal static class AlignmentApi
 
         try
         {
-            var get = _alignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
+            var get = AlignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
             var alignment = get?.Invoke(null, new object[] { element });
             if (alignment is null)
             {
@@ -238,8 +242,8 @@ internal static class AlignmentApi
             return new AlignmentInfo
             {
                 ElementId = element.Id,
-                Name = ReadProperty<string>(alignment, "Name"),
-                Description = ReadProperty<string>(alignment, "Description"),
+                Name = ReadProperty<string>(alignment, "Name") ?? string.Empty,
+                Description = ReadProperty<string>(alignment, "Description") ?? string.Empty,
                 StartStation = ReadProperty<double>(alignment, "StartStation"),
                 EndStation = ReadProperty<double>(alignment, "EndStation"),
                 DisplayedStartStation = ReadProperty<double>(alignment, "DisplayedStartStation"),
@@ -254,7 +258,7 @@ internal static class AlignmentApi
     }
 
     /// <summary>XYZ on the alignment at a station (internal units), or null.</summary>
-    public static XYZ GetPointAtStation(Element element, double station)
+    public static XYZ? GetPointAtStation(Element element, double station)
     {
         if (!IsValid(element))
         {
@@ -263,9 +267,9 @@ internal static class AlignmentApi
 
         try
         {
-            var get = _alignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
+            var get = AlignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
             var alignment = get?.Invoke(null, new object[] { element });
-            var method = _alignmentType.GetMethod("GetPointAtStation", BindingFlags.Public | BindingFlags.Instance);
+            var method = AlignmentType.GetMethod("GetPointAtStation", BindingFlags.Public | BindingFlags.Instance);
             return method?.Invoke(alignment, new object[] { station }) as XYZ;
         }
         catch (Exception ex)
@@ -279,7 +283,7 @@ internal static class AlignmentApi
     /// Raw Autodesk "infra" alignment JSON stored on the element (AlignmentSchema.GetJSON, internal).
     /// Used to learn the format and as the base for edits.
     /// </summary>
-    public static string GetJson(Element element)
+    public static string? GetJson(Element element)
     {
         if (element is null || !IsAvailable || _schemaType is null)
         {
@@ -311,7 +315,7 @@ internal static class AlignmentApi
     /// lives in the JSON. Must be called from within the Revit API context.
     /// </summary>
     /// <param name="planLength">Alignment length in feet, used if Autodesk's own length calculation is unavailable.</param>
-    public static ElementId Create(Document doc, string name, string json, double planLength, ICollection<ElementId> sourceCurveIdsToDelete = null)
+    public static ElementId Create(Document doc, string name, string json, double planLength, ICollection<ElementId>? sourceCurveIdsToDelete = null)
     {
         if (doc is null)
         {
@@ -329,7 +333,7 @@ internal static class AlignmentApi
         }
 
         // CreateAlignment and the AlignmentData setters are non-public in the Civil Alignments DLL.
-        var createMethod = _alignmentType.GetMethod("CreateAlignment", AnyMember, null, new[] { typeof(Document), _alignmentDataType }, null);
+        var createMethod = AlignmentType.GetMethod("CreateAlignment", AnyMember, null, new[] { typeof(Document), _alignmentDataType }, null);
         if (createMethod is null)
         {
             throw new MissingMethodException("Alignment.CreateAlignment(Document, AlignmentData) was not found.");
@@ -351,7 +355,7 @@ internal static class AlignmentApi
         failureHandlingOptions.SetFailuresPreprocessor(fh);
         transaction.SetFailureHandlingOptions(failureHandlingOptions);
 
-        object alignment;
+        object? alignment;
         try
         {
             alignment = createMethod.Invoke(null, new[] { doc, alignmentData });
@@ -393,7 +397,7 @@ internal static class AlignmentApi
     /// <param name="alignmentElement">The alignment being updated.</param>
     /// <param name="planLength">Alignment length in feet, used if Autodesk's own length calculation is unavailable.</param>
     /// <param name="name">The alignment's new name, so its type can be renamed to match; null to leave the type alone.</param>
-    public static void Update(Document doc, Element alignmentElement, string json, double planLength, string name = null)
+    public static void Update(Document doc, Element alignmentElement, string json, double planLength, string? name = null)
     {
         if (doc is null)
         {
@@ -415,7 +419,7 @@ internal static class AlignmentApi
             throw new ArgumentException("Alignment JSON is required.", nameof(json));
         }
 
-        var updateMethod = _alignmentType.GetMethod("UpdateAlignment", AnyMember, null, new[] { typeof(Document), _alignmentDataType }, null);
+        var updateMethod = AlignmentType.GetMethod("UpdateAlignment", AnyMember, null, new[] { typeof(Document), _alignmentDataType }, null);
         if (updateMethod is null)
         {
             throw new MissingMethodException("Alignment.UpdateAlignment(Document, AlignmentData) was not found.");
@@ -499,8 +503,8 @@ internal static class AlignmentApi
             return types;
         }
 
-        var isValid = _labelType.GetMethod("IsValidType", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
-        var isRecommended = _labelType.GetMethod("IsRecommendedTypeForSet", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
+        var isValid = LabelType.GetMethod("IsValidType", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
+        var isRecommended = LabelType.GetMethod("IsRecommendedTypeForSet", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
         if (isValid is null)
         {
             return types;
@@ -510,9 +514,9 @@ internal static class AlignmentApi
         {
             try
             {
-                if ((bool)isValid.Invoke(null, new object[] { type }))
+                if (isValid.Invoke(null, new object[] { type }) is true)
                 {
-                    var recommended = isRecommended is not null && (bool)isRecommended.Invoke(null, new object[] { type });
+                    var recommended = isRecommended is not null && isRecommended.Invoke(null, new object[] { type }) is true;
                     types.Add(new StationLabelType(type.Id, type.Name, recommended));
                 }
             }
@@ -531,7 +535,7 @@ internal static class AlignmentApi
     /// <paramref name="labelTypeId"/> is null or invalid, Autodesk's recommended label type is created. Lengths are in
     /// feet; the offset is a paper-space length, positive to the right of the alignment and negative to the left.
     /// </summary>
-    public static int CreateStationLabels(Document doc, Element alignmentElement, View view, ElementId labelTypeId,
+    public static int CreateStationLabels(Document doc, Element alignmentElement, View view, ElementId? labelTypeId,
         double? startStation, double? endStation, double? interval, double? offset, bool hasLeader)
     {
         if (doc is null)
@@ -554,11 +558,11 @@ internal static class AlignmentApi
             throw new InvalidOperationException("The Civil Alignments add-in can't create station labels in this version of Revit.");
         }
 
-        var getAlignment = _alignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
+        var getAlignment = AlignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
         var alignment = getAlignment?.Invoke(null, new object[] { alignmentElement })
                         ?? throw new InvalidOperationException("The element is not a valid alignment.");
 
-        var createSet = _labelType.GetMethod("CreateSet", BindingFlags.Public | BindingFlags.Static);
+        var createSet = LabelType.GetMethod("CreateSet", BindingFlags.Public | BindingFlags.Static);
         if (createSet is null)
         {
             throw new MissingMethodException("AlignmentStationLabel.CreateSet was not found.");
@@ -573,11 +577,12 @@ internal static class AlignmentApi
 
         if (labelTypeId is null || labelTypeId == ElementId.InvalidElementId)
         {
-            var create = _labelType.GetMethod("CreateRecommendedTypeForSet", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Document) }, null);
+            var create = LabelType.GetMethod("CreateRecommendedTypeForSet", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Document) }, null);
             labelTypeId = create?.Invoke(null, new object[] { doc }) as ElementId ?? ElementId.InvalidElementId;
         }
 
-        var options = Activator.CreateInstance(_labelSetOptionsType);
+        var options = Activator.CreateInstance(LabelSetOptionsType)
+                      ?? throw new InvalidOperationException("Could not create the station label options.");
         SetOption(options, "HasLeader", hasLeader);
         SetOption(options, "TypeId", labelTypeId);
         SetOption(options, "StartStation", startStation);
@@ -585,7 +590,7 @@ internal static class AlignmentApi
         SetOption(options, "Interval", interval);
         SetOption(options, "Offset", offset);
 
-        object labels;
+        object? labels;
         try
         {
             labels = createSet.Invoke(null, new[] { alignment, view, options });
@@ -599,11 +604,11 @@ internal static class AlignmentApi
         return labels is System.Collections.ICollection collection ? collection.Count : 0;
     }
 
-    private static void SetOption(object options, string name, object value)
+    private static void SetOption(object options, string name, object? value)
     {
         if (value is not null)
         {
-            _labelSetOptionsType.GetProperty(name, AnyMember)?.SetValue(options, value);
+            LabelSetOptionsType.GetProperty(name, AnyMember)?.SetValue(options, value);
         }
     }
 
@@ -627,7 +632,7 @@ internal static class AlignmentApi
     /// The name is already part of the JSON. Alignment.Name has no setter in current Revit versions, so only use it
     /// if it is writable, and also name the element's type so the alignment is easy to find in the browser.
     /// </summary>
-    private static void ApplyName(Document doc, object alignment, Element alignmentElement, string name)
+    private static void ApplyName(Document doc, object alignment, Element? alignmentElement, string name)
     {
         try
         {
@@ -683,7 +688,7 @@ internal static class AlignmentApi
         private readonly object _alignment;
         private readonly MethodInfo _pointAtStation;
         private readonly MethodInfo _tangentAtStation;
-        private readonly MethodInfo _curveEndpoints;
+        private readonly MethodInfo? _curveEndpoints;
 
         public PathReader(Element alignmentElement)
         {
@@ -697,15 +702,15 @@ internal static class AlignmentApi
                 throw new ArgumentException("The element is not a valid alignment.", nameof(alignmentElement));
             }
 
-            var get = _alignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
+            var get = AlignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
             _alignment = get?.Invoke(null, new object[] { alignmentElement })
                          ?? throw new InvalidOperationException("The alignment could not be read.");
 
-            _pointAtStation = _alignmentType.GetMethod("GetPointAtStation", BindingFlags.Public | BindingFlags.Instance)
+            _pointAtStation = AlignmentType.GetMethod("GetPointAtStation", BindingFlags.Public | BindingFlags.Instance)
                               ?? throw new MissingMethodException("Alignment.GetPointAtStation was not found.");
-            _tangentAtStation = _alignmentType.GetMethod("GetHCurveTangentAtStation", BindingFlags.Public | BindingFlags.Instance)
+            _tangentAtStation = AlignmentType.GetMethod("GetHCurveTangentAtStation", BindingFlags.Public | BindingFlags.Instance)
                                 ?? throw new MissingMethodException("Alignment.GetHCurveTangentAtStation was not found.");
-            _curveEndpoints = _alignmentType.GetMethod("GetDisplayedHorizontalCurveEndpoints", BindingFlags.Public | BindingFlags.Instance);
+            _curveEndpoints = AlignmentType.GetMethod("GetDisplayedHorizontalCurveEndpoints", BindingFlags.Public | BindingFlags.Instance);
 
             StartStation = ReadProperty<double>(_alignment, "DisplayedStartStation");
             EndStation = ReadProperty<double>(_alignment, "DisplayedEndStation");
@@ -741,7 +746,8 @@ internal static class AlignmentApi
             var clamped = Math.Max(StartStation, Math.Min(EndStation, station));
             try
             {
-                return (XYZ)method.Invoke(_alignment, new object[] { clamped });
+                return (XYZ?)method.Invoke(_alignment, new object[] { clamped })
+                       ?? throw new InvalidOperationException("The alignment returned no value at the station.");
             }
             catch (TargetInvocationException ex) when (ex.InnerException is not null)
             {
@@ -750,7 +756,7 @@ internal static class AlignmentApi
         }
     }
 
-    private static T ReadProperty<T>(object instance, string name)
+    private static T? ReadProperty<T>(object instance, string name)
     {
         var value = instance.GetType().GetProperty(name, AnyMember)?.GetValue(instance);
         return value is T typed ? typed : default;
@@ -759,9 +765,9 @@ internal static class AlignmentApi
 
 internal class AlignmentInfo
 {
-    public ElementId ElementId { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
+    public ElementId ElementId { get; set; } = ElementId.InvalidElementId;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public double StartStation { get; set; }
     public double EndStation { get; set; }
     public double DisplayedStartStation { get; set; }

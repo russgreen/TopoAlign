@@ -52,7 +52,7 @@ internal sealed class SectionProfile
     /// <summary>
     /// Makes a section from a loop of straights and arcs. False, with the reason, if it isn't a closed loop or encloses nothing.
     /// </summary>
-    public static bool TryCreate(IReadOnlyList<PlanSegment> segments, out SectionProfile profile, out string error)
+    public static bool TryCreate(IReadOnlyList<PlanSegment> segments, out SectionProfile? profile, out string? error)
     {
         profile = null;
         error = null;

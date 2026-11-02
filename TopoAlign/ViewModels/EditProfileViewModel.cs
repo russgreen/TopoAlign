@@ -106,13 +106,13 @@ internal partial class EditProfileViewModel : BaseViewModel
     private decimal _defaultCurveLength;
 
     [ObservableProperty]
-    private ProfileRow _selectedRow;
+    private ProfileRow? _selectedRow;
 
     [ObservableProperty]
     private List<Models.DisplayUnitModel> _displayUnits = new();
 
     [ObservableProperty]
-    private Models.DisplayUnitModel _selectedDisplayUnit;
+    private Models.DisplayUnitModel _selectedDisplayUnit = null!;
 
     /// <summary>The stations of the profile, in order from the start of the alignment.</summary>
     public ObservableCollection<ProfileRow> Rows { get; } = new();
@@ -120,17 +120,17 @@ internal partial class EditProfileViewModel : BaseViewModel
     public string WindowTitle { get; }
 
     /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler HideRequested;
+    public event EventHandler? HideRequested;
 
     /// <summary>True when the dialog was hidden to pick an alignment; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
 
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
-    public EditProfileRequest Request { get; private set; }
+    public EditProfileRequest? Request { get; private set; }
 
     private readonly Models.Settings _settings = new();
-    private Element _alignment;
-    private string _originalJson;
+    private Element? _alignment;
+    private string? _originalJson;
     private string _alignmentName = string.Empty;
     private List<ProfileVertex> _original = new();
     private double _startStationFeet;
@@ -156,7 +156,7 @@ internal partial class EditProfileViewModel : BaseViewModel
             });
         }
 
-        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == documentUnits) ?? DisplayUnits.FirstOrDefault();
+        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == documentUnits) ?? DisplayUnits.First();
 
         // elevations in the alignment's JSON are shared elevations; the dialog shows project elevations, as Create Alignment does
         _sharedToInternal = App.RevitDocument.ActiveProjectLocation.GetTotalTransform();
@@ -192,7 +192,7 @@ internal partial class EditProfileViewModel : BaseViewModel
 
     private double ProjectToShared(double projectElevation) => _sharedToInternal.Inverse.OfPoint(new XYZ(0.0, 0.0, projectElevation)).Z;
 
-    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel oldValue, Models.DisplayUnitModel newValue)
+    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel newValue)
     {
         if (oldValue is null || newValue is null)
         {
@@ -276,10 +276,10 @@ internal partial class EditProfileViewModel : BaseViewModel
             }
 
             var json = AlignmentApi.GetJson(element);
-            var document = AlignmentJsonDocument.Parse(json);
+            var document = AlignmentJsonDocument.Parse(json ?? throw new InvalidOperationException("The alignment has no JSON data."));
             if (!document.CanEditProfile(out var reason))
             {
-                AlignmentStatus = reason;
+                AlignmentStatus = reason ?? string.Empty;
                 return false;
             }
 
@@ -340,7 +340,7 @@ internal partial class EditProfileViewModel : BaseViewModel
         Refresh();
     }
 
-    private void OnRowChanged(object sender, PropertyChangedEventArgs e)
+    private void OnRowChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (_loading || sender is not ProfileRow row)
         {
@@ -371,7 +371,7 @@ internal partial class EditProfileViewModel : BaseViewModel
     // ---- turning the grid into a profile ------------------------------------------------------------------------
 
     /// <summary>The grid as profile points in feet, distances along the alignment and shared elevations. False, with the reason, if it isn't a valid profile.</summary>
-    private bool TryGetVertices(out List<ProfileVertex> vertices, out string error)
+    private bool TryGetVertices(out List<ProfileVertex> vertices, out string? error)
     {
         vertices = new List<ProfileVertex>(Rows.Count);
         error = null;
@@ -458,7 +458,7 @@ internal partial class EditProfileViewModel : BaseViewModel
                 row.CurveUsed = string.Empty;
             }
 
-            ProfileStatus = error;
+            ProfileStatus = error ?? string.Empty;
         }
         else
         {
@@ -552,11 +552,16 @@ internal partial class EditProfileViewModel : BaseViewModel
     [RelayCommand(CanExecute = nameof(CanApply))]
     private void Apply()
     {
+        if (_alignment is null || _originalJson is null)
+        {
+            return;
+        }
+
         try
         {
             if (!TryGetVertices(out var vertices, out var error))
             {
-                ProfileStatus = error;
+                ProfileStatus = error ?? string.Empty;
                 return;
             }
 

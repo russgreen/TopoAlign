@@ -5,7 +5,7 @@ namespace TopoAlign;
 
 public class FacePickFilter : ISelectionFilter
 {
-    private Document m_doc = null;
+    private readonly Document m_doc;
 
     public FacePickFilter(Document doc)
     {

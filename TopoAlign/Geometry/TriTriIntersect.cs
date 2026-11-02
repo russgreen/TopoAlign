@@ -19,7 +19,11 @@ public class TriTriIntersect
 
         while (geoObjects.MoveNext())
         {
-           Solid geoObj = geoObjects.Current as Solid;
+           Solid? geoObj = geoObjects.Current as Solid;
+            if (geoObj is null)
+            {
+                continue;
+            }
 
             foreach (Face face in geoObj.Faces)
             {
@@ -44,10 +48,8 @@ public class TriTriIntersect
         {
             GeometryObject geoObj = geoObjects.Current;
 
-            if (geoObj is Mesh)
+            if (geoObj is Mesh mesh)
             {
-                Mesh mesh = geoObj as Mesh;
-
                 for (int i = 0; i < mesh.NumTriangles; i++)
                 {
                     var meshTriangle = mesh.get_Triangle(i);
@@ -164,7 +166,7 @@ public class TriTriIntersect
         return faceTriangles;
     }
 
-    public static List<Vector3d> IntersectTriangleLists(List<Triangle3d> topoTriangles, List<Triangle3d> faceTriangles, double divide = 1000d * 0.00328084d)
+    public static List<Vector3d>? IntersectTriangleLists(List<Triangle3d> topoTriangles, List<Triangle3d> faceTriangles, double divide = 1000d * 0.00328084d)
     {
         var points = new List<Vector3d>();
 
@@ -202,12 +204,7 @@ public class TriTriIntersect
             }
         }
 
-        if (points.Count == 0)
-        {
-            points = null;
-        }
-
-        return points;
+        return points.Count == 0 ? null : points;
     }
 
 

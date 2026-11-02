@@ -11,7 +11,7 @@ namespace TopoAlign.ViewModels;
 
 internal sealed class CreateAlignmentRequest
 {
-    public CreateAlignmentRequest(string name, string json, double planLength, IList<ElementId> sourceCurveIdsToDelete, string notice = "")
+    public CreateAlignmentRequest(string name, string json, double planLength, IList<ElementId>? sourceCurveIdsToDelete, string notice = "")
     {
         Name = name;
         Json = json;
@@ -28,7 +28,7 @@ internal sealed class CreateAlignmentRequest
 
     /// <summary>Alignment length in feet (internal units).</summary>
     public double PlanLength { get; }
-    public IList<ElementId> SourceCurveIdsToDelete { get; }
+    public IList<ElementId>? SourceCurveIdsToDelete { get; }
 }
 
 internal partial class CreateAlignmentViewModel : BaseViewModel
@@ -37,7 +37,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CreateAlignmentCommand))]
-    private string _alignmentName;
+    private string _alignmentName = string.Empty;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CreateAlignmentCommand))]
@@ -63,7 +63,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     private List<Models.DisplayUnitModel> _displayUnits = new();
 
     [ObservableProperty]
-    private Models.DisplayUnitModel _selectedDisplayUnit;
+    private Models.DisplayUnitModel _selectedDisplayUnit = null!;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CreateAlignmentCommand))]
@@ -90,7 +90,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     public string WindowTitle { get; }
 
     /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler HideRequested;
+    public event EventHandler? HideRequested;
 
     /// <summary>True when the dialog was hidden to pick lines; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
@@ -99,12 +99,12 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     public bool PickToposolidRequested { get; set; }
 
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
-    public CreateAlignmentRequest Request { get; private set; }
+    public CreateAlignmentRequest? Request { get; private set; }
 
     private readonly Models.Settings _settings = new();
     private readonly List<ElementId> _selectedCurveIds = new();
     private List<Curve> _orderedCurves = new();
-    private Element _topography;
+    private Element? _topography;
 
 #if REVIT2018 || REVIT2019 || REVIT2020
     private DisplayUnitType _docDisplayUnits;
@@ -200,7 +200,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
             var uidoc = App.CachedUiApp.ActiveUIDocument;
             var filter = new TopoPickFilter();
 
-            Element topography = null;
+            Element? topography = null;
             foreach (var id in uidoc.Selection.GetElementIds())
             {
                 var element = App.RevitDocument.GetElement(id);
@@ -475,7 +475,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         }
 #endif
 
-        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == _docDisplayUnits) ?? DisplayUnits.FirstOrDefault();
+        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == _docDisplayUnits) ?? DisplayUnits.First();
     }
 
     private void LoadSettings()
@@ -521,7 +521,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     {
         var existing = AlignmentApi.GetAlignmentElements(App.RevitDocument)
             .Select(AlignmentApi.GetInfo)
-            .Where(info => info is not null)
+            .OfType<AlignmentInfo>()
             .Select(info => info.Name)
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);

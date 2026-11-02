@@ -271,7 +271,7 @@ internal partial class CreateAlignmentViewModel
         RefreshPoints();
     }
 
-    private void OnPointChanged(object sender, PropertyChangedEventArgs e)
+    private void OnPointChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(PiRow.Radius) or nameof(PiRow.SpiralLength))
         {
@@ -343,7 +343,7 @@ internal partial class CreateAlignmentViewModel
     /// <summary>The plan geometry for the current input: Revit curves where they can be used as picked, otherwise plan segments.</summary>
     private sealed class PlanLayout
     {
-        public PlanLayout(List<Curve> curves, List<PlanSegment> segments, double flatElevation, string notice = "")
+        public PlanLayout(List<Curve>? curves, List<PlanSegment> segments, double flatElevation, string notice = "")
         {
             Curves = curves;
             Segments = segments;
@@ -355,7 +355,7 @@ internal partial class CreateAlignmentViewModel
         public string Notice { get; }
 
         /// <summary>The picked curves (reversed if asked), or null when spirals were added or the points were laid out.</summary>
-        public List<Curve> Curves { get; }
+        public List<Curve>? Curves { get; }
 
         public List<PlanSegment> Segments { get; }
 

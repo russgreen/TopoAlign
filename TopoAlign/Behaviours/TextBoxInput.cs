@@ -45,7 +45,7 @@ internal static class TextBoxInput
     {
         if (e.DataObject.GetDataPresent(DataFormats.Text))
         {
-            var text = Convert.ToString(e.DataObject.GetData(DataFormats.Text));
+            var text = Convert.ToString(e.DataObject.GetData(DataFormats.Text)) ?? string.Empty;
 
             if (!IsValid((TextBox)sender, text))
             {

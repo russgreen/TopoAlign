@@ -8,8 +8,8 @@ public class LinePickFilter : ISelectionFilter
     public bool AllowElement(Element elem)
     {
         // Convert the element to a ModelLine
-        ModelLine line = elem as ModelLine;
-        ModelCurve curve = elem as ModelCurve;
+        ModelLine? line = elem as ModelLine;
+        ModelCurve? curve = elem as ModelCurve;
         // line is null if the element is not a model line
         if (line is null & curve is null)
         {

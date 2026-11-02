@@ -115,11 +115,11 @@ public class StringFormatting
         {
             if (pi.PropertyType == typeof(ForgeTypeId))
             {
-                object obj = pi.GetValue(null, null);
+                object? obj = pi.GetValue(null, null);
 
-                ForgeTypeId fti = obj as ForgeTypeId;
+                ForgeTypeId? fti = obj as ForgeTypeId;
 
-                Debug.Print("{0}: {1}", pi.Name, fti.TypeId);
+                Debug.Print("{0}: {1}", pi.Name, fti?.TypeId);
             }
         }
 

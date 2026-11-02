@@ -60,10 +60,10 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     };
 
     [ObservableProperty]
-    private RoadChoice<RoadGeometryMethod> _selectedGeometryMethod;
+    private RoadChoice<RoadGeometryMethod>? _selectedGeometryMethod;
 
     [ObservableProperty]
-    private RoadChoice<RoadOutput> _selectedOutput;
+    private RoadChoice<RoadOutput>? _selectedOutput;
 
     [ObservableProperty]
     private string _alignmentStatus = "No alignment selected.";
@@ -72,7 +72,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     private List<ProfileTypeInfo> _profileTypes = new();
 
     [ObservableProperty]
-    private ProfileTypeInfo _selectedProfileType;
+    private ProfileTypeInfo? _selectedProfileType;
 
     [ObservableProperty]
     private string _profileStatus = string.Empty;
@@ -91,7 +91,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     private List<RoadCategory> _categories = new();
 
     [ObservableProperty]
-    private RoadCategory _selectedCategory;
+    private RoadCategory? _selectedCategory;
 
     [ObservableProperty]
     private string _existingRoadNote = string.Empty;
@@ -100,24 +100,24 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     private List<Models.DisplayUnitModel> _displayUnits = new();
 
     [ObservableProperty]
-    private Models.DisplayUnitModel _selectedDisplayUnit;
+    private Models.DisplayUnitModel _selectedDisplayUnit = null!;
 
     public string WindowTitle { get; }
 
     /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler HideRequested;
+    public event EventHandler? HideRequested;
 
     /// <summary>True when the dialog was hidden to pick an alignment; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
 
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
-    public SweepAlignmentRequest Request { get; private set; }
+    public SweepAlignmentRequest? Request { get; private set; }
 
     private readonly Models.Settings _settings = new();
-    private readonly Dictionary<long, (SectionProfile Profile, string Error)> _profileCache = new();
-    private Element _alignment;
+    private readonly Dictionary<long, (SectionProfile? Profile, string? Error)> _profileCache = new();
+    private Element? _alignment;
     private string _alignmentName = string.Empty;
-    private SectionProfile _profile;
+    private SectionProfile? _profile;
 
     public SweepAlignmentViewModel()
     {
@@ -137,7 +137,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
             });
         }
 
-        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == documentUnits) ?? DisplayUnits.FirstOrDefault();
+        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == documentUnits) ?? DisplayUnits.First();
 
         Categories = RoadBuilder.GetCategories(App.RevitDocument);
         ProfileTypes = SectionProfileReader.ListProfileTypes(App.RevitDocument);
@@ -228,14 +228,14 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
 
     // ---- the cross-section --------------------------------------------------------------------------------------
 
-    partial void OnSelectedProfileTypeChanged(ProfileTypeInfo value) => LoadProfile(value);
+    partial void OnSelectedProfileTypeChanged(ProfileTypeInfo? value) => LoadProfile(value);
 
     partial void OnMirrorProfileChanged(bool value) => RefreshProfileStatus();
 
     partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel value) => RefreshProfileStatus();
 
     /// <summary>Reads the shape drawn in the chosen profile family (once per type) and shows its size.</summary>
-    private void LoadProfile(ProfileTypeInfo type)
+    private void LoadProfile(ProfileTypeInfo? type)
     {
         _profile = null;
         if (type is null)
@@ -255,7 +255,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         _profile = cached.Profile;
         if (_profile is null)
         {
-            ProfileStatus = cached.Error;
+            ProfileStatus = cached.Error ?? string.Empty;
         }
         else
         {
@@ -293,6 +293,11 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     [RelayCommand(CanExecute = nameof(CanCreate))]
     private void Create()
     {
+        if (_alignment is null || _profile is null)
+        {
+            return;
+        }
+
         try
         {
             var options = new RoadOptions

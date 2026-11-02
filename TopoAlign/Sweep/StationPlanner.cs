@@ -37,7 +37,7 @@ internal static class StationPlanner
     /// A regular station that lands within a tenth of an interval of a mandatory one or of the end is dropped, so there are
     /// no slivers between sections.
     /// </summary>
-    public static List<double> Plan(double start, double end, double interval, IEnumerable<double> mandatory = null)
+    public static List<double> Plan(double start, double end, double interval, IEnumerable<double>? mandatory = null)
     {
         if (!(end > start))
         {

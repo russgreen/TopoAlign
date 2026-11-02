@@ -4,7 +4,7 @@ namespace TopoAlign.ViewModels;
 
 public class BaseViewModel : ObservableValidator
     {
-        public event EventHandler ClosingRequest;
+        public event EventHandler? ClosingRequest;
 
         protected void OnClosingRequest()
         {

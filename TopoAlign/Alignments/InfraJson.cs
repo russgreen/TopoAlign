@@ -40,6 +40,6 @@ internal static class InfraJson
             text += ".0";
         }
 
-        return JsonNode.Parse(text);
+        return JsonNode.Parse(text)!;
     }
 }

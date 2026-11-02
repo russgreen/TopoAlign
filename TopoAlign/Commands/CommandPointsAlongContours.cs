@@ -18,11 +18,11 @@ public class CommandPointsAlongContours : IExternalCommand
 {
     private static readonly ILogger log = Log.ForContext<CommandPointsAlongContours>();
 
-    private UIApplication _uiapp;
-    private UIDocument _uidoc;
-    private Autodesk.Revit.ApplicationServices.Application _app;
-    private Document _doc;
-    private Selection _sel;
+    private UIApplication _uiapp = null!;
+    private UIDocument _uidoc = null!;
+    private Autodesk.Revit.ApplicationServices.Application _app = null!;
+    private Document _doc = null!;
+    private Selection _sel = null!;
     private decimal _offset;
     private decimal _divide;
     //private Element _element;
@@ -30,12 +30,12 @@ public class CommandPointsAlongContours : IExternalCommand
     //private View3D _v3d;
 
 #if REVIT2024_OR_GREATER
-    private Toposolid _topoSolid;
+    private Toposolid? _topoSolid;
 #else
-    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+    private Autodesk.Revit.DB.Architecture.TopographySurface? _topoSurface;
 #endif
 
-    public Models.Settings cSettings;
+    public Models.Settings cSettings = null!;
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {

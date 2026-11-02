@@ -310,7 +310,7 @@ internal static class RoadBuilder
             : $"Road along {alignmentName} ({options.ProfileName})";
 
         // The family file is made before the model is touched, so a failure there leaves the model as it was.
-        string familyFile = null;
+        string? familyFile = null;
         try
         {
             if (options.Output == RoadOutput.Family)
@@ -393,7 +393,7 @@ internal static class RoadBuilder
     }
 
     /// <summary>Everything an earlier road for this alignment left in the model: the shapes, and the families (which take their instances with them).</summary>
-    private static List<ElementId> FindPreviousIds(Document document, Element alignment, string alignmentName)
+    private static List<ElementId> FindPreviousIds(Document document, Element alignment, string? alignmentName)
     {
         var ids = new List<ElementId>();
         ids.AddRange(new FilteredElementCollector(document)

@@ -6,7 +6,7 @@ namespace TopoAlign;
 /// </summary>
 public partial class ProgressWindow : Window, IDisposable
 {
-    private string _format;
+    private string? _format;
     private bool _abortFlag = false;
 
     public ProgressWindow()

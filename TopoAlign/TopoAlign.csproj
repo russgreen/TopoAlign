@@ -13,6 +13,7 @@
 	  <NeutralLanguage>en</NeutralLanguage>
 	  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	  <UseWPF>true</UseWPF>
+	  <Nullable>enable</Nullable>
 	  <!--<UseWindowsForms>true</UseWindowsForms>-->
 	  <!--<ImplicitUsings>true</ImplicitUsings>-->
 	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -123,17 +124,17 @@
    <ItemGroup>
 	 <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
 	 <PackageReference Include="geometry3Sharp" Version="1.0.324" />
-	 <PackageReference Include="System.Text.Json" Version="8.0.5" />
+	 <PackageReference Include="System.Text.Json" Version="10.0.14" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
 
-	 <PackageReference Include="Serilog" Version="4.3.0" />
+	 <PackageReference Include="Serilog" Version="4.4.0" />
 
 	 <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
 	 <PackageReference Include="Serilog.Sinks.GoogleAnalytics" Version="1.*" />
 
 	   <!--Repacking-->
-	   <PackageReference Include="ILRepack" Version="2.0.44">
+	   <PackageReference Include="ILRepack" Version="2.0.48">
 		   <PrivateAssets>all</PrivateAssets>
 		   <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	   </PackageReference>

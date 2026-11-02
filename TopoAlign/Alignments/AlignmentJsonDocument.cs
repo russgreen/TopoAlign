@@ -26,7 +26,7 @@ internal sealed class AlignmentJsonDocument
             throw new InvalidOperationException("The alignment has no JSON data.");
         }
 
-        JsonNode node;
+        JsonNode? node;
         try
         {
             node = JsonNode.Parse(json);
@@ -36,13 +36,14 @@ internal sealed class AlignmentJsonDocument
             throw new InvalidOperationException("The alignment data could not be read: " + ex.Message, ex);
         }
 
-        var core = (node as JsonObject)?[InfraJson.AlignmentKey]?["CoreComponent"] as JsonObject;
-        if (core is null)
+        var root = node as JsonObject;
+        var core = root?[InfraJson.AlignmentKey]?["CoreComponent"] as JsonObject;
+        if (root is null || core is null)
         {
             throw new InvalidOperationException("The data is not an alignment document.");
         }
 
-        return new AlignmentJsonDocument((JsonObject)node, core);
+        return new AlignmentJsonDocument(root, core);
     }
 
     /// <summary>The alignment's name as stored in the JSON.</summary>
@@ -65,7 +66,7 @@ internal sealed class AlignmentJsonDocument
         get
         {
             var total = 0.0;
-            foreach (var curve in Curves(HorizontalGeometry()))
+            foreach (var curve in Curves(HorizontalGeometry()).OfType<JsonNode>())
             {
                 total += CurveLength(curve);
             }
@@ -78,10 +79,10 @@ internal sealed class AlignmentJsonDocument
     /// True if every horizontal and profile curve is a kind that <see cref="Reverse"/> understands (straights, arcs and
     /// parabolic vertical curves); otherwise the reason it can't.
     /// </summary>
-    public bool CanReverse(out string reason)
+    public bool CanReverse(out string? reason)
     {
         reason = null;
-        foreach (var curve in Curves(HorizontalGeometry()))
+        foreach (var curve in Curves(HorizontalGeometry()).OfType<JsonNode>())
         {
             var typeId = TypeId(curve);
             if (typeId != InfraJson.LineTypeId && typeId != InfraJson.CircleTypeId)
@@ -91,7 +92,7 @@ internal sealed class AlignmentJsonDocument
             }
         }
 
-        foreach (var curve in Curves(ProfileGeometry()))
+        foreach (var curve in Curves(ProfileGeometry()).OfType<JsonNode>())
         {
             var typeId = TypeId(curve);
             if (typeId != InfraJson.LineTypeId && typeId != InfraJson.CircleTypeId && typeId != InfraJson.VerticalCurveTypeId)
@@ -119,7 +120,7 @@ internal sealed class AlignmentJsonDocument
         var length = PlanLength;
 
         var horizontal = Curves(HorizontalGeometry());
-        foreach (var curve in horizontal)
+        foreach (var curve in horizontal.OfType<JsonNode>())
         {
             if (TypeId(curve) == InfraJson.LineTypeId)
             {
@@ -134,7 +135,7 @@ internal sealed class AlignmentJsonDocument
         ReverseOrder(horizontal);
 
         var profile = Curves(ProfileGeometry());
-        foreach (var curve in profile)
+        foreach (var curve in profile.OfType<JsonNode>())
         {
             switch (TypeId(curve))
             {
@@ -161,10 +162,10 @@ internal sealed class AlignmentJsonDocument
     /// True if the profile is made only of straights and parabolic vertical curves, the kinds <see cref="ReadProfile"/> and
     /// <see cref="SetProfile"/> understand; otherwise the reason it can't be edited.
     /// </summary>
-    public bool CanEditProfile(out string reason)
+    public bool CanEditProfile(out string? reason)
     {
         reason = null;
-        var curves = Curves(ProfileGeometry());
+        var curves = Curves(ProfileGeometry()).OfType<JsonNode>().ToList();
         if (curves.Count == 0)
         {
             reason = "The alignment has no vertical profile.";
@@ -187,7 +188,7 @@ internal sealed class AlignmentJsonDocument
     /// <summary>Distance along the alignment, in feet, where the profile starts (normally 0).</summary>
     private double ProfileOrigin()
     {
-        var first = Curves(ProfileGeometry()).FirstOrDefault();
+        var first = Curves(ProfileGeometry()).OfType<JsonNode>().FirstOrDefault();
         if (first is null)
         {
             return 0.0;
@@ -210,7 +211,7 @@ internal sealed class AlignmentJsonDocument
             throw new InvalidOperationException(reason);
         }
 
-        var curves = Curves(ProfileGeometry());
+        var curves = Curves(ProfileGeometry()).OfType<JsonNode>().ToList();
         var origin = ProfileOrigin();
         var vertices = new List<ProfileVertex>();
 
@@ -295,7 +296,8 @@ internal sealed class AlignmentJsonDocument
         var lengths = vertices.Select(v => v.CurveLength).ToList();
 
         var nodes = ProfileJson.CreateCurves(points, lengths);
-        var holder = ProfileGeometry()[InfraJson.CurveArrayKey] as JsonObject;
+        var holder = ProfileGeometry()?[InfraJson.CurveArrayKey] as JsonObject
+                     ?? throw new InvalidOperationException("The alignment has no vertical profile.");
         holder["curves"] = nodes;
     }
 
@@ -369,18 +371,18 @@ internal sealed class AlignmentJsonDocument
 
     // ---- navigation ---------------------------------------------------------------------------------------------
 
-    private JsonObject CurveGeometry() => _core[InfraJson.CurveGeometryKey]?["curveGeometry"] as JsonObject;
+    private JsonObject? CurveGeometry() => _core[InfraJson.CurveGeometryKey]?["curveGeometry"] as JsonObject;
 
-    private JsonObject HorizontalGeometry() => CurveGeometry()?[InfraJson.HorizontalGeometryKey]?["horizontalGeometry"] as JsonObject;
+    private JsonObject? HorizontalGeometry() => CurveGeometry()?[InfraJson.HorizontalGeometryKey]?["horizontalGeometry"] as JsonObject;
 
-    private JsonObject ProfileGeometry() => CurveGeometry()?[InfraJson.ProfileGeometryKey]?["profileGeometry"] as JsonObject;
+    private JsonObject? ProfileGeometry() => CurveGeometry()?[InfraJson.ProfileGeometryKey]?["profileGeometry"] as JsonObject;
 
-    private static JsonArray Curves(JsonObject geometry)
+    private static JsonArray Curves(JsonObject? geometry)
     {
         return geometry?[InfraJson.CurveArrayKey]?["curves"] as JsonArray ?? new JsonArray();
     }
 
-    private static string TypeId(JsonNode curve) => curve?["typeid"]?.GetValue<string>();
+    private static string? TypeId(JsonNode? curve) => curve?["typeid"]?.GetValue<string>();
 
     private static double CurveLength(JsonNode curve)
     {
@@ -423,12 +425,13 @@ internal sealed class AlignmentJsonDocument
 
     private static void WritePoint(JsonNode curve, string groupKey, string name, double x, double y)
     {
-        var values = (JsonObject)curve[groupKey][name]["Float64"];
+        var values = curve[groupKey]?[name]?["Float64"] as JsonObject
+                     ?? throw new InvalidOperationException($"The alignment curve is missing its '{name}'.");
         values["x"] = InfraJson.Number(x);
         values["y"] = InfraJson.Number(y);
     }
 
-    private static double? ReadDouble(JsonNode node)
+    private static double? ReadDouble(JsonNode? node)
     {
         return node is null ? null : node.GetValue<double>();
     }

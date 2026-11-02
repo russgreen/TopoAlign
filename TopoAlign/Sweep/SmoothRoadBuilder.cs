@@ -171,7 +171,7 @@ internal static class SmoothRoadBuilder
     /// (for example the section is wider than the tightest turn); the caller then falls back to another method.
     /// </summary>
     public static bool TryBuild(AlignmentApi.PathReader path, IReadOnlyList<double> stations, SectionProfile profile, RoadOptions options,
-        out List<Solid> solids, out string problem)
+        out List<Solid> solids, out string? problem)
     {
         solids = new List<Solid>();
         problem = null;
@@ -222,8 +222,8 @@ internal static class SmoothRoadBuilder
     }
 
     /// <summary>One smooth solid from station index <paramref name="first"/> to <paramref name="last"/>.</summary>
-    internal static Solid BuildChunk(IReadOnlyList<PlanPoint> ring, IReadOnlyList<XYZ> centres, IReadOnlyList<XYZ> tangents, int first, int last,
-        double verticalOffset, out string problem)
+    internal static Solid? BuildChunk(IReadOnlyList<PlanPoint> ring, IReadOnlyList<XYZ> centres, IReadOnlyList<XYZ> tangents, int first, int last,
+        double verticalOffset, out string? problem)
     {
         problem = null;
         var n = ring.Count;
@@ -274,7 +274,7 @@ internal static class SmoothRoadBuilder
         return null;
     }
 
-    private static Solid Assemble(Curve[] splines, XYZ[][] corners, XYZ startNormal, XYZ endNormal, bool reverseSides)
+    private static Solid? Assemble(Curve[] splines, XYZ[][] corners, XYZ startNormal, XYZ endNormal, bool reverseSides)
     {
         var n = splines.Length;
         var last = corners[0].Length - 1;

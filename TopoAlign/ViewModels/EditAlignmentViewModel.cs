@@ -61,21 +61,21 @@ internal partial class EditAlignmentViewModel : BaseViewModel
     private List<Models.DisplayUnitModel> _displayUnits = new();
 
     [ObservableProperty]
-    private Models.DisplayUnitModel _selectedDisplayUnit;
+    private Models.DisplayUnitModel _selectedDisplayUnit = null!;
 
     public string WindowTitle { get; }
 
     /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler HideRequested;
+    public event EventHandler? HideRequested;
 
     /// <summary>True when the dialog was hidden to pick an alignment; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
 
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
-    public EditAlignmentRequest Request { get; private set; }
+    public EditAlignmentRequest? Request { get; private set; }
 
-    private Element _alignment;
-    private string _originalJson;
+    private Element? _alignment;
+    private string? _originalJson;
     private string _originalName = string.Empty;
     private double _originalStartStationFeet;
     private decimal _originalStartStation;
@@ -99,13 +99,13 @@ internal partial class EditAlignmentViewModel : BaseViewModel
             });
         }
 
-        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == documentUnits) ?? DisplayUnits.FirstOrDefault();
+        SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == documentUnits) ?? DisplayUnits.First();
     }
 
     /// <summary>True once an alignment has been chosen.</summary>
     public bool HasAlignment => _alignment is not null;
 
-    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel oldValue, Models.DisplayUnitModel newValue)
+    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel newValue)
     {
         if (oldValue is null || newValue is null)
         {
@@ -187,7 +187,7 @@ internal partial class EditAlignmentViewModel : BaseViewModel
             }
 
             var json = AlignmentApi.GetJson(element);
-            var document = AlignmentJsonDocument.Parse(json);
+            var document = AlignmentJsonDocument.Parse(json ?? throw new InvalidOperationException("The alignment has no JSON data."));
 
             _alignment = element;
             _originalJson = json;
@@ -215,7 +215,7 @@ internal partial class EditAlignmentViewModel : BaseViewModel
         }
     }
 
-    private void RefreshStatus(string note = null)
+    private void RefreshStatus(string? note = null)
     {
         if (_alignment is null || SelectedDisplayUnit is null)
         {
@@ -232,6 +232,11 @@ internal partial class EditAlignmentViewModel : BaseViewModel
     [RelayCommand(CanExecute = nameof(CanApply))]
     private void Apply()
     {
+        if (_alignment is null || _originalJson is null)
+        {
+            return;
+        }
+
         try
         {
             var document = AlignmentJsonDocument.Parse(_originalJson);

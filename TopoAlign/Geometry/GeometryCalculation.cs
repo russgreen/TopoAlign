@@ -232,11 +232,11 @@ internal static class GeometryCalculation
     /// case it is empty.
     /// https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
     /// </summary>
-    public static XYZ LineLineIntersection(
+    public static XYZ? LineLineIntersection(
       XYZ p1, XYZ v1, XYZ p2, XYZ v2)
     {
         XYZ w = p2 - p1;
-        XYZ p5 = null;
+        XYZ? p5 = null;
 
         double c = (v2.X * w.Y - v2.Y * w.X)
           / (v2.X * v1.Y - v2.Y * v1.X);
@@ -261,7 +261,7 @@ internal static class GeometryCalculation
     /// case it is empty.
     /// https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
     /// </summary>
-    public static XYZ LineLineIntersection(
+    public static XYZ? LineLineIntersection(
       Curve c1,
       Curve c2)
     {
@@ -291,7 +291,7 @@ internal static class GeometryCalculation
     /// line and the plane, null if the line is parallel 
     /// to the plane.
     /// </summary>
-    public static XYZ LinePlaneIntersection(
+    public static XYZ? LinePlaneIntersection(
       Line line,
       Plane plane,
       out double lineParameter)

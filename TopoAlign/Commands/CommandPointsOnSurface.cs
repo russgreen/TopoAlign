@@ -21,24 +21,24 @@ public class CommandPointsOnSurface : IExternalCommand
 {
     private static readonly ILogger log = Log.ForContext<CommandPointsOnSurface>();
 
-    private UIApplication _uiapp;
-    private UIDocument _uidoc;
-    private Autodesk.Revit.ApplicationServices.Application _app;
-    private Document _doc;
-    private Selection _sel;
+    private UIApplication _uiapp = null!;
+    private UIDocument _uidoc = null!;
+    private Autodesk.Revit.ApplicationServices.Application _app = null!;
+    private Document _doc = null!;
+    private Selection _sel = null!;
     //private decimal _offset;
     private decimal _divide;
     //private Element _element;
     //private Edge _edge;
-    private View3D _v3d;
+    private View3D _v3d = null!;
 
 #if REVIT2024_OR_GREATER
-    private Toposolid _topoSolid;
+    private Toposolid? _topoSolid;
 #else
-    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+    private Autodesk.Revit.DB.Architecture.TopographySurface? _topoSurface;
 #endif
 
-    public Models.Settings cSettings;
+    public Models.Settings cSettings = null!;
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
@@ -104,9 +104,11 @@ public class CommandPointsOnSurface : IExternalCommand
             var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
 
 #if REVIT2024_OR_GREATER
-            _topoSolid = _doc.GetElement(refToposurface) as Toposolid;
+            _topoSolid = _doc.GetElement(refToposurface) as Toposolid
+                         ?? throw new InvalidOperationException("The selected element is not a toposolid.");
 #else
-            _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
+            _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface
+                           ?? throw new InvalidOperationException("The selected element is not a topography surface.");
 #endif
         }
         catch (Exception)
@@ -120,9 +122,9 @@ public class CommandPointsOnSurface : IExternalCommand
         {
             foreach (Reference r in _uidoc.Selection.PickObjects(ObjectType.Element, lineFilter, "Select lines(s) to add topo points along"))
             {
-                Curve curve = null;
-                ModelLine modelLine = _doc.GetElement(r) as ModelLine;
-                ModelCurve modelCurve = _doc.GetElement(r) as ModelCurve;
+                Curve? curve = null;
+                ModelLine? modelLine = _doc.GetElement(r) as ModelLine;
+                ModelCurve? modelCurve = _doc.GetElement(r) as ModelCurve;
                 if (modelLine is not null)
                 {
                     try
@@ -206,11 +208,15 @@ public class CommandPointsOnSurface : IExternalCommand
                 var dirUp = (endPtUp - startPt).Normalize();
                 var referenceIntersector = new ReferenceIntersector(_topoSolid.Id, FindReferenceTarget.All, _v3d);
                 var obstructionsOnUnboundLineUp = referenceIntersector.Find(startPt, dirUp);
-                XYZ point = null;
                 var gRefWithContext = obstructionsOnUnboundLineUp.FirstOrDefault();
+                if (gRefWithContext is null)
+                {
+                    // the point is not over the topography
+                    continue;
+                }
+
                 var gRef = gRefWithContext.GetReference();
-                point = gRef.GlobalPoint;
-                points1.Add(point);
+                points1.Add(gRef.GlobalPoint);
             }
 
             if (CleanupTopoPoints == true)
@@ -261,11 +267,15 @@ public class CommandPointsOnSurface : IExternalCommand
                     var dirUp = (endPtUp - startPt).Normalize();
                     var referenceIntersector = new ReferenceIntersector(_topoSurface.Id, FindReferenceTarget.All, _v3d);
                     var obstructionsOnUnboundLineUp = referenceIntersector.Find(startPt, dirUp);
-                    XYZ point = null;
                     var gRefWithContext = obstructionsOnUnboundLineUp.FirstOrDefault();
+                    if (gRefWithContext is null)
+                    {
+                        // the point is not over the topography
+                        continue;
+                    }
+
                     var gRef = gRefWithContext.GetReference();
-                    point = gRef.GlobalPoint;
-                    points1.Add(point);
+                    points1.Add(gRef.GlobalPoint);
                 }
 
                 if (CleanupTopoPoints == true)

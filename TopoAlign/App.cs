@@ -15,11 +15,11 @@ namespace TopoAlign;
 [Regeneration(RegenerationOption.Manual)]
 class App : IExternalApplication
 {
-    public static UIControlledApplication CachedUiCtrApp;
-    public static ControlledApplication CtrApp;
-    public static UIApplication CachedUiApp;
+    public static UIControlledApplication CachedUiCtrApp = null!;
+    public static ControlledApplication CtrApp = null!;
+    public static UIApplication CachedUiApp = null!;
 
-    public static Autodesk.Revit.DB.Document RevitDocument;
+    public static Autodesk.Revit.DB.Document RevitDocument = null!;
 
     //public static Autodesk.Revit.DB.Document revitDocument;
     private static readonly string _domain = Environment.UserDomainName;
@@ -185,10 +185,10 @@ class App : IExternalApplication
         return panel;
     }
 
-    private System.Windows.Media.ImageSource PngImageSource(string embeddedPath)
+    private System.Windows.Media.ImageSource? PngImageSource(string embeddedPath)
     {
         var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(embeddedPath);
-        System.Windows.Media.ImageSource imageSource;
+        System.Windows.Media.ImageSource? imageSource;
         try
         {
             imageSource = BitmapFrame.Create(stream);
