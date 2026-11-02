@@ -13,7 +13,8 @@
 	  <NeutralLanguage>en</NeutralLanguage>
 	  <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 	  <UseWPF>true</UseWPF>
-	  <UseWindowsForms>true</UseWindowsForms>
+	  <Nullable>enable</Nullable>
+	  <!--<UseWindowsForms>true</UseWindowsForms>-->
 	  <!--<ImplicitUsings>true</ImplicitUsings>-->
 	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
@@ -99,6 +100,18 @@
      <None Remove="Images\Reset32.png" />
      <None Remove="Images\TopoAlign32.png" />
      <None Remove="Images\TopoAlignPlane32.png" />
+     <None Remove="Images\AlignmentFromCurve32.png" />
+     <None Remove="Images\EditAlignment32.png" />
+     <None Remove="Images\SweepAlongAlignment32.png" />
+     <None Remove="Images\StationLabels32.png" />
+     <None Remove="Images\EditProfile32.png" />
+     <None Remove="Images\SweepToToposolid32.png" />
+   </ItemGroup>
+
+   <!-- Toposolids arrived in Revit 2024, so the Sweep to Toposolid dialog is only built from there. -->
+   <ItemGroup Condition="$(RevitVersion) &lt; 2024">
+     <Page Remove="Views\SweepToToposolidView.xaml" />
+     <Compile Remove="Views\SweepToToposolidView.xaml.cs" />
    </ItemGroup>
   
    <ItemGroup>
@@ -108,31 +121,35 @@
      <EmbeddedResource Include="Images\Reset32.png" />
      <EmbeddedResource Include="Images\TopoAlign32.png" />
      <EmbeddedResource Include="Images\TopoAlignPlane32.png" />
+     <EmbeddedResource Include="Images\AlignmentFromCurve32.png" />
+     <EmbeddedResource Include="Images\EditAlignment32.png" />
+     <EmbeddedResource Include="Images\SweepAlongAlignment32.png" />
+     <EmbeddedResource Include="Images\StationLabels32.png" />
+     <EmbeddedResource Include="Images\EditProfile32.png" />
+     <EmbeddedResource Include="Images\SweepToToposolid32.png" />
    </ItemGroup>
   
    <ItemGroup>
-     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
-     <PackageReference Include="geometry3Sharp" Version="1.0.324" />
-     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.*" />
+	 <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
+	 <PackageReference Include="geometry3Sharp" Version="1.0.324" />
+	 <PackageReference Include="System.Text.Json" Version="10.0.14" Condition="'$(TargetFramework)'=='net48'" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
-	   
-	 <PackageReference Include="Serilog" Version="4.3.0" />
-	   
+
+	 <PackageReference Include="Serilog" Version="4.4.0" />
+
 	 <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
 	 <PackageReference Include="Serilog.Sinks.GoogleAnalytics" Version="1.*" />
 
 	   <!--Repacking-->
-	   <PackageReference Include="ILRepack" Version="2.0.44">
+	   <PackageReference Include="ILRepack" Version="2.0.48">
 		   <PrivateAssets>all</PrivateAssets>
 		   <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	   </PackageReference>
    </ItemGroup>
-	
+
   <ItemGroup>
-    <EmbeddedResource Update="ProgressForm.resx">
-      <DependentUpon>ProgressForm.cs</DependentUpon>
-    </EmbeddedResource>
+    <InternalsVisibleTo Include="TopoAlign.Tests" />
   </ItemGroup>
 
   <ItemGroup>

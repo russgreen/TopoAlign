@@ -1,343 +1,451 @@
-﻿body {
-    background: #FFFFFF;
-    color: #000000;
-    font-family: Verdana;
-    font-style: normal;
-    font-weight: normal;
-    font-size: smaller;
-    margin-top: 0;
-    margin-bottom: 0;
-    margin-left: 10;
-    margin-right: 10;
-    width: 100%;
+/* TopoAlign documentation
+   Russ Green Design System: docs-site kit, light theme.
+   Token names and values below are copied from the system's tokens.css. */
+
+:root {
+  /* Colour scales */
+  --blue-50: #eaf1fe;
+  --blue-400: #3b7cf0;
+  --blue-500: #2461db;
+  --blue-600: #1b4cb3;
+  --gray-950: #0b0d10;
+  --gray-900: #14171c;
+  --gray-500: #5b6472;
+  --gray-300: #aeb4bd;
+  --gray-200: #d3d7dc;
+  --gray-50: #f5f6f7;
+  --white: #ffffff;
+
+  /* Colour roles */
+  --surface-1: var(--white);
+  --surface-2: var(--gray-50);
+  --border: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-500);
+  --accent-current: var(--blue-500);
+  --accent-on-light-soft: var(--blue-50);
+  --focus-ring: var(--blue-400);
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Radius */
+  --radius-xs: 2px;
+  --radius-md: 6px;
+
+  /* Type */
+  --font-sans: 'Public Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Fragment Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-xl: 20px;
+  --text-3xl: 32px;
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-relaxed: 1.65;
+  --tracking-tight: -0.01em;
+  --tracking-wide: 0.04em;
+  --tracking-widest: 0.08em;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(.2, .8, .2, 1);
+  --duration-fast: 110ms;
 }
 
-.filename {
-    font-family: Courier New;
-    font-style: normal;
-    font-weight: bold;
-    color: blue;
+/* Base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-.parametername {
-    font-family: Courier New;
-    font-style: normal;
-    font-weight: bold;
-    color: purple;
+html {
+  color-scheme: light;
+  scroll-padding-top: var(--space-6);
 }
 
-ul {
-    list-style-type: circle;
-    margin-top: 1em;
-    margin-bottom: 1em;
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-relaxed);
 }
 
-ol {
-    list-style-type: decimal;
-    margin-top: 1em;
-    margin-bottom: 1em;
+a {
+  color: var(--accent-current);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
 }
-
-/* a:link {
-	color:	#000000;
-}
-
-a:visited {
-	color:	#0000FF;
-} 
 
 a:hover {
-	color: #ff0000;
-}*/
-
-h1 {
-    font-family: Arial, Helvetica, sans-serif;
-    color: #0066cc;
+  color: var(--blue-600);
 }
 
-h2 {
-    font-family: Arial, Helvetica, sans-serif;
-    color: #0066cc;
+a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 
-h3 {
-    font-family: Arial, Helvetica, sans-serif;
-    color: #0066cc;
+strong {
+  font-weight: var(--weight-semibold);
 }
 
-nav {
-    border-bottom: 1px solid black;
+code {
+  padding: 1px var(--space-1);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 0.93em;
+  overflow-wrap: anywhere;
+}
+
+/* Sidebar */
+
+header {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  border-right: 1px solid var(--border);
+}
+
+header .wrap {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.brand {
+  display: block;
+  color: var(--text-primary);
+}
+
+.brand:hover {
+  color: var(--text-primary);
+}
+
+.brand-wordmark {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+}
+
+.brand-product {
+  display: block;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.side-nav h2 {
+  margin: 0 0 var(--space-2);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-widest);
+  line-height: var(--leading-snug);
+  text-transform: uppercase;
+}
+
+.side-nav ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.side-nav a {
+  display: block;
+  padding: 6px var(--space-2);
+  border-radius: var(--radius-xs);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.side-nav a:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.side-nav a[aria-current="page"] {
+  background: var(--accent-on-light-soft);
+  color: var(--accent-current);
+  font-weight: var(--weight-semibold);
+}
+
+/* Content */
+
+main {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+
+main .wrap,
+footer .wrap {
+  max-width: 784px;
+  padding: var(--space-8);
+}
+
+.crumbs {
+  margin-bottom: var(--space-3);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--leading-snug);
 }
 
 .crumbs ol {
-    list-style-type: none;
-    padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.crumb {
-    display: inline-block;
+.crumb + .crumb::before {
+  content: "/";
+  padding: 0 var(--space-1);
 }
 
-    .crumb a::after {
-        display: inline-block;
-        color: #000;
-        content: '>';
-        font-size: 80%;
-        font-weight: bold;
-        padding: 0 3px;
-    }
-
-table,
-tr {
-    vertical-align: top;
+.crumb a {
+  color: inherit;
 }
 
-th {
-    text-align: left;
+.crumb a:hover {
+  color: var(--accent-current);
 }
 
-td {
-    text-align: left;
-    padding-bottom: 8px;
+article h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
 }
 
-
-#layoutgrid {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: x-large;
-    border-collapse: collapse;
-    width: 400px;
-    height: 300px;
+article h1 + p {
+  margin: var(--space-3) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-md);
+  line-height: 1.6;
 }
 
-    #layoutgrid td,
-    #customers th {
-        text-align: center;
-        border: 1px solid #282727;
-    }
-
-    #layoutgrid tr {
-        vertical-align: middle;
-    }
-
-
-/* Additional styles consolidated from HTML files */
-/* Common styles */
-.container {
-    max-width: 1000px;
-    margin: 0 auto;
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+article h2 {
+  margin: var(--space-8) 0 var(--space-3);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
 }
 
-.header {
-    text-align: center;
-    margin-bottom: 40px;
+article h3 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
 }
 
-    .header h1 {
-        font-size: 36px;
-        margin-bottom: 10px;
-    }
+article p {
+  margin: var(--space-3) 0;
+}
 
-    .header p {
-        font-size: 18px;
-        color: #666;
-    }
+article ul,
+article ol {
+  margin: var(--space-3) 0;
+  padding-left: var(--space-6);
+}
 
-.section {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #eee;
+article li + li {
+  margin-top: var(--space-1);
+}
+
+article li::marker {
+  color: var(--text-secondary);
+}
+
+article ol > li::marker {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+article p a,
+article li a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+article video {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--gray-950);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+/* Command cards */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
 }
 
 .card {
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: var(--space-3);
+  align-content: start;
+  padding: var(--space-4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-standard);
 }
 
-    .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .card h3 {
-        margin-top: 0;
-    }
+.card:hover {
+  border-color: var(--border-strong);
+}
 
 .card-icon {
-    width: 32px;
-    height: 32px;
-    float: left;
-    margin-right: 15px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    padding: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  grid-row: 1 / span 2;
+  width: 32px;
+  height: 32px;
 }
 
-.card-link {
-    display: inline-block;
-    background-color: #0066cc;
-    color: white;
-    padding: 8px 16px;
-    text-decoration: none;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-    margin-top: 10px;
+.card h3 {
+  margin: 0;
+  font-size: var(--text-base);
 }
 
-    .card-link:hover {
-        background-color: #0052a3;
-    }
-
-.features {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin: 0 -10px;
+/* Makes the whole card the click target for its title link. */
+.card h3 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-md);
 }
 
-.feature {
-    flex: 1 1 300px;
-    margin: 0 10px 20px;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    text-align: center;
+.card p {
+  margin: var(--space-1) 0 0;
 }
 
-.feature-icon {
-    font-size: 36px;
-    margin-bottom: 15px;
-    color: #0066cc;
+.muted {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
-.steps {
-    margin-left: 20px;
+/* Previous and next links */
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-10);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-sm);
 }
 
-.note {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-left: 4px solid #0066cc;
-    margin: 15px 0;
+.pager-prev {
+  color: var(--text-secondary);
 }
 
-.footer {
-    text-align: center;
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-    font-size: 14px;
-    color: #666;
+.pager-next {
+  margin-left: auto;
+  text-align: right;
 }
 
-/* Command documentation specific styles */
-.header-logo {
+/* Footer */
+
+footer {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+footer .wrap {
+  padding-top: 0;
+  padding-bottom: var(--space-6);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+/* Narrow screens: the sidebar collapses to the wordmark, and pages link
+   back to the index through the breadcrumb. */
+
+@media (max-width: 800px) {
+  body {
     display: block;
-    margin: 0 auto 20px;
-    max-width: 200px;
+  }
+
+  header {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header .wrap {
+    position: static;
+    max-height: none;
+  }
+
+  .side-nav {
+    display: none;
+  }
+
+  main .wrap,
+  footer .wrap {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  main .wrap {
+    padding-top: var(--space-6);
+  }
+
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
-
-.command-card {
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 20px;
-    margin-bottom: 20px;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    display: flex;
-    transition: transform 0.2s;
-}
-
-    .command-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-.command-icon {
-    margin-right: 20px;
-    flex-shrink: 0;
-}
-
-.command-content {
-    flex-grow: 1;
-}
-
-    .command-content h2 {
-        margin-top: 0;
-    }
-
-    .command-content p {
-        margin-bottom: 10px;
-    }
-
-.command-link {
-    display: inline-block;
-    background-color: #0066cc;
-    color: white;
-    padding: 8px 16px;
-    text-decoration: none;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-
-    .command-link:hover {
-        background-color: #0052a3;
-    }
-
-/* Workflow section styles */
-.workflow-section {
-    margin-top: 40px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
-}
-
-.workflow-diagram {
-    display: flex;
-    justify-content: space-between;
-    margin: 30px 0;
-}
-
-.workflow-step {
-    text-align: center;
-    flex: 1;
-    position: relative;
-    padding: 0 10px;
-}
-
-    .workflow-step:not(:last-child):after {
-        content: "→";
-        position: absolute;
-        right: -10px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 24px;
-        color: #0066cc;
-    }
-
-.workflow-icon {
-    display: inline-block;
-    width: 60px;
-    height: 60px;
-    background-color: #0066cc;
-    border-radius: 50%;
-    margin-bottom: 10px;
-    position: relative;
-}
-
-    .workflow-icon img {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 32px;
-        height: 32px;
-    }

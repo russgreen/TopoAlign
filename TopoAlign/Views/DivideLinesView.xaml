@@ -1,0 +1,52 @@
+<Window x:Class="TopoAlign.Views.DivideLinesView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TopoAlign.Views"
+        xmlns:viewModels="clr-namespace:TopoAlign.ViewModels"
+        xmlns:behaviours="clr-namespace:TopoAlign.Behaviours"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance {x:Type viewModels:DivideLinesViewModel}, IsDesignTimeCreatable=False}"
+        Title="{Binding WindowTitle}"
+        FontSize="12" FontFamily="Segoe UI Light"
+        WindowStartupLocation="CenterScreen"
+        Height="215" Width="250"
+        WindowStyle="ToolWindow" ResizeMode="NoResize">
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="130" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Units used"/>
+        <ComboBox Grid.Row="1" Grid.ColumnSpan="2" Margin="0,0,0,5"
+                  ItemsSource="{Binding DisplayUnits}"
+                  DisplayMemberPath="Label"
+                  SelectedValue="{Binding SelectedDisplayUnit, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Grid.Row="2" Text="Divide edge distance"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,5"
+                 HorizontalContentAlignment="Right"
+                 IsEnabled="{Binding IsDivideEnabled}"
+                 Text="{Binding Divide}"
+                 MaxLength="20" behaviours:TextBoxInput.RegularExpression="^[0-9]*\.?[0-9]*$" />
+
+        <TextBlock Grid.Row="3" Text="Vertical offset"/>
+        <TextBox x:Name="OffsetTextBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,5"
+                 HorizontalContentAlignment="Right"
+                 Text="{Binding Offset}"
+                 MaxLength="20" behaviours:TextBoxInput.RegularExpression="^[0-9]*\.?[0-9]*$" />
+
+        <Button Grid.Row="4" Grid.ColumnSpan="2" Content="OK" IsDefault="True"
+                Command="{Binding OkCommand}" />
+    </Grid>
+</Window>

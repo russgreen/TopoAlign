@@ -269,7 +269,8 @@ internal class CurveUtils
 
         foreach (Reference reference in boundaries)
         {
-            CurveElement curveElement = doc.GetElement(reference) as CurveElement;
+            var curveElement = doc.GetElement(reference) as CurveElement
+                               ?? throw new InvalidOperationException("The reference is not a curve element.");
             curves.Add(curveElement.GeometryCurve.Clone());
         }
 

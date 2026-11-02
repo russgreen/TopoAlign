@@ -6,7 +6,7 @@ internal class DisplayUnitModel
 #if REVIT2018 || REVIT2019 || REVIT2020
     public DisplayUnitType DisplayUnit { get; set; }
 #else
-    public ForgeTypeId DisplayUnit { get; set; }
+    public ForgeTypeId DisplayUnit { get; set; } = new ForgeTypeId();
 #endif
-    public string Label { get; set; }
+    public string Label { get; set; } = string.Empty;
 }

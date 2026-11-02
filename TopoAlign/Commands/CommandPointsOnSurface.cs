@@ -8,9 +8,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using TopoAlign.Comparers;
 using TopoAlign.Geometry;
+using TopoAlign.ViewModels;
+using TopoAlign.Views;
 
 namespace TopoAlign.Commands;
 
@@ -20,33 +21,24 @@ public class CommandPointsOnSurface : IExternalCommand
 {
     private static readonly ILogger log = Log.ForContext<CommandPointsOnSurface>();
 
-    private UIApplication _uiapp;
-    private UIDocument _uidoc;
-    private Autodesk.Revit.ApplicationServices.Application _app;
-    private Document _doc;
-    private Selection _sel;
+    private UIApplication _uiapp = null!;
+    private UIDocument _uidoc = null!;
+    private Autodesk.Revit.ApplicationServices.Application _app = null!;
+    private Document _doc = null!;
+    private Selection _sel = null!;
     //private decimal _offset;
     private decimal _divide;
     //private Element _element;
     //private Edge _edge;
-    private View3D _v3d;
-    private Units _docUnits;
+    private View3D _v3d = null!;
 
 #if REVIT2024_OR_GREATER
-    private Toposolid _topoSolid;
+    private Toposolid? _topoSolid;
 #else
-    private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface;
+    private Autodesk.Revit.DB.Architecture.TopographySurface? _topoSurface;
 #endif
 
-#if REVIT2018 || REVIT2019 || REVIT2020
-    private DisplayUnitType _docDisplayUnits; 
-    private DisplayUnitType _useDisplayUnits;
-#else
-    private ForgeTypeId _docDisplayUnits;
-    private ForgeTypeId _useDisplayUnits;
-#endif
-
-    public Models.Settings cSettings;
+    public Models.Settings cSettings = null!;
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
@@ -66,63 +58,20 @@ public class CommandPointsOnSurface : IExternalCommand
         //    return Result.Cancelled;
         //}
 
-#if REVIT2018 || REVIT2019 || REVIT2020
-        _docUnits = _doc.GetUnits();
-        _docDisplayUnits = _doc.GetUnits().GetFormatOptions(UnitType.UT_Length).DisplayUnits;
-#else
-        _docUnits = _doc.GetUnits();
-        _docDisplayUnits = _doc.GetUnits().GetFormatOptions(SpecTypeId.Length).GetUnitTypeId();
-#endif
-        using (FormDivideLines frm = new())
+        var viewModel = new DivideLinesViewModel(_doc, cSettings.DivideEdgeDistance);
+        var view = new DivideLinesView(viewModel);
+
+        if (view.ShowDialog() == true)
         {
-            _divide = Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)cSettings.DivideEdgeDistance, _docDisplayUnits));
+            _divide = viewModel.InternalDivide;
 
-            frm.nudVertOffset.Value = 0;
-            //frm.nudVertOffset.Enabled = false;
+            //first save the settings for next time
+            cSettings.DivideEdgeDistance = _divide;
+            cSettings.SaveSettings();
 
-            if (_divide > frm.nudDivide.Maximum)
+            if (PointsOnSurfaceAlongLines() == false)
             {
-                frm.nudDivide.Value = frm.nudDivide.Maximum;
-            }
-            else
-            {
-                frm.nudDivide.Value = _divide;
-            }
-
-#if REVIT2018 || REVIT2019 || REVIT2020
-            foreach (DisplayUnitType displayUnitType in UnitUtils.GetValidDisplayUnits(UnitType.UT_Length))
-            {
-                frm.DisplayUnitTypecomboBox.Items.AddRange(new object[] { displayUnitType });
-                frm.DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelFor(displayUnitType));
-            }
-#else
-            foreach (ForgeTypeId displayUnitType in UnitUtils.GetValidUnits(SpecTypeId.Length))
-            {
-                frm.DisplayUnitTypecomboBox.Items.AddRange(new object[] { displayUnitType });
-                frm.DisplayUnitcomboBox.Items.Add(LabelUtils.GetLabelForUnit(displayUnitType));
-            }
-#endif
-            frm.DisplayUnitTypecomboBox.SelectedItem = _docDisplayUnits;
-            frm.DisplayUnitcomboBox.SelectedIndex = frm.DisplayUnitTypecomboBox.SelectedIndex;
-
-            if (frm.ShowDialog() == DialogResult.OK)
-            {
-#if REVIT2018 || REVIT2019 || REVIT2020
-                _useDisplayUnits = (DisplayUnitType)frm.DisplayUnitTypecomboBox.SelectedItem;
-                _divide = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)frm.nudDivide.Value, _useDisplayUnits));
-#else
-                _useDisplayUnits = (ForgeTypeId)frm.DisplayUnitTypecomboBox.SelectedItem;
-                _divide = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)frm.nudDivide.Value, _useDisplayUnits));
-#endif
-
-                //first save the settings for next time
-                cSettings.DivideEdgeDistance = _divide;
-                cSettings.SaveSettings();
-
-                if (PointsOnSurfaceAlongLines() == false)
-                {
-                    return Result.Failed;
-                }
+                return Result.Failed;
             }
         }
 
@@ -155,9 +104,11 @@ public class CommandPointsOnSurface : IExternalCommand
             var refToposurface = _uidoc.Selection.PickObject(ObjectType.Element, topoFilter, "Select a topographic surface");
 
 #if REVIT2024_OR_GREATER
-            _topoSolid = _doc.GetElement(refToposurface) as Toposolid;
+            _topoSolid = _doc.GetElement(refToposurface) as Toposolid
+                         ?? throw new InvalidOperationException("The selected element is not a toposolid.");
 #else
-            _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface;
+            _topoSurface = _doc.GetElement(refToposurface) as Autodesk.Revit.DB.Architecture.TopographySurface
+                           ?? throw new InvalidOperationException("The selected element is not a topography surface.");
 #endif
         }
         catch (Exception)
@@ -171,9 +122,9 @@ public class CommandPointsOnSurface : IExternalCommand
         {
             foreach (Reference r in _uidoc.Selection.PickObjects(ObjectType.Element, lineFilter, "Select lines(s) to add topo points along"))
             {
-                Curve curve = null;
-                ModelLine modelLine = _doc.GetElement(r) as ModelLine;
-                ModelCurve modelCurve = _doc.GetElement(r) as ModelCurve;
+                Curve? curve = null;
+                ModelLine? modelLine = _doc.GetElement(r) as ModelLine;
+                ModelCurve? modelCurve = _doc.GetElement(r) as ModelCurve;
                 if (modelLine is not null)
                 {
                     try
@@ -257,11 +208,15 @@ public class CommandPointsOnSurface : IExternalCommand
                 var dirUp = (endPtUp - startPt).Normalize();
                 var referenceIntersector = new ReferenceIntersector(_topoSolid.Id, FindReferenceTarget.All, _v3d);
                 var obstructionsOnUnboundLineUp = referenceIntersector.Find(startPt, dirUp);
-                XYZ point = null;
                 var gRefWithContext = obstructionsOnUnboundLineUp.FirstOrDefault();
+                if (gRefWithContext is null)
+                {
+                    // the point is not over the topography
+                    continue;
+                }
+
                 var gRef = gRefWithContext.GetReference();
-                point = gRef.GlobalPoint;
-                points1.Add(point);
+                points1.Add(gRef.GlobalPoint);
             }
 
             if (CleanupTopoPoints == true)
@@ -312,11 +267,15 @@ public class CommandPointsOnSurface : IExternalCommand
                     var dirUp = (endPtUp - startPt).Normalize();
                     var referenceIntersector = new ReferenceIntersector(_topoSurface.Id, FindReferenceTarget.All, _v3d);
                     var obstructionsOnUnboundLineUp = referenceIntersector.Find(startPt, dirUp);
-                    XYZ point = null;
                     var gRefWithContext = obstructionsOnUnboundLineUp.FirstOrDefault();
+                    if (gRefWithContext is null)
+                    {
+                        // the point is not over the topography
+                        continue;
+                    }
+
                     var gRef = gRefWithContext.GetReference();
-                    point = gRef.GlobalPoint;
-                    points1.Add(point);
+                    points1.Add(gRef.GlobalPoint);
                 }
 
                 if (CleanupTopoPoints == true)

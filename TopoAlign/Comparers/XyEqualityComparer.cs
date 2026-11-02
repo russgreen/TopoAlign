@@ -12,8 +12,13 @@ internal class XyEqualityComparer : IEqualityComparer<XYZ>
 {
     private const double _sixteenthInchInFeet = 1.0d / (16.0d * 12.0d);
 
-    public bool Equals(XYZ p, XYZ q)
+    public bool Equals(XYZ? p, XYZ? q)
     {
+        if (p is null || q is null)
+        {
+            return ReferenceEquals(p, q);
+        }
+
         var testPoint = new XYZ(q.X, q.Y, p.Z);
 
         return p.IsAlmostEqualTo(testPoint, _sixteenthInchInFeet);

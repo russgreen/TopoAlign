@@ -40,6 +40,16 @@ public class ElemPickFilter : ISelectionFilter
                 return true;
             }
 
+            case (long)BuiltInCategory.OST_Roads:
+                {
+                    return true;
+                }
+
+            case (long)BuiltInCategory.OST_Hardscape:
+                {
+                    return true;
+                }
+
             case (long)BuiltInCategory.OST_GenericModel:
             {
                 return true;
