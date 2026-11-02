@@ -69,7 +69,15 @@ public class CommandSweepAlignment : IExternalCommand
         {
             var result = RoadBuilder.Create(App.RevitDocument, request.Alignment, request.Profile, request.Options);
 
-            var summary = $"Road created along '{request.AlignmentName}' from {result.StationCount} sections.";
+            var summary = request.Options.Output == RoadOutput.Toposolid
+                ? $"Toposolid created along '{request.AlignmentName}' from {result.StationCount} sections and {result.ToposolidPointCount} surface points. No road was added to the model."
+                : $"Road created along '{request.AlignmentName}' from {result.StationCount} sections.";
+            if (result.ToposolidPointsAddedAfterwards)
+            {
+                summary += $"{Environment.NewLine}{Environment.NewLine}Revit would not make the toposolid with its points in one step, " +
+                           "so the boundary was made first and the points added to it afterwards.";
+            }
+
             if (result.ReplacedPrevious)
             {
                 summary += " The earlier road for this alignment was replaced.";

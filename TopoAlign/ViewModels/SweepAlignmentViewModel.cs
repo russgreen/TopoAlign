@@ -56,14 +56,44 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     public List<RoadChoice<RoadOutput>> Outputs { get; } = new()
     {
         new RoadChoice<RoadOutput>(RoadOutput.DirectShape, "Direct shape"),
-        new RoadChoice<RoadOutput>(RoadOutput.Family, "Family")
+        new RoadChoice<RoadOutput>(RoadOutput.Family, "Family"),
+#if REVIT2024_OR_GREATER
+        new RoadChoice<RoadOutput>(RoadOutput.Toposolid, "Toposolid only (no road)")
+#endif
     };
 
     [ObservableProperty]
     private RoadChoice<RoadGeometryMethod>? _selectedGeometryMethod;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsToposolidOutput))]
+    [NotifyPropertyChangedFor(nameof(IsRoadOutput))]
+    [NotifyPropertyChangedFor(nameof(CreateButtonText))]
+    [NotifyPropertyChangedFor(nameof(ExistingRoadNote))]
+    [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
     private RoadChoice<RoadOutput>? _selectedOutput;
+
+    /// <summary>Toposolid types in the project, offered when the road is only used to make a toposolid.</summary>
+    public List<RoadChoice<ElementId>> ToposolidTypes { get; } = new();
+
+    /// <summary>Levels in the project, lowest first.</summary>
+    public List<RoadChoice<ElementId>> Levels { get; } = new();
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
+    private RoadChoice<ElementId>? _selectedToposolidType;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
+    private RoadChoice<ElementId>? _selectedLevel;
+
+    /// <summary>True when no road is added and the swept geometry only makes a toposolid.</summary>
+    public bool IsToposolidOutput => SelectedOutput?.Value == RoadOutput.Toposolid;
+
+    /// <summary>True when a road is added to the model, so it has a category.</summary>
+    public bool IsRoadOutput => !IsToposolidOutput;
+
+    public string CreateButtonText => IsToposolidOutput ? "Create Toposolid" : "Create Road";
 
     [ObservableProperty]
     private string _alignmentStatus = "No alignment selected.";
@@ -93,8 +123,12 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     [ObservableProperty]
     private RoadCategory? _selectedCategory;
 
-    [ObservableProperty]
-    private string _existingRoadNote = string.Empty;
+    private bool _hasExistingRoad;
+
+    /// <summary>Warns that creating again replaces the road already made for the alignment; not shown when only a toposolid is made, which leaves roads alone.</summary>
+    public string ExistingRoadNote => _hasExistingRoad && !IsToposolidOutput
+        ? "A road already exists for this alignment. Creating again replaces it."
+        : string.Empty;
 
     [ObservableProperty]
     private List<Models.DisplayUnitModel> _displayUnits = new();
@@ -140,6 +174,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         SelectedDisplayUnit = DisplayUnits.FirstOrDefault(x => x.DisplayUnit == documentUnits) ?? DisplayUnits.First();
 
         Categories = RoadBuilder.GetCategories(App.RevitDocument);
+        FillToposolidChoices();
         ProfileTypes = SectionProfileReader.ListProfileTypes(App.RevitDocument);
         ProfileStatus = ProfileTypes.Count == 0
             ? "No profile families are loaded. Load one from Revit's Profiles library, or draw your own closed shape in a profile family."
@@ -150,7 +185,30 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
 
     public bool HasAlignment => _alignment is not null;
 
-    private bool CanCreate() => HasAlignment && _profile is not null && Interval > 0m;
+    private bool CanCreate() => HasAlignment && _profile is not null && Interval > 0m
+                                && (!IsToposolidOutput || (SelectedToposolidType is not null && SelectedLevel is not null));
+
+    /// <summary>Lists the toposolid types and levels. There are no toposolids before Revit 2024, so the lists stay empty there.</summary>
+    private void FillToposolidChoices()
+    {
+#if REVIT2024_OR_GREATER
+        ToposolidTypes.AddRange(ToposolidBuilder.GetTypes(App.RevitDocument).Select(type => new RoadChoice<ElementId>(type.Id, type.Name)));
+        Levels.AddRange(ToposolidBuilder.GetLevels(App.RevitDocument).Select(level => new RoadChoice<ElementId>(level.Id, level.Name)));
+#endif
+    }
+
+    /// <summary>Starts the level on the highest one at or below the alignment, which is where the toposolid will sit.</summary>
+    private void SelectLevelFor(Element alignment)
+    {
+#if REVIT2024_OR_GREATER
+        var levels = ToposolidBuilder.GetLevels(App.RevitDocument);
+        var level = ToposolidBuilder.DefaultLevel(levels, alignment);
+        if (level is not null)
+        {
+            SelectedLevel = Levels.FirstOrDefault(choice => choice.Value == level.Id) ?? SelectedLevel;
+        }
+#endif
+    }
 
     private double ToInternal(decimal displayValue)
     {
@@ -197,7 +255,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     internal bool SelectAlignment(Element element)
     {
         _alignment = null;
-        ExistingRoadNote = string.Empty;
+        _hasExistingRoad = false;
         try
         {
             var info = AlignmentApi.GetInfo(element);
@@ -212,16 +270,15 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
             var length = UnitUtils.ConvertFromInternalUnits(info.DisplayedEndStation - info.DisplayedStartStation, SelectedDisplayUnit.DisplayUnit);
             AlignmentStatus = $"{_alignmentName}, length {length:N2} {SelectedDisplayUnit.Label}";
 
-            if (RoadBuilder.FindRoads(App.RevitDocument, element).Count > 0)
-            {
-                ExistingRoadNote = "A road already exists for this alignment. Creating again replaces it.";
-            }
+            _hasExistingRoad = RoadBuilder.FindRoads(App.RevitDocument, element).Count > 0;
+            SelectLevelFor(element);
 
             return true;
         }
         finally
         {
             OnPropertyChanged(nameof(HasAlignment));
+            OnPropertyChanged(nameof(ExistingRoadNote));
             CreateCommand.NotifyCanExecuteChanged();
         }
     }
@@ -310,6 +367,12 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
                 Output = SelectedOutput?.Value ?? RoadOutput.DirectShape
             };
 
+            if (options.Output == RoadOutput.Toposolid && SelectedToposolidType is not null && SelectedLevel is not null)
+            {
+                options.ToposolidTypeId = SelectedToposolidType.Value;
+                options.LevelId = SelectedLevel.Value;
+            }
+
             SaveSettings();
 
             // The road is built by the command once this dialog has closed, so the transaction
@@ -338,6 +401,8 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         SelectedProfileType = ProfileTypes.FirstOrDefault(t => t.Name == _settings.SweepProfileName) ?? ProfileTypes.FirstOrDefault();
         SelectedGeometryMethod = GeometryMethods.FirstOrDefault(m => m.Value.ToString() == _settings.SweepGeometryMethod) ?? GeometryMethods[0];
         SelectedOutput = Outputs.FirstOrDefault(o => o.Value.ToString() == _settings.SweepOutput) ?? Outputs[0];
+        SelectedToposolidType = ToposolidTypes.FirstOrDefault(t => t.Name == _settings.RoadToposolidType) ?? ToposolidTypes.FirstOrDefault();
+        SelectedLevel = Levels.FirstOrDefault();
     }
 
     private void SaveSettings()
@@ -350,6 +415,10 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         _settings.SweepProfileName = SelectedProfileType?.Name ?? string.Empty;
         _settings.SweepGeometryMethod = (SelectedGeometryMethod?.Value ?? RoadGeometryMethod.SegmentedLoft).ToString();
         _settings.SweepOutput = (SelectedOutput?.Value ?? RoadOutput.DirectShape).ToString();
+        if (SelectedToposolidType is not null)
+        {
+            _settings.RoadToposolidType = SelectedToposolidType.Name;
+        }
         _settings.SaveSettings();
     }
 }

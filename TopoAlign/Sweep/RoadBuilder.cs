@@ -36,6 +36,12 @@ internal sealed class RoadOptions
 
     /// <summary>A DirectShape (default) or a loadable family with an instance placed in the model.</summary>
     public RoadOutput Output { get; set; } = RoadOutput.DirectShape;
+
+    /// <summary>The toposolid type to use when <see cref="Output"/> is <see cref="RoadOutput.Toposolid"/>.</summary>
+    public ElementId ToposolidTypeId { get; set; } = ElementId.InvalidElementId;
+
+    /// <summary>The level to host the toposolid on when <see cref="Output"/> is <see cref="RoadOutput.Toposolid"/>.</summary>
+    public ElementId LevelId { get; set; } = ElementId.InvalidElementId;
 }
 
 internal sealed class RoadResult
@@ -57,6 +63,15 @@ internal sealed class RoadResult
 
     /// <summary>True when an earlier road for the same alignment was removed first.</summary>
     public bool ReplacedPrevious { get; set; }
+
+    /// <summary>The toposolid, when the road was only used to make one. No road is added to the model then.</summary>
+    public ElementId ToposolidId { get; set; } = ElementId.InvalidElementId;
+
+    /// <summary>How many surface points the toposolid was made from.</summary>
+    public int ToposolidPointCount { get; set; }
+
+    /// <summary>True when Revit would not make the toposolid with its points in one step, so they were added afterwards.</summary>
+    public bool ToposolidPointsAddedAfterwards { get; set; }
 }
 
 /// <summary>Lofts a run of section loops into solids.</summary>
@@ -292,6 +307,11 @@ internal static class RoadBuilder
                 "Revit could not build any geometry for the road. The profile may be too wide for the tightest curve in the alignment, or may overlap itself.");
         }
 
+        if (options.Output == RoadOutput.Toposolid)
+        {
+            return CreateToposolid(document, solids, stations.Count, notice, options);
+        }
+
         var categoryId = IsValidCategory(document, options.Category)
             ? new ElementId(options.Category)
             : new ElementId(BuiltInCategory.OST_GenericModel);
@@ -368,6 +388,32 @@ internal static class RoadBuilder
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Makes a toposolid from the top of the road. The solids were never added to the model, so nothing of the road is
+    /// left behind and an earlier road for the alignment is not touched.
+    /// </summary>
+    private static RoadResult CreateToposolid(Document document, RoadSolidBuilder.SolidResult solids, int stationCount, string notice, RoadOptions options)
+    {
+#if REVIT2024_OR_GREATER
+        var made = ToposolidBuilder.Create(document, solids.Solids, options.ToposolidTypeId, options.LevelId);
+
+        var result = new RoadResult
+        {
+            StationCount = stationCount,
+            SolidCount = solids.Solids.Count,
+            SkippedSpans = solids.SkippedSpans,
+            Notice = string.Join(" ", new[] { notice, made.Notice }.Where(text => !string.IsNullOrEmpty(text))),
+            ToposolidId = made.ToposolidId,
+            ToposolidPointCount = made.PointCount,
+            ToposolidPointsAddedAfterwards = made.PointsAddedAfterwards
+        };
+
+        return result;
+#else
+        throw new InvalidOperationException("Toposolids need Revit 2024 or later.");
+#endif
     }
 
     /// <summary>True for a road this add-in made: a DirectShape it tagged, or an instance of one of its road families.</summary>

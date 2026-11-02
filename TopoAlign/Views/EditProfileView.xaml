@@ -10,7 +10,7 @@
         Title="{Binding WindowTitle}"
         FontSize="12" FontFamily="Segoe UI Light"
         WindowStartupLocation="CenterScreen"
-        SizeToContent="Height" Width="560"
+        SizeToContent="Height" Width="640"
         WindowStyle="ToolWindow" ResizeMode="NoResize">
 
     <Grid Margin="10">
@@ -96,7 +96,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Curve used" Binding="{Binding CurveUsed}" IsReadOnly="True" Width="75"/>
-                <DataGridTextColumn Header="Grade to next" Binding="{Binding GradeToNext}" IsReadOnly="True" Width="85"/>
+                <DataGridTextColumn Header="Grade to next" Binding="{Binding GradeToNext}" IsReadOnly="True" Width="130"/>
             </DataGrid.Columns>
         </DataGrid>
 

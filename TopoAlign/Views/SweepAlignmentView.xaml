@@ -32,8 +32,11 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
             <Style TargetType="TextBlock">
                 <Setter Property="Margin" Value="0,0,0,6"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -86,8 +89,9 @@
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"
                  ToolTip="Raises (positive) or lowers (negative) the whole road relative to the alignment's profile."/>
 
-        <TextBlock Grid.Row="8" Text="Category"/>
+        <TextBlock Grid.Row="8" Text="Category" Visibility="{Binding IsRoadOutput, Converter={StaticResource BoolToVisibility}}"/>
         <ComboBox Grid.Row="8" Grid.Column="1"
+                  Visibility="{Binding IsRoadOutput, Converter={StaticResource BoolToVisibility}}"
                   ItemsSource="{Binding Categories}"
                   DisplayMemberPath="Name"
                   SelectedItem="{Binding SelectedCategory}"/>
@@ -104,11 +108,26 @@
                   ItemsSource="{Binding Outputs}"
                   DisplayMemberPath="Name"
                   SelectedItem="{Binding SelectedOutput}"
-                  ToolTip="A direct shape is plain geometry. A family is loaded into the project with a type you can see in the Project Browser."/>
+                  ToolTip="A direct shape is plain geometry. A family is loaded into the project with a type you can see in the Project Browser. Toposolid only adds no road at all: the swept geometry is only used to make a toposolid that follows its top surface."/>
 
-        <TextBlock Grid.Row="11" Grid.ColumnSpan="2" Text="{Binding ExistingRoadNote}" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="11" Text="Toposolid type" Visibility="{Binding IsToposolidOutput, Converter={StaticResource BoolToVisibility}}"/>
+        <ComboBox Grid.Row="11" Grid.Column="1"
+                  Visibility="{Binding IsToposolidOutput, Converter={StaticResource BoolToVisibility}}"
+                  ItemsSource="{Binding ToposolidTypes}"
+                  DisplayMemberPath="Name"
+                  SelectedItem="{Binding SelectedToposolidType}"
+                  ToolTip="The type sets the thickness and layers of the toposolid, which hangs below the road surface."/>
 
-        <Button Grid.Row="12" Grid.ColumnSpan="2" Content="Create Road" IsDefault="True" Height="30"
+        <TextBlock Grid.Row="12" Text="Level" Visibility="{Binding IsToposolidOutput, Converter={StaticResource BoolToVisibility}}"/>
+        <ComboBox Grid.Row="12" Grid.Column="1"
+                  Visibility="{Binding IsToposolidOutput, Converter={StaticResource BoolToVisibility}}"
+                  ItemsSource="{Binding Levels}"
+                  DisplayMemberPath="Name"
+                  SelectedItem="{Binding SelectedLevel}"/>
+
+        <TextBlock Grid.Row="13" Grid.ColumnSpan="2" Text="{Binding ExistingRoadNote}" TextWrapping="Wrap"/>
+
+        <Button Grid.Row="14" Grid.ColumnSpan="2" Content="{Binding CreateButtonText}" IsDefault="True" Height="30"
                 Command="{Binding CreateCommand}"/>
     </Grid>
 </Window>

@@ -151,6 +151,21 @@ internal static class ProfileEditing
         return (to.Elevation - from.Elevation) / (to.Distance - from.Distance);
     }
 
+    /// <summary>
+    /// Formats a grade as a percentage followed, in brackets, by the same gradient as a ratio, e.g. "1.25 % (1:80)". A flat
+    /// grade has no ratio, so only the percentage is returned.
+    /// </summary>
+    public static string FormatGrade(double grade)
+    {
+        var percent = grade.ToString("P2");
+        if (Math.Abs(grade) < 1e-9)
+        {
+            return percent;
+        }
+
+        return $"{percent} (1:{(1.0 / Math.Abs(grade)).ToString("0.#")})";
+    }
+
     /// <summary>Largest absolute grade between consecutive PVIs.</summary>
     public static double MaxAbsGrade(IReadOnlyList<ProfileVertex> vertices)
     {

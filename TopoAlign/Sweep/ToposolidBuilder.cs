@@ -64,10 +64,22 @@ internal static class ToposolidBuilder
     {
         var builder = new RoadSurfaceOutlineBuilder();
         TopographyReader.ForEachUpFacingTriangle(road, (a, b, c) => builder.AddTriangle(a.X, a.Y, a.Z, b.X, b.Y, b.Z, c.X, c.Y, c.Z));
+        return BuildOutline(builder);
+    }
 
+    /// <summary>As above, for solids that haven't been added to the model.</summary>
+    internal static RoadSurfaceOutline ReadOutline(IEnumerable<Solid> solids)
+    {
+        var builder = new RoadSurfaceOutlineBuilder();
+        TopographyReader.ForEachUpFacingTriangle(solids.Cast<GeometryObject>(), (a, b, c) => builder.AddTriangle(a.X, a.Y, a.Z, b.X, b.Y, b.Z, c.X, c.Y, c.Z));
+        return BuildOutline(builder);
+    }
+
+    private static RoadSurfaceOutline BuildOutline(RoadSurfaceOutlineBuilder builder)
+    {
         if (builder.TriangleCount == 0)
         {
-            throw new InvalidOperationException("No upward-facing surface could be read from the selected road.");
+            throw new InvalidOperationException("No upward-facing surface could be read from the road.");
         }
 
         var outline = builder.Build();
@@ -84,17 +96,41 @@ internal static class ToposolidBuilder
     /// </summary>
     public static ToposolidResult Create(Document document, Element road, ElementId typeId, ElementId levelId, bool deleteOriginal)
     {
-        if (document is null)
-        {
-            throw new ArgumentNullException(nameof(document));
-        }
-
         if (road is null)
         {
             throw new ArgumentNullException(nameof(road));
         }
 
-        var outline = ReadOutline(road);
+        var result = Create(document, ReadOutline(road), typeId, levelId);
+
+        if (deleteOriginal)
+        {
+            result.DeletedOriginal = DeleteRoad(document, road);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Makes the toposolid from solids that were built but never added to the model, so the road leaves nothing behind.
+    /// Must be called from within the Revit API context.
+    /// </summary>
+    public static ToposolidResult Create(Document document, IReadOnlyList<Solid> solids, ElementId typeId, ElementId levelId)
+    {
+        if (solids is null)
+        {
+            throw new ArgumentNullException(nameof(solids));
+        }
+
+        return Create(document, ReadOutline(solids), typeId, levelId);
+    }
+
+    private static ToposolidResult Create(Document document, RoadSurfaceOutline outline, ElementId typeId, ElementId levelId)
+    {
+        if (document is null)
+        {
+            throw new ArgumentNullException(nameof(document));
+        }
 
         // a toposolid boundary is flat; the points give the surface its shape
         var boundaryZ = outline.Points.Min(point => point.Z);
@@ -133,12 +169,6 @@ internal static class ToposolidBuilder
         }
 
         result.ToposolidId = toposolid!.Id;
-
-        if (deleteOriginal)
-        {
-            result.DeletedOriginal = DeleteRoad(document, road);
-        }
-
         return result;
     }
 

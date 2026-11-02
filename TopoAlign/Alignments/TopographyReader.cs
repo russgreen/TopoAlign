@@ -45,6 +45,17 @@ internal static class TopographyReader
         }
     }
 
+    /// <summary>As above, for geometry that isn't in the model, such as solids built but not yet added.</summary>
+    public static void ForEachUpFacingTriangle(IEnumerable<GeometryObject> geometry, Action<XYZ, XYZ, XYZ> visit)
+    {
+        if (geometry is null)
+        {
+            throw new ArgumentNullException(nameof(geometry));
+        }
+
+        AddGeometry(visit, geometry);
+    }
+
     private static void AddGeometry(Action<XYZ, XYZ, XYZ> visit, IEnumerable<GeometryObject> geometry)
     {
         foreach (var geometryObject in geometry)

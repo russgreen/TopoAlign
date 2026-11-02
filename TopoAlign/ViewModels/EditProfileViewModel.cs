@@ -464,7 +464,7 @@ internal partial class EditProfileViewModel : BaseViewModel
         {
             for (var i = 0; i < Rows.Count; i++)
             {
-                Rows[i].GradeToNext = i < Rows.Count - 1 ? ProfileEditing.Grade(vertices[i], vertices[i + 1]).ToString("P2") : string.Empty;
+                Rows[i].GradeToNext = i < Rows.Count - 1 ? ProfileEditing.FormatGrade(ProfileEditing.Grade(vertices[i], vertices[i + 1])) :string.Empty;
 
                 var used = ProfileEditing.EffectiveCurveLength(vertices, i);
                 Rows[i].CurveUsed = used > 1e-9 ? ToDisplay(used).ToString("0.###") : string.Empty;

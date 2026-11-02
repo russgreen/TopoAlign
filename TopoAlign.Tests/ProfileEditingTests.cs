@@ -383,6 +383,17 @@ public class ProfileEditingTests : TopoAlignTest
     }
 
     [Test]
+    public async Task FormatGrade_ShowsThePercentageAndTheRatio()
+    {
+        // the percentage is culture formatted, so check the ratio in brackets and that the percentage comes first
+        await Assert.That(ProfileEditing.FormatGrade(0.0125).EndsWith(" (1:80)")).IsTrue();
+        await Assert.That(ProfileEditing.FormatGrade(0.0125).StartsWith(0.0125.ToString("P2"))).IsTrue();
+        await Assert.That(ProfileEditing.FormatGrade(-0.05).EndsWith(" (1:20)")).IsTrue();
+        await Assert.That(ProfileEditing.FormatGrade(0.08).EndsWith(" (1:12.5)")).IsTrue();
+        await Assert.That(ProfileEditing.FormatGrade(0.0)).IsEqualTo(0.0.ToString("P2"));
+    }
+
+    [Test]
     public async Task EffectiveCurveLength_IsClampedToHalfTheNeighbouringStraights()
     {
         // 100 ft to the previous station, 600 ft to the next: a 400 ft curve would need 200 ft either side, but a curve may use at most half (50 ft) of the 100 ft straight before it

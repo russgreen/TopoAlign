@@ -18,7 +18,10 @@ internal enum RoadGeometryMethod
 internal enum RoadOutput
 {
     DirectShape,
-    Family
+    Family,
+
+    /// <summary>No road is added; the swept geometry is only used to make a toposolid (Revit 2024 and later).</summary>
+    Toposolid
 }
 
 /// <summary>Pure helpers that decide how a road is cut into smooth pieces and what a section looks like as a ring of vertices.</summary>
