@@ -2,7 +2,6 @@ using Autodesk.Revit.DB;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -16,78 +15,10 @@ namespace TopoAlign.Alignments;
 /// </summary>
 internal static class AlignmentApi
 {
-    private const string AssemblyFileName = "Autodesk.CivilAlignments.DBApplication.dll";
-    private const string AssemblyName = "Autodesk.CivilAlignments.DBApplication";
-    private const string NamespacePrefix = "Autodesk.Revit.DB.Infrastructure.";
-
     private static readonly ILogger log = Log.ForContext(typeof(AlignmentApi));
-    private const BindingFlags AnyMember = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+    private const BindingFlags AnyMember = CivilAlignmentsBinding.AnyMember;
 
-    private static bool _initialised;
-    private static Type? _alignmentType;
-    private static Type? _schemaType;
-    private static Type? _alignmentDataType;
-    private static Type? _utilitiesType;
-    private static Type? _labelType;
-    private static Type? _labelSetOptionsType;
-
-    private static Type AlignmentType => _alignmentType ?? throw new InvalidOperationException("Civil Alignments API is not available.");
-    private static Type LabelType => _labelType ?? throw new InvalidOperationException("Civil Alignments station labels are not available.");
-    private static Type LabelSetOptionsType => _labelSetOptionsType ?? throw new InvalidOperationException("Civil Alignments station labels are not available.");
-
-    public static bool IsAvailable
-    {
-        get
-        {
-            Initialise();
-            return _alignmentType is not null;
-        }
-    }
-
-    private static void Initialise()
-    {
-        if (_initialised)
-        {
-            return;
-        }
-
-        _initialised = true;
-
-        try
-        {
-            var assembly = AppDomain.CurrentDomain.GetAssemblies()
-                .FirstOrDefault(a => string.Equals(a.GetName().Name, AssemblyName, StringComparison.OrdinalIgnoreCase));
-
-            if (assembly is null)
-            {
-                var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AddIns", "CivilAlignments", AssemblyFileName);
-                if (!File.Exists(path))
-                {
-                    log.Warning("Civil Alignments assembly not found at {path}", path);
-                    return;
-                }
-
-                assembly = Assembly.LoadFrom(path);
-            }
-
-            _alignmentType = assembly.GetType(NamespacePrefix + "Alignment");
-            _schemaType = assembly.GetType(NamespacePrefix + "AlignmentSchema");
-            _alignmentDataType = assembly.GetType(NamespacePrefix + "AlignmentData");
-            _utilitiesType = assembly.GetType(NamespacePrefix + "Utilities");
-            _labelType = assembly.GetType(NamespacePrefix + "AlignmentStationLabel");
-            _labelSetOptionsType = assembly.GetType(NamespacePrefix + "AlignmentStationLabelSetOptions");
-        }
-        catch (Exception ex)
-        {
-            log.Error(ex, "Failed to load Civil Alignments assembly");
-            _alignmentType = null;
-            _schemaType = null;
-            _alignmentDataType = null;
-            _utilitiesType = null;
-            _labelType = null;
-            _labelSetOptionsType = null;
-        }
-    }
+    public static bool IsAvailable => CivilAlignmentsBinding.IsAvailable;
 
     /// <summary>The parts of Autodesk's Civil Alignments add-in that TopoAlign's commands rely on.</summary>
     [Flags]
@@ -132,44 +63,39 @@ internal static class AlignmentApi
             }
         }
 
-        bool HasStatic(Type? type, string method, Type[] arguments) =>
-            type?.GetMethod(method, AnyMember, null, arguments, null) is not null;
-
-        bool HasProperty(Type? type, string property) => type?.GetProperty(property, AnyMember) is not null;
-
         if (features.HasFlag(AlignmentFeature.Read))
         {
-            Require(HasStatic(_alignmentType, "Get", new[] { typeof(Element) }), "Alignment.Get");
-            Require(_alignmentType?.GetMethod("GetPointAtStation", AnyMember) is not null, "Alignment.GetPointAtStation");
-            Require(_schemaType?.GetMethod("GetJSON", AnyMember, null, new[] { typeof(Element) }, null) is not null, "AlignmentSchema.GetJSON");
+            Require(CivilAlignmentsBinding.Get is not null, "Alignment.Get");
+            Require(CivilAlignmentsBinding.GetPointAtStation is not null, "Alignment.GetPointAtStation");
+            Require(CivilAlignmentsBinding.GetJson is not null, "AlignmentSchema.GetJSON");
         }
 
         if (features.HasFlag(AlignmentFeature.Create) || features.HasFlag(AlignmentFeature.Update))
         {
-            Require(_alignmentDataType is not null, "AlignmentData");
-            Require(HasProperty(_alignmentDataType, "JSON"), "AlignmentData.JSON");
-            Require(HasProperty(_alignmentDataType, "DisplayedStartDistance"), "AlignmentData.DisplayedStartDistance");
-            Require(HasProperty(_alignmentDataType, "DisplayedEndDistance"), "AlignmentData.DisplayedEndDistance");
+            Require(CivilAlignmentsBinding.AlignmentDataType is not null, "AlignmentData");
+            Require(CivilAlignmentsBinding.DataJson is not null, "AlignmentData.JSON");
+            Require(CivilAlignmentsBinding.DataDisplayedStartDistance is not null, "AlignmentData.DisplayedStartDistance");
+            Require(CivilAlignmentsBinding.DataDisplayedEndDistance is not null, "AlignmentData.DisplayedEndDistance");
         }
 
-        if (_alignmentDataType is not null)
+        if (CivilAlignmentsBinding.AlignmentDataType is not null)
         {
             if (features.HasFlag(AlignmentFeature.Create))
             {
-                Require(HasStatic(_alignmentType, "CreateAlignment", new[] { typeof(Document), _alignmentDataType }), "Alignment.CreateAlignment");
+                Require(CivilAlignmentsBinding.CreateAlignment is not null, "Alignment.CreateAlignment");
             }
 
             if (features.HasFlag(AlignmentFeature.Update))
             {
-                Require(HasStatic(_alignmentType, "UpdateAlignment", new[] { typeof(Document), _alignmentDataType }), "Alignment.UpdateAlignment");
+                Require(CivilAlignmentsBinding.UpdateAlignment is not null, "Alignment.UpdateAlignment");
             }
         }
 
         if (features.HasFlag(AlignmentFeature.StationLabels))
         {
             Require(CanCreateStationLabels, "AlignmentStationLabel");
-            Require(_labelType?.GetMethod("CreateSet", BindingFlags.Public | BindingFlags.Static) is not null, "AlignmentStationLabel.CreateSet");
-            Require(_labelType?.GetMethod("IsValidType", BindingFlags.Public | BindingFlags.Static) is not null, "AlignmentStationLabel.IsValidType");
+            Require(CivilAlignmentsBinding.LabelCreateSet is not null, "AlignmentStationLabel.CreateSet");
+            Require(CivilAlignmentsBinding.LabelIsValidType is not null, "AlignmentStationLabel.IsValidType");
         }
 
         if (missing.Count == 0)
@@ -183,6 +109,31 @@ internal static class AlignmentApi
         return false;
     }
 
+    private static Type LabelSetOptionsType => CivilAlignmentsBinding.LabelSetOptionsType
+        ?? throw new InvalidOperationException("Civil Alignments station labels are not available.");
+
+    /// <summary>Autodesk's alignment object for an alignment element, or null if it can't be read.</summary>
+    private static object? GetAlignment(Element element) =>
+        CivilAlignmentsBinding.Get?.Invoke(null, new object[] { element });
+
+    /// <summary>
+    /// A new <c>AlignmentData</c> for <see cref="Create"/> and <see cref="Update"/>. The displayed start and end are distances
+    /// along the alignment (0 .. length), not stations; the end is Autodesk's own length for the JSON where it agrees with
+    /// <paramref name="planLength"/>.
+    /// </summary>
+    private static object CreateAlignmentData(string json, double planLength)
+    {
+        var dataType = CivilAlignmentsBinding.AlignmentDataType
+                       ?? throw new InvalidOperationException("Civil Alignments API is not available.");
+
+        var alignmentData = Activator.CreateInstance(dataType, true)
+                            ?? throw new InvalidOperationException("Could not create the alignment data.");
+        CivilAlignmentsBinding.DataJson?.SetValue(alignmentData, json);
+        CivilAlignmentsBinding.DataDisplayedStartDistance?.SetValue(alignmentData, 0.0);
+        CivilAlignmentsBinding.DataDisplayedEndDistance?.SetValue(alignmentData, ResolveDisplayedEndDistance(json, planLength));
+        return alignmentData;
+    }
+
     /// <summary>True if the element is a valid native alignment.</summary>
     public static bool IsValid(Element element)
     {
@@ -193,8 +144,7 @@ internal static class AlignmentApi
 
         try
         {
-            var method = AlignmentType.GetMethod("IsValid", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
-            return method is not null && method.Invoke(null, new object[] { element }) is true;
+            return CivilAlignmentsBinding.IsValid?.Invoke(null, new object[] { element }) is true;
         }
         catch (Exception ex)
         {
@@ -232,8 +182,7 @@ internal static class AlignmentApi
 
         try
         {
-            var get = AlignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
-            var alignment = get?.Invoke(null, new object[] { element });
+            var alignment = GetAlignment(element);
             if (alignment is null)
             {
                 return null;
@@ -267,10 +216,7 @@ internal static class AlignmentApi
 
         try
         {
-            var get = AlignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
-            var alignment = get?.Invoke(null, new object[] { element });
-            var method = AlignmentType.GetMethod("GetPointAtStation", BindingFlags.Public | BindingFlags.Instance);
-            return method?.Invoke(alignment, new object[] { station }) as XYZ;
+            return CivilAlignmentsBinding.GetPointAtStation?.Invoke(GetAlignment(element), new object[] { station }) as XYZ;
         }
         catch (Exception ex)
         {
@@ -285,21 +231,21 @@ internal static class AlignmentApi
     /// </summary>
     public static string? GetJson(Element element)
     {
-        if (element is null || !IsAvailable || _schemaType is null)
+        if (element is null || !IsAvailable)
         {
             return null;
         }
 
         try
         {
-            var method = _schemaType.GetMethod("GetJSON", AnyMember, null, new[] { typeof(Element) }, null);
+            var method = CivilAlignmentsBinding.GetJson;
             if (method is null)
             {
                 log.Warning("AlignmentSchema.GetJSON not found");
                 return null;
             }
 
-            var target = method.IsStatic ? null : Activator.CreateInstance(_schemaType, true);
+            var target = method.IsStatic ? null : Activator.CreateInstance(method.DeclaringType!, true);
             return method.Invoke(target, new object[] { element }) as string;
         }
         catch (Exception ex)
@@ -322,7 +268,7 @@ internal static class AlignmentApi
             throw new ArgumentNullException(nameof(doc));
         }
 
-        if (!IsAvailable || _alignmentDataType is null)
+        if (!IsAvailable || CivilAlignmentsBinding.AlignmentDataType is null)
         {
             throw new InvalidOperationException("Civil Alignments API is not available.");
         }
@@ -333,23 +279,15 @@ internal static class AlignmentApi
         }
 
         // CreateAlignment and the AlignmentData setters are non-public in the Civil Alignments DLL.
-        var createMethod = AlignmentType.GetMethod("CreateAlignment", AnyMember, null, new[] { typeof(Document), _alignmentDataType }, null);
-        if (createMethod is null)
-        {
-            throw new MissingMethodException("Alignment.CreateAlignment(Document, AlignmentData) was not found.");
-        }
+        var createMethod = CivilAlignmentsBinding.CreateAlignment
+                           ?? throw new MissingMethodException("Alignment.CreateAlignment(Document, AlignmentData) was not found.");
 
         var fh = new FailureHandler();
 
         using var transaction = new Transaction(doc, "Create alignment");
         transaction.Start();
 
-        var displayedEnd = ResolveDisplayedEndDistance(json, planLength);
-
-        var alignmentData = Activator.CreateInstance(_alignmentDataType, true);
-        _alignmentDataType.GetProperty("JSON", AnyMember)?.SetValue(alignmentData, json);
-        _alignmentDataType.GetProperty("DisplayedStartDistance", AnyMember)?.SetValue(alignmentData, 0.0);
-        _alignmentDataType.GetProperty("DisplayedEndDistance", AnyMember)?.SetValue(alignmentData, displayedEnd);
+        var alignmentData = CreateAlignmentData(json, planLength);
 
         var failureHandlingOptions = transaction.GetFailureHandlingOptions();
         failureHandlingOptions.SetFailuresPreprocessor(fh);
@@ -409,7 +347,7 @@ internal static class AlignmentApi
             throw new ArgumentNullException(nameof(alignmentElement));
         }
 
-        if (!IsAvailable || _alignmentDataType is null)
+        if (!IsAvailable || CivilAlignmentsBinding.AlignmentDataType is null)
         {
             throw new InvalidOperationException("Civil Alignments API is not available.");
         }
@@ -419,11 +357,8 @@ internal static class AlignmentApi
             throw new ArgumentException("Alignment JSON is required.", nameof(json));
         }
 
-        var updateMethod = AlignmentType.GetMethod("UpdateAlignment", AnyMember, null, new[] { typeof(Document), _alignmentDataType }, null);
-        if (updateMethod is null)
-        {
-            throw new MissingMethodException("Alignment.UpdateAlignment(Document, AlignmentData) was not found.");
-        }
+        var updateMethod = CivilAlignmentsBinding.UpdateAlignment
+                           ?? throw new MissingMethodException("Alignment.UpdateAlignment(Document, AlignmentData) was not found.");
 
         using var transaction = new Transaction(doc, "Edit alignment");
         transaction.Start();
@@ -432,10 +367,7 @@ internal static class AlignmentApi
         failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
         transaction.SetFailureHandlingOptions(failureHandlingOptions);
 
-        var alignmentData = Activator.CreateInstance(_alignmentDataType, true);
-        _alignmentDataType.GetProperty("JSON", AnyMember)?.SetValue(alignmentData, json);
-        _alignmentDataType.GetProperty("DisplayedStartDistance", AnyMember)?.SetValue(alignmentData, 0.0);
-        _alignmentDataType.GetProperty("DisplayedEndDistance", AnyMember)?.SetValue(alignmentData, ResolveDisplayedEndDistance(json, planLength));
+        var alignmentData = CreateAlignmentData(json, planLength);
 
         try
         {
@@ -468,14 +400,8 @@ internal static class AlignmentApi
     // ---- station labels -----------------------------------------------------------------------------------------
 
     /// <summary>True if the installed Civil Alignments add-in can create station label sets.</summary>
-    public static bool CanCreateStationLabels
-    {
-        get
-        {
-            Initialise();
-            return _labelType is not null && _labelSetOptionsType is not null;
-        }
-    }
+    public static bool CanCreateStationLabels =>
+        CivilAlignmentsBinding.LabelType is not null && CivilAlignmentsBinding.LabelSetOptionsType is not null;
 
     /// <summary>A spot-dimension type that can be used for alignment station labels.</summary>
     internal sealed class StationLabelType
@@ -503,8 +429,8 @@ internal static class AlignmentApi
             return types;
         }
 
-        var isValid = LabelType.GetMethod("IsValidType", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
-        var isRecommended = LabelType.GetMethod("IsRecommendedTypeForSet", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
+        var isValid = CivilAlignmentsBinding.LabelIsValidType;
+        var isRecommended = CivilAlignmentsBinding.LabelIsRecommendedTypeForSet;
         if (isValid is null)
         {
             return types;
@@ -558,15 +484,11 @@ internal static class AlignmentApi
             throw new InvalidOperationException("The Civil Alignments add-in can't create station labels in this version of Revit.");
         }
 
-        var getAlignment = AlignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
-        var alignment = getAlignment?.Invoke(null, new object[] { alignmentElement })
+        var alignment = GetAlignment(alignmentElement)
                         ?? throw new InvalidOperationException("The element is not a valid alignment.");
 
-        var createSet = LabelType.GetMethod("CreateSet", BindingFlags.Public | BindingFlags.Static);
-        if (createSet is null)
-        {
-            throw new MissingMethodException("AlignmentStationLabel.CreateSet was not found.");
-        }
+        var createSet = CivilAlignmentsBinding.LabelCreateSet
+                        ?? throw new MissingMethodException("AlignmentStationLabel.CreateSet was not found.");
 
         using var transaction = new Transaction(doc, "Create station labels");
         transaction.Start();
@@ -577,7 +499,7 @@ internal static class AlignmentApi
 
         if (labelTypeId is null || labelTypeId == ElementId.InvalidElementId)
         {
-            var create = LabelType.GetMethod("CreateRecommendedTypeForSet", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Document) }, null);
+            var create = CivilAlignmentsBinding.LabelCreateRecommendedTypeForSet;
             labelTypeId = create?.Invoke(null, new object[] { doc }) as ElementId ?? ElementId.InvalidElementId;
         }
 
@@ -669,8 +591,7 @@ internal static class AlignmentApi
     {
         try
         {
-            var method = _utilitiesType?.GetMethod("GetAlignmentLength", AnyMember, null, new[] { typeof(string) }, null);
-            return method?.Invoke(null, new object[] { json }) is double length ? length : null;
+            return CivilAlignmentsBinding.GetAlignmentLength?.Invoke(null, new object[] { json }) is double length ? length : null;
         }
         catch (Exception ex)
         {
@@ -702,15 +623,14 @@ internal static class AlignmentApi
                 throw new ArgumentException("The element is not a valid alignment.", nameof(alignmentElement));
             }
 
-            var get = AlignmentType.GetMethod("Get", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Element) }, null);
-            _alignment = get?.Invoke(null, new object[] { alignmentElement })
+            _alignment = GetAlignment(alignmentElement)
                          ?? throw new InvalidOperationException("The alignment could not be read.");
 
-            _pointAtStation = AlignmentType.GetMethod("GetPointAtStation", BindingFlags.Public | BindingFlags.Instance)
+            _pointAtStation = CivilAlignmentsBinding.GetPointAtStation
                               ?? throw new MissingMethodException("Alignment.GetPointAtStation was not found.");
-            _tangentAtStation = AlignmentType.GetMethod("GetHCurveTangentAtStation", BindingFlags.Public | BindingFlags.Instance)
+            _tangentAtStation = CivilAlignmentsBinding.GetHCurveTangentAtStation
                                 ?? throw new MissingMethodException("Alignment.GetHCurveTangentAtStation was not found.");
-            _curveEndpoints = AlignmentType.GetMethod("GetDisplayedHorizontalCurveEndpoints", BindingFlags.Public | BindingFlags.Instance);
+            _curveEndpoints = CivilAlignmentsBinding.GetDisplayedHorizontalCurveEndpoints;
 
             StartStation = ReadProperty<double>(_alignment, "DisplayedStartStation");
             EndStation = ReadProperty<double>(_alignment, "DisplayedEndStation");
