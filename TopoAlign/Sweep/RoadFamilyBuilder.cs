@@ -27,6 +27,12 @@ internal static class RoadFamilyBuilder
         return $"{NamePrefix}{cleaned} ({IdOf(alignment)})";
     }
 
+    /// <summary>True for a road family this add-in made, whichever alignment it is for.</summary>
+    public static bool IsRoadFamily(Family? family)
+    {
+        return family is not null && family.Name.StartsWith(NamePrefix, StringComparison.Ordinal);
+    }
+
     /// <summary>The road families this add-in has made for an alignment.</summary>
     public static List<Family> FindFamilies(Document document, Element alignment, string? alignmentName)
     {

@@ -105,6 +105,13 @@
      <None Remove="Images\SweepAlongAlignment32.png" />
      <None Remove="Images\StationLabels32.png" />
      <None Remove="Images\EditProfile32.png" />
+     <None Remove="Images\SweepToToposolid32.png" />
+   </ItemGroup>
+
+   <!-- Toposolids arrived in Revit 2024, so the Sweep to Toposolid dialog is only built from there. -->
+   <ItemGroup Condition="$(RevitVersion) &lt; 2024">
+     <Page Remove="Views\SweepToToposolidView.xaml" />
+     <Compile Remove="Views\SweepToToposolidView.xaml.cs" />
    </ItemGroup>
   
    <ItemGroup>
@@ -119,6 +126,7 @@
      <EmbeddedResource Include="Images\SweepAlongAlignment32.png" />
      <EmbeddedResource Include="Images\StationLabels32.png" />
      <EmbeddedResource Include="Images\EditProfile32.png" />
+     <EmbeddedResource Include="Images\SweepToToposolid32.png" />
    </ItemGroup>
   
    <ItemGroup>

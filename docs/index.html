@@ -42,6 +42,7 @@
           <li><a href="./Commands/CommandEditProfile.html">Edit Profile</a></li>
           <li><a href="./Commands/CommandStationLabels.html">Station Labels</a></li>
           <li><a href="./Commands/CommandSweepAlignment.html">Sweep Along Alignment</a></li>
+          <li><a href="./Commands/CommandSweepToToposolid.html">Sweep to Toposolid</a></li>
         </ul>
       </section>
       <section>
@@ -90,6 +91,7 @@
           <li>Use <strong>Edit Alignment</strong> to rename an alignment, change its start station or reverse it, and <strong>Station Labels</strong> to place station labels along it.</li>
           <li>Use <strong>Edit Profile</strong> to add stations to an alignment's profile and set the elevation of each.</li>
           <li>Use <strong>Sweep Along Alignment</strong> to build a road or path by sweeping a profile family along an alignment.</li>
+          <li>Use <strong>Sweep to Toposolid</strong> to convert a swept road into a toposolid that follows its surface (Revit 2024 and later).</li>
           <li>Use <strong>Points At Intersection</strong> to place points where a face intersects the topography.</li>
           <li>Use <strong>Reset Topo Region</strong> to replace points within a rectangle from a source topo into a target topo.</li>
         </ol>
@@ -151,6 +153,11 @@
             <h3><a href="./Commands/CommandSweepAlignment.html">Sweep Along Alignment</a></h3>
             <p class="muted">Sweeps a profile family along an alignment, following its plan and profile, to make a road or path.</p>
           </div>
+          <div class="card">
+            <img src="./assets/SweepToToposolid32.png" alt="Sweep to Toposolid" class="card-icon">
+            <h3><a href="./Commands/CommandSweepToToposolid.html">Sweep to Toposolid</a></h3>
+            <p class="muted">Converts a swept road into a toposolid whose top surface follows the road (Revit 2024 and later).</p>
+          </div>
         </div>
 
         <h2 id="config">Configuration &amp; Paths</h2>
@@ -176,6 +183,7 @@
           <li>Create Alignment: point (PI) and CAD input, transition spirals, and draping the profile on a toposolid.</li>
           <li>New Edit Alignment and Station Labels commands.</li>
           <li>New Sweep Along Alignment command to make roads and paths from a profile family, with a choice of segmented loft or smooth surfaces, and of a direct shape or a family as the result.</li>
+          <li>New Sweep to Toposolid command to convert a swept road into a toposolid (Revit 2024 and later).</li>
           <li>New Edit Profile command to add stations to an alignment's profile and set their elevations.</li>
         </ul>
       </article>

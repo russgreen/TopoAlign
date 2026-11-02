@@ -42,6 +42,12 @@ public class Settings
     /// <summary>What the road is made into: DirectShape or Family.</summary>
     public string SweepOutput { get; set; } = "DirectShape";
 
+    /// <summary>Name of the last toposolid type used when converting a road to a toposolid.</summary>
+    public string RoadToposolidType { get; set; } = string.Empty;
+
+    /// <summary>Whether converting a road to a toposolid also deletes the road.</summary>
+    public bool RoadToposolidDeleteRoad { get; set; }
+
 #if REVIT2021_OR_GREATER
     public decimal CreateAlignmentStartStation { get; set; } = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(0, UnitTypeId.Meters));
 #else
@@ -78,6 +84,8 @@ public class Settings
                     SweepProfileName = Convert.ToString(key.GetValue("SweepProfileName", SweepProfileName)) ?? string.Empty;
                     SweepGeometryMethod = Convert.ToString(key.GetValue("SweepGeometryMethod", SweepGeometryMethod)) ?? "SegmentedLoft";
                     SweepOutput = Convert.ToString(key.GetValue("SweepOutput", SweepOutput)) ?? "DirectShape";
+                    RoadToposolidType = Convert.ToString(key.GetValue("RoadToposolidType", RoadToposolidType)) ?? string.Empty;
+                    RoadToposolidDeleteRoad = Convert.ToBoolean(key.GetValue("RoadToposolidDeleteRoad", RoadToposolidDeleteRoad));
 
                     _ = decimal.TryParse(key.GetValue("DivideEdgeDistance", DivideEdgeDistance).ToString(), out decimal divideEdgeDistance);
                     _ = decimal.TryParse(key.GetValue("VerticalOffset", VerticalOffset).ToString(), out decimal verticalOffset);
@@ -126,6 +134,8 @@ public class Settings
             key.SetValue("SweepProfileName", SweepProfileName ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("SweepGeometryMethod", SweepGeometryMethod ?? "SegmentedLoft", Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("SweepOutput", SweepOutput ?? "DirectShape", Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("RoadToposolidType", RoadToposolidType ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("RoadToposolidDeleteRoad", RoadToposolidDeleteRoad, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("DivideEdgeDistance", DivideEdgeDistance, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("VerticalOffset", VerticalOffset, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("CreateAlignmentStartStation", CreateAlignmentStartStation, Microsoft.Win32.RegistryValueKind.String);

@@ -182,6 +182,17 @@ class App : IExternalApplication
         pbSweepAlignment.LargeImage = PngImageSource("TopoAlign.Images.SweepAlongAlignment32.png");
         pbSweepAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepAlignment.html"));
 
+#if REVIT2024_OR_GREATER
+        PushButton pbSweepToToposolid = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandSweepToToposolid),
+            $"Sweep to{Environment.NewLine}Toposolid",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandSweepToToposolid)}"));
+        pbSweepToToposolid.ToolTip = "Convert a road made with Sweep Along Alignment into a toposolid that follows its surface.";
+        pbSweepToToposolid.LargeImage = PngImageSource("TopoAlign.Images.SweepToToposolid32.png");
+        pbSweepToToposolid.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepToToposolid.html"));
+#endif
+
         return panel;
     }
 

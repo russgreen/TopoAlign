@@ -41,6 +41,7 @@
           <li><a href="./CommandEditProfile.html">Edit Profile</a></li>
           <li><a href="./CommandStationLabels.html">Station Labels</a></li>
           <li><a href="./CommandSweepAlignment.html" aria-current="page">Sweep Along Alignment</a></li>
+          <li><a href="./CommandSweepToToposolid.html">Sweep to Toposolid</a></li>
         </ul>
       </section>
       <section>
@@ -95,11 +96,12 @@
                 <li>A family is a snapshot: it doesn't update when the alignment changes. Run the command again to replace it.</li>
                 <li>The section always stands upright, across the horizontal direction of the alignment, so a thickness stays a vertical thickness on a slope.</li>
                 <li>If a curve is tighter than the road is wide, the inside of the road would fold back on itself. Revit cannot build those spans, so they are left as gaps and the summary says how many; use a narrower section or a larger radius.</li>
-                <li>Not included yet: a section that changes along the road, banking (superelevation), junctions, and cutting the road into the toposolid.</li>
+                <li>Not included yet: a section that changes along the road, banking (superelevation), junctions, and cutting the road into the topography. To turn a road into a toposolid, use <a href="./CommandSweepToToposolid.html">Sweep to Toposolid</a>.</li>
             </ul>
       </article>
         <nav class="pager" aria-label="Previous and next page">
           <a class="pager-prev" href="./CommandStationLabels.html">&larr; Station Labels</a>
+          <a class="pager-next" href="./CommandSweepToToposolid.html">Sweep to Toposolid &rarr;</a>
         </nav>
     </div>
   </main>

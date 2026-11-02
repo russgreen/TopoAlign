@@ -16,13 +16,7 @@ internal static class TopographyReader
         }
 
         var surface = new TriangleSurface();
-        var options = new Options { DetailLevel = ViewDetailLevel.Fine, ComputeReferences = false };
-
-        var geometry = topography.get_Geometry(options);
-        if (geometry is not null)
-        {
-            AddGeometry(surface, geometry);
-        }
+        ForEachUpFacingTriangle(topography, (a, b, c) => surface.AddTriangle(a.X, a.Y, a.Z, b.X, b.Y, b.Z, c.X, c.Y, c.Z));
 
         if (surface.TriangleCount == 0)
         {
@@ -32,7 +26,26 @@ internal static class TopographyReader
         return surface;
     }
 
-    private static void AddGeometry(TriangleSurface surface, IEnumerable<GeometryObject> geometry)
+    /// <summary>
+    /// Calls <paramref name="visit"/> with the corners (in model coordinates) of every triangle in the upward-facing
+    /// faces of an element's geometry, looking inside family instances too.
+    /// </summary>
+    public static void ForEachUpFacingTriangle(Element element, Action<XYZ, XYZ, XYZ> visit)
+    {
+        if (element is null)
+        {
+            throw new ArgumentNullException(nameof(element));
+        }
+
+        var options = new Options { DetailLevel = ViewDetailLevel.Fine, ComputeReferences = false };
+        var geometry = element.get_Geometry(options);
+        if (geometry is not null)
+        {
+            AddGeometry(visit, geometry);
+        }
+    }
+
+    private static void AddGeometry(Action<XYZ, XYZ, XYZ> visit, IEnumerable<GeometryObject> geometry)
     {
         foreach (var geometryObject in geometry)
         {
@@ -43,18 +56,18 @@ internal static class TopographyReader
                     {
                         if (FacesUp(face))
                         {
-                            AddMesh(surface, face.Triangulate());
+                            AddMesh(visit, face.Triangulate());
                         }
                     }
 
                     break;
 
                 case Mesh mesh:
-                    AddMesh(surface, mesh);
+                    AddMesh(visit, mesh);
                     break;
 
                 case GeometryInstance instance:
-                    AddGeometry(surface, instance.GetInstanceGeometry());
+                    AddGeometry(visit, instance.GetInstanceGeometry());
                     break;
             }
         }
@@ -72,7 +85,7 @@ internal static class TopographyReader
         return face.ComputeNormal(middle).Z > 0.01;
     }
 
-    private static void AddMesh(TriangleSurface surface, Mesh mesh)
+    private static void AddMesh(Action<XYZ, XYZ, XYZ> visit, Mesh mesh)
     {
         if (mesh is null)
         {
@@ -82,10 +95,7 @@ internal static class TopographyReader
         for (var i = 0; i < mesh.NumTriangles; i++)
         {
             var triangle = mesh.get_Triangle(i);
-            var a = triangle.get_Vertex(0);
-            var b = triangle.get_Vertex(1);
-            var c = triangle.get_Vertex(2);
-            surface.AddTriangle(a.X, a.Y, a.Z, b.X, b.Y, b.Z, c.X, c.Y, c.Z);
+            visit(triangle.get_Vertex(0), triangle.get_Vertex(1), triangle.get_Vertex(2));
         }
     }
 }

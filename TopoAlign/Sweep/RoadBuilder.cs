@@ -370,6 +370,17 @@ internal static class RoadBuilder
         return result;
     }
 
+    /// <summary>True for a road this add-in made: a DirectShape it tagged, or an instance of one of its road families.</summary>
+    public static bool IsRoad(Element? element)
+    {
+        return element switch
+        {
+            DirectShape shape => shape.ApplicationId == ApplicationId,
+            FamilyInstance instance => RoadFamilyBuilder.IsRoadFamily(instance.Symbol?.Family),
+            _ => false
+        };
+    }
+
     /// <summary>The roads this add-in has made for an alignment: DirectShapes and instances of road families.</summary>
     public static List<Element> FindRoads(Document document, Element alignment)
     {
