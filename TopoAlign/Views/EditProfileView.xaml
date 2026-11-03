@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:TopoAlign.ViewModels"
         xmlns:behaviours="clr-namespace:TopoAlign.Behaviours"
+        xmlns:views="clr-namespace:TopoAlign.Views"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance {x:Type viewModels:EditProfileViewModel}, IsDesignTimeCreatable=False}"
         Title="{Binding WindowTitle}"
@@ -21,6 +22,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -58,7 +60,14 @@
                   DisplayMemberPath="Label"
                   SelectedValue="{Binding SelectedDisplayUnit, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <DataGrid Grid.Row="3" Grid.ColumnSpan="4" Height="220" Margin="0,0,0,6"
+        <Border Grid.Row="3" Grid.ColumnSpan="4" Height="170" Margin="0,0,0,6" BorderThickness="0"
+                IsEnabled="{Binding HasAlignment}">
+            <views:ProfileGraph Data="{Binding Graph}" SelectedIndex="{Binding SelectedStationIndex}"
+                                SnapsToDevicePixels="True" UseLayoutRounding="True"
+                                ToolTip="The profile as edited (solid), against the profile in the model (dashed). The selected station is highlighted."/>
+        </Border>
+
+        <DataGrid Grid.Row="4" Grid.ColumnSpan="4" Height="180" Margin="0,0,0,6"
                   ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}"
                   AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                   CanUserSortColumns="False" CanUserReorderColumns="False"
@@ -100,26 +109,26 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <TextBlock Grid.Row="4" Text="New station"/>
-        <TextBox Grid.Row="4" Grid.Column="1" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
+        <TextBlock Grid.Row="5" Text="New station"/>
+        <TextBox Grid.Row="5" Grid.Column="1" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
                  Text="{Binding NewStation, UpdateSourceTrigger=PropertyChanged}"
                  MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"
                  ToolTip="The station to add. Its height starts on the existing profile, so adding it changes nothing until you edit its elevation."/>
-        <TextBlock Grid.Row="4" Grid.Column="2" Text="Curve length" Margin="10,0,0,6"/>
-        <TextBox Grid.Row="4" Grid.Column="3" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
+        <TextBlock Grid.Row="5" Grid.Column="2" Text="Curve length" Margin="10,0,0,6"/>
+        <TextBox Grid.Row="5" Grid.Column="3" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
                  Text="{Binding DefaultCurveLength, UpdateSourceTrigger=PropertyChanged}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Vertical curve length given to a new station. 0 leaves a sharp change of grade."/>
 
-        <Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Content="Add station" Command="{Binding AddStationCommand}" Margin="0,0,5,6"/>
-        <UniformGrid Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="2" Columns="2" Margin="5,0,0,0">
+        <Button Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Content="Add station" Command="{Binding AddStationCommand}" Margin="0,0,5,6"/>
+        <UniformGrid Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="2" Columns="2" Margin="5,0,0,0">
             <Button Content="Remove station" Command="{Binding DeleteStationCommand}" Margin="0,0,5,6"/>
             <Button Content="Reset" Command="{Binding ResetStationsCommand}" Margin="0,0,0,6"/>
         </UniformGrid>
 
-        <TextBlock Grid.Row="6" Grid.ColumnSpan="4" Text="{Binding ProfileStatus}" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="7" Grid.ColumnSpan="4" Text="{Binding ProfileStatus}" TextWrapping="Wrap"/>
 
-        <Button Grid.Row="7" Grid.ColumnSpan="4" Content="Apply" IsDefault="True" Height="30"
+        <Button Grid.Row="8" Grid.ColumnSpan="4" Content="Apply" IsDefault="True" Height="30"
                 Command="{Binding ApplyCommand}"/>
     </Grid>
 </Window>

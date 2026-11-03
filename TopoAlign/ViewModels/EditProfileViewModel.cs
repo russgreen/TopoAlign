@@ -108,6 +108,14 @@ internal partial class EditProfileViewModel : BaseViewModel
     [ObservableProperty]
     private ProfileRow? _selectedRow;
 
+    /// <summary>What the profile graph draws; rebuilt whenever a station, elevation or curve length changes.</summary>
+    [ObservableProperty]
+    private Views.ProfileGraphData _graph = Views.ProfileGraphData.Empty;
+
+    /// <summary>Position of the selected grid row among the stations, so the graph can highlight it; -1 for none.</summary>
+    [ObservableProperty]
+    private int _selectedStationIndex = -1;
+
     [ObservableProperty]
     private List<Models.DisplayUnitModel> _displayUnits = new();
 
@@ -173,6 +181,11 @@ internal partial class EditProfileViewModel : BaseViewModel
     }
 
     private bool CanAddStation() => HasAlignment;
+
+    partial void OnSelectedRowChanged(ProfileRow? value)
+    {
+        SelectedStationIndex = value is null ? -1 : Rows.IndexOf(value);
+    }
 
     // ---- units --------------------------------------------------------------------------------------------------
 
@@ -265,6 +278,8 @@ internal partial class EditProfileViewModel : BaseViewModel
         _originalJson = null;
         Rows.Clear();
         ProfileStatus = string.Empty;
+        Graph = Views.ProfileGraphData.Empty;
+        SelectedStationIndex = -1;
         OnPropertyChanged(nameof(HasAlignment));
 
         try
@@ -444,8 +459,11 @@ internal partial class EditProfileViewModel : BaseViewModel
             Rows[i].IsEnd = i == 0 || i == Rows.Count - 1;
         }
 
+        SelectedStationIndex = SelectedRow is null ? -1 : Rows.IndexOf(SelectedRow);
+
         if (SelectedDisplayUnit is null || Rows.Count == 0)
         {
+            Graph = Views.ProfileGraphData.Empty;
             ApplyCommand.NotifyCanExecuteChanged();
             return;
         }
@@ -459,6 +477,9 @@ internal partial class EditProfileViewModel : BaseViewModel
             }
 
             ProfileStatus = error ?? string.Empty;
+
+            // an invalid grid has no profile to draw: keep the original so the user still sees where they started
+            Graph = BuildGraph(null);
         }
         else
         {
@@ -474,9 +495,28 @@ internal partial class EditProfileViewModel : BaseViewModel
             var maxElevation = ToDisplay(SharedToProject(vertices.Max(v => v.Elevation)));
             ProfileStatus = $"{vertices.Count} stations, elevation {minElevation:N2} to {maxElevation:N2} {SelectedDisplayUnit.Label}, " +
                             $"max grade {ProfileEditing.MaxAbsGrade(vertices):P1}";
+
+            Graph = BuildGraph(vertices);
         }
 
         ApplyCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>The graph's data in display units. <paramref name="edited"/> is null when the grid isn't a valid profile.</summary>
+    private Views.ProfileGraphData BuildGraph(IReadOnlyList<ProfileVertex>? edited)
+    {
+        System.Windows.Point ToPoint(double distance, double sharedElevation) => new(
+            UnitUtils.ConvertFromInternalUnits(_startStationFeet + distance, SelectedDisplayUnit.DisplayUnit),
+            UnitUtils.ConvertFromInternalUnits(SharedToProject(sharedElevation), SelectedDisplayUnit.DisplayUnit));
+
+        List<System.Windows.Point> Line(IReadOnlyList<ProfileVertex> vertices) =>
+            ProfileSampling.Sample(vertices).Select(p => ToPoint(p.Distance, p.Elevation)).ToList();
+
+        return new Views.ProfileGraphData(
+            edited is null ? new List<System.Windows.Point>() : Line(edited),
+            Line(_original),
+            edited?.Select(v => ToPoint(v.Distance, v.Elevation)).ToList() ?? new List<System.Windows.Point>(),
+            SelectedDisplayUnit.Label);
     }
 
     // ---- editing the stations -----------------------------------------------------------------------------------
