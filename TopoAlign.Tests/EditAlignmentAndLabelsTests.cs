@@ -562,6 +562,7 @@ public class StationLabelsViewModelTests : TopoAlignUiTest
     {
         var (viewModel, _, alignment) = NewViewModel();
         viewModel.SelectAlignment(alignment);
+        viewModel.IntervalText = string.Empty;
         var closed = 0;
         viewModel.ClosingRequest += (_, _) => closed++;
 
@@ -575,6 +576,19 @@ public class StationLabelsViewModelTests : TopoAlignUiTest
         await Assert.That(request.EndStation).IsNull();
         await Assert.That(request.HasLeader).IsTrue();
         await Assert.That(request.AlignmentName).IsEqualTo("Road 1");
+    }
+
+    [Test]
+    public async Task SelectAlignment_SuggestsAnIntervalThatGivesSeveralLabels()
+    {
+        var (viewModel, _, alignment) = NewViewModel();
+
+        viewModel.SelectAlignment(alignment);
+
+        await Assert.That(viewModel.IntervalText).IsNotEqualTo(string.Empty);
+        await Assert.That(StationLabelsViewModel.SuggestInterval(137.0)).IsEqualTo(10.ToString());
+        await Assert.That(StationLabelsViewModel.SuggestInterval(420.0)).IsEqualTo(50.ToString());
+        await Assert.That(StationLabelsViewModel.SuggestInterval(0.0)).IsEqualTo(string.Empty);
     }
 
     [Test]

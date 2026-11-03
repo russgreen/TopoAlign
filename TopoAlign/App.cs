@@ -191,6 +191,15 @@ class App : IExternalApplication
         pbSweepToToposolid.ToolTip = "Convert a road made with Sweep Along Alignment into a toposolid that follows its surface.";
         pbSweepToToposolid.LargeImage = PngImageSource("TopoAlign.Images.SweepToToposolid32.png");
         pbSweepToToposolid.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepToToposolid.html"));
+
+        PushButton pbGradeToSurface = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandGradeToSurface),
+            $"Grade to{Environment.NewLine}Surface",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandGradeToSurface)}"));
+        pbGradeToSurface.ToolTip = "Grade a slope from an edge or model line down or up to the toposolid, replacing the toposolid points in between.";
+        pbGradeToSurface.LargeImage = PngImageSource("TopoAlign.Images.GradeToSurface32.png");
+        pbGradeToSurface.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandGradeToSurface.html"));
 #endif
 
         return panel;

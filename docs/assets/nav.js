@@ -32,7 +32,8 @@
         { title: 'Edit Profile', href: 'Commands/CommandEditProfile.html' },
         { title: 'Station Labels', href: 'Commands/CommandStationLabels.html' },
         { title: 'Sweep Along Alignment', href: 'Commands/CommandSweepAlignment.html' },
-        { title: 'Sweep to Toposolid', href: 'Commands/CommandSweepToToposolid.html' }
+        { title: 'Sweep to Toposolid', href: 'Commands/CommandSweepToToposolid.html' },
+        { title: 'Grade to Surface', href: 'Commands/CommandGradeToSurface.html' }
     ];
 
     var REFERENCE = [
