@@ -423,4 +423,29 @@ public class ProfileEditingTests : TopoAlignTest
 
         await Assert.That(written[1].CurveLength).IsEqualTo(ProfileEditing.EffectiveCurveLength(vertices, 1)).Within(1e-9);
     }
+
+    // ---- sampling the profile for the graph ----------------------------------------------------------------------
+
+    [Test]
+    public async Task Sample_WithoutCurves_IsTheStraightsBetweenThePvis()
+    {
+        var points = ProfileSampling.Sample(new[] { V(0, 100), V(400, 110), V(1000, 90) });
+
+        await Assert.That(points.Count).IsEqualTo(3);
+        await Assert.That(points[1].Distance).IsEqualTo(400.0);
+        await Assert.That(points[1].Elevation).IsEqualTo(110.0);
+    }
+
+    [Test]
+    public async Task Sample_WithACurve_FollowsTheParabolaBelowTheApex()
+    {
+        // grades +4 % then -4 % over a 200 ft curve: the curve sits A*L/8 = 1 ft under the PVI
+        var points = ProfileSampling.Sample(new[] { V(0, 100), V(500, 110, 200), V(Length, 100) });
+
+        var middle = points.Single(p => Math.Abs(p.Distance - 500.0) < 1e-9);
+        await Assert.That(middle.Elevation).IsEqualTo(109.0).Within(1e-9);
+        await Assert.That(points.Any(p => Math.Abs(p.Distance - 400.0) < 1e-9 && Math.Abs(p.Elevation - 108.0) < 1e-9)).IsTrue();
+        await Assert.That(points.Any(p => Math.Abs(p.Distance - 600.0) < 1e-9 && Math.Abs(p.Elevation - 108.0) < 1e-9)).IsTrue();
+        await Assert.That(points.Count).IsEqualTo(2 + ProfileSampling.CurveSegments + 1);
+    }
 }
