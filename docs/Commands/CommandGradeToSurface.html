@@ -1,0 +1,85 @@
+<!-- docs/Commands/CommandGradeToSurface.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – Grade to Surface</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=Fragment+Mono&amp;display=swap">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="../index.html">
+      <span class="brand-wordmark">russ green</span>
+      <span class="brand-product">TopoAlign</span>
+    </a>
+    <nav class="side-nav" aria-label="Documentation"></nav>
+  </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Grade to Surface</li>
+          </ol>
+        </nav>
+        <article>
+            <h1 id="overview">Grade to Surface</h1>
+            <p>Grades a slope from an edge or a line down, or up, to meet an existing toposolid. From each point along the line the tool projects a ray away from it at the slope you set, finds where that ray meets the toposolid surface, and adds points there. The existing toposolid points between the line and those new points are removed, so the slope is a clean plane rather than being pulled about by the points that were there. This is Revit 2024 and later only.</p>
+
+            <h2 id="usage">Usage / Steps</h2>
+            <ol>
+                <li>Go to a plan view. Select the toposolid first, or launch <strong>Grade to Surface</strong> and click <strong>Pick toposolid</strong>.</li>
+                <li>Choose <strong>Element edges</strong> or <strong>Model lines</strong>, click <strong>Pick line</strong> and pick the edges (for example the top edge of a platform) or lines/arcs to grade from. They must join end to end. Model lines can be at any height, such as a contour.</li>
+                <li>Click <strong>Pick side</strong>, then click in the view on the side of the line the slope should run towards.</li>
+                <li>Set the <strong>Slope</strong>, the <strong>Maximum width</strong> and the other options, then click <strong>Grade</strong>.</li>
+            </ol>
+
+            <script src="../assets/video-loader.js"></script>
+            <script>
+              const VIDEO_URL = 'https://russgreen.github.io/TopoAlign/assets/gradetosurface.mp4';
+            </script>
+            <div id="video-section" style="display: none;">
+              <h2>Demo Video</h2>
+              <video width="1000" controls preload="metadata" muted>
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+
+            <h2 id="options">Options / Parameters</h2>
+            <ul>
+                <li><strong>Slope</strong> — Enter it as a ratio (<code>3</code> means 1 : 3, one up for three across), a percentage, or an angle in degrees. The slope is measured square to the line. The last choice is remembered.</li>
+                <li><strong>Units used</strong> — The length unit for the three distances below. It starts as the project's length unit.</li>
+                <li><strong>Maximum width</strong> — The furthest the slope may run from the line. A point whose slope has not met the ground by then is left out and counted in the summary.</li>
+                <li><strong>Vertical offset</strong> — Starts the slope this far above the line, or below it if negative, for example to allow for the depth of a topsoil layer.</li>
+                <li><strong>Spacing along line</strong> — How far apart the points are along the line, and so along the foot of the slope. Arcs always get a point at least every 5 degrees.</li>
+                <li><strong>Add points along the line</strong> — Puts points on the line itself so the top of the slope sits at the line's height. Turn this off if the line is already shaped into the toposolid, for example with Align to Element.</li>
+            </ul>
+
+            <h2 id="notes">Notes</h2>
+            <ul>
+                <li>Cut or fill is worked out for every point. Where the ground is below the line the slope falls to meet it (fill); where the ground is above the line the slope rises (cut). One line can be fill at one end and cut at the other.</li>
+                <li>Where the line turns a corner the slope runs along the corner's bisector, so it stays at the slope you set when measured square to each leg.</li>
+                <li>The existing toposolid points inside the graded area are replaced. All other points, including those outside the area, are kept.</li>
+                <li>Toposolid points can only be removed by rebuilding the shape, so on a very large toposolid the tool can take a moment, and any shape edits made by hand with the toposolid's own point tools are rebuilt from the points that remain.</li>
+                <li>If the slope does not meet the toposolid anywhere along the line, nothing is changed and the tool says so. Check that the side you picked faces the toposolid, and increase the maximum width.</li>
+                <li>Very sharp inside corners can make neighbouring slopes cross each other. Pick the line as separate stretches, or round the corner with an arc, if the result looks wrong.</li>
+                <li>The whole change is one undo step.</li>
+            </ul>
+      </article>
+        <nav class="pager" aria-label="Previous and next page"></nav>
+    </div>
+  </main>
+
+<footer><div class="wrap">TopoAlign • Documentation</div></footer>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

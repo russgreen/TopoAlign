@@ -1,0 +1,117 @@
+<Window x:Class="TopoAlign.Views.GradeToSurfaceView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:TopoAlign.ViewModels"
+        xmlns:behaviours="clr-namespace:TopoAlign.Behaviours"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance {x:Type viewModels:GradeToSurfaceViewModel}, IsDesignTimeCreatable=False}"
+        Title="{Binding WindowTitle}"
+        FontSize="12" FontFamily="Segoe UI Light"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Height" Width="420"
+        WindowStyle="ToolWindow" ResizeMode="NoResize">
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <Style TargetType="TextBlock">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="ComboBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+            <Style TargetType="CheckBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+            <Style TargetType="RadioButton">
+                <Setter Property="Margin" Value="0,0,12,6"/>
+            </Style>
+            <Style TargetType="TextBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="HorizontalContentAlignment" Value="Right"/>
+                <Setter Property="MaxLength" Value="20"/>
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="Height" Value="25"/>
+            </Style>
+        </Grid.Resources>
+
+        <TextBlock Grid.Row="0" Text="Grade from"/>
+        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+            <RadioButton Content="Element edges" IsChecked="{Binding SourceIsEdges}"/>
+            <RadioButton Content="Model lines" IsChecked="{Binding SourceIsModelLines, Mode=OneWay}"/>
+        </StackPanel>
+
+        <Button Grid.Row="1" Grid.ColumnSpan="2" Content="Pick line" Command="{Binding PickLineCommand}"
+                ToolTip="Pick the edges or model lines the slope starts from. They must join end to end."/>
+        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding LineStatus}" TextWrapping="Wrap"/>
+
+        <Button Grid.Row="3" Grid.ColumnSpan="2" Content="Pick side" Command="{Binding PickSideCommand}"
+                ToolTip="Click in a plan view on the side of the line the slope should run towards."/>
+        <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Text="{Binding SideStatus}" TextWrapping="Wrap"/>
+
+        <Button Grid.Row="5" Grid.ColumnSpan="2" Content="Pick toposolid" Command="{Binding PickToposolidCommand}"/>
+        <TextBlock Grid.Row="6" Grid.ColumnSpan="2" Text="{Binding ToposolidStatus}" TextWrapping="Wrap"/>
+
+        <TextBlock Grid.Row="7" Text="Slope"/>
+        <Grid Grid.Row="7" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Text="{Binding SlopeValue}" Margin="0,0,6,6"
+                     behaviours:TextBoxInput.RegularExpression="^[0-9]*\.?[0-9]*$"
+                     ToolTip="1 : 3 is entered as 3 in Ratio. The slope rises where the ground is above the line and falls where it is below."/>
+            <ComboBox Grid.Column="1" ItemsSource="{Binding SlopeModes}" DisplayMemberPath="Label"
+                      SelectedItem="{Binding SelectedSlopeMode}"/>
+        </Grid>
+
+        <TextBlock Grid.Row="8" Text="Units used"/>
+        <ComboBox Grid.Row="8" Grid.Column="1" ItemsSource="{Binding DisplayUnits}" DisplayMemberPath="Label"
+                  SelectedItem="{Binding SelectedDisplayUnit}"/>
+
+        <TextBlock Grid.Row="9" Text="Maximum width"/>
+        <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding MaxWidth}"
+                 behaviours:TextBoxInput.RegularExpression="^[0-9]*\.?[0-9]*$"
+                 ToolTip="The furthest the slope may run from the line. Points whose slope doesn't meet the ground within this are left alone."/>
+
+        <TextBlock Grid.Row="10" Text="Vertical offset"/>
+        <TextBox Grid.Row="10" Grid.Column="1" Text="{Binding VerticalOffset}"
+                 behaviours:TextBoxInput.RegularExpression="^-?[0-9]*\.?[0-9]*$"
+                 ToolTip="Starts the slope this far above (or, if negative, below) the line."/>
+
+        <TextBlock Grid.Row="11" Text="Spacing along line"/>
+        <TextBox Grid.Row="11" Grid.Column="1" Text="{Binding Interval}"
+                 behaviours:TextBoxInput.RegularExpression="^[0-9]*\.?[0-9]*$"
+                 ToolTip="How far apart the points along the line, and so along the foot of the slope, are."/>
+
+        <CheckBox Grid.Row="12" Grid.ColumnSpan="2" Content="Add points along the line" IsChecked="{Binding AddEdgePoints}"
+                  ToolTip="Puts points on the line itself so the top of the slope sits at its height."/>
+
+        <Button Grid.Row="13" Grid.ColumnSpan="2" Content="Grade" IsDefault="True" Height="30"
+                Command="{Binding GradeCommand}"/>
+    </Grid>
+</Window>

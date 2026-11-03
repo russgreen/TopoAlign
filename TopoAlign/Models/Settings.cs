@@ -48,6 +48,15 @@ public class Settings
     /// <summary>Whether converting a road to a toposolid also deletes the road.</summary>
     public bool RoadToposolidDeleteRoad { get; set; }
 
+    // Grade to surface, lengths in feet (internal units).
+    public string GradeSource { get; set; } = "Edges";
+    public string GradeSlopeMode { get; set; } = "Ratio";
+    public decimal GradeSlopeValue { get; set; } = 3;
+    public decimal GradeMaxWidth { get; set; } = Convert.ToDecimal(50.0 / 0.3048);                       // 50 m
+    public decimal GradeVerticalOffset { get; set; }
+    public decimal GradeInterval { get; set; } = Convert.ToDecimal(1.0 / 0.3048);                        // 1 m
+    public bool GradeAddEdgePoints { get; set; } = true;
+
 #if REVIT2021_OR_GREATER
     public decimal CreateAlignmentStartStation { get; set; } = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(0, UnitTypeId.Meters));
 #else
@@ -86,6 +95,9 @@ public class Settings
                     SweepOutput = Convert.ToString(key.GetValue("SweepOutput", SweepOutput)) ?? "DirectShape";
                     RoadToposolidType = Convert.ToString(key.GetValue("RoadToposolidType", RoadToposolidType)) ?? string.Empty;
                     RoadToposolidDeleteRoad = Convert.ToBoolean(key.GetValue("RoadToposolidDeleteRoad", RoadToposolidDeleteRoad));
+                    GradeSource = Convert.ToString(key.GetValue("GradeSource", GradeSource)) ?? "Edges";
+                    GradeSlopeMode = Convert.ToString(key.GetValue("GradeSlopeMode", GradeSlopeMode)) ?? "Ratio";
+                    GradeAddEdgePoints = Convert.ToBoolean(key.GetValue("GradeAddEdgePoints", GradeAddEdgePoints));
 
                     _ = decimal.TryParse(key.GetValue("DivideEdgeDistance", DivideEdgeDistance).ToString(), out decimal divideEdgeDistance);
                     _ = decimal.TryParse(key.GetValue("VerticalOffset", VerticalOffset).ToString(), out decimal verticalOffset);
@@ -100,6 +112,10 @@ public class Settings
                     SweepInterval = ReadDecimal(key, "SweepInterval", SweepInterval);
                     SweepVerticalOffset = ReadDecimal(key, "SweepVerticalOffset", SweepVerticalOffset);
                     EditProfileCurveLength = ReadDecimal(key, "EditProfileCurveLength", EditProfileCurveLength);
+                    GradeSlopeValue = ReadDecimal(key, "GradeSlopeValue", GradeSlopeValue);
+                    GradeMaxWidth = ReadDecimal(key, "GradeMaxWidth", GradeMaxWidth);
+                    GradeVerticalOffset = ReadDecimal(key, "GradeVerticalOffset", GradeVerticalOffset);
+                    GradeInterval = ReadDecimal(key, "GradeInterval", GradeInterval);
 
                     DivideEdgeDistance = divideEdgeDistance;
                     VerticalOffset = verticalOffset;
@@ -136,6 +152,13 @@ public class Settings
             key.SetValue("SweepOutput", SweepOutput ?? "DirectShape", Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("RoadToposolidType", RoadToposolidType ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("RoadToposolidDeleteRoad", RoadToposolidDeleteRoad, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("GradeSource", GradeSource ?? "Edges", Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("GradeSlopeMode", GradeSlopeMode ?? "Ratio", Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("GradeSlopeValue", GradeSlopeValue, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("GradeMaxWidth", GradeMaxWidth, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("GradeVerticalOffset", GradeVerticalOffset, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("GradeInterval", GradeInterval, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("GradeAddEdgePoints", GradeAddEdgePoints, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("DivideEdgeDistance", DivideEdgeDistance, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("VerticalOffset", VerticalOffset, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("CreateAlignmentStartStation", CreateAlignmentStartStation, Microsoft.Win32.RegistryValueKind.String);

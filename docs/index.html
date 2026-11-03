@@ -57,6 +57,7 @@
           <li>Use <strong>Edit Profile</strong> to add stations to an alignment's profile and set the elevation of each.</li>
           <li>Use <strong>Sweep Along Alignment</strong> to build a road or path by sweeping a profile family along an alignment.</li>
           <li>Use <strong>Sweep to Toposolid</strong> to convert a swept road into a toposolid that follows its surface (Revit 2024 and later).</li>
+          <li>Use <strong>Grade to Surface</strong> to grade a slope at a set gradient from an edge or model line to meet a toposolid (Revit 2024 and later).</li>
           <li>Use <strong>Points At Intersection</strong> to place points where a face intersects the topography.</li>
           <li>Use <strong>Reset Topo Region</strong> to replace points within a rectangle from a source topo into a target topo.</li>
         </ol>
@@ -123,6 +124,11 @@
             <h3><a href="./Commands/CommandSweepToToposolid.html">Sweep to Toposolid</a></h3>
             <p class="muted">Converts a swept road into a toposolid whose top surface follows the road (Revit 2024 and later).</p>
           </div>
+          <div class="card">
+            <img src="./assets/GradeToSurface32.png" alt="Grade to Surface" class="card-icon">
+            <h3><a href="./Commands/CommandGradeToSurface.html">Grade to Surface</a></h3>
+            <p class="muted">Grades a slope at a set gradient from an edge or model line to meet a toposolid, replacing the points in between (Revit 2024 and later).</p>
+          </div>
         </div>
 
         <h2 id="config">Configuration &amp; Paths</h2>
@@ -150,6 +156,7 @@
           <li>New Sweep Along Alignment command to make roads and paths from a profile family, with a choice of segmented loft or smooth surfaces, and of a direct shape or a family as the result.</li>
           <li>New Sweep to Toposolid command to convert a swept road into a toposolid (Revit 2024 and later).</li>
           <li>New Edit Profile command to add stations to an alignment's profile and set their elevations.</li>
+          <li>New Grade to Surface command to grade a slope from an edge or model line to meet a toposolid (Revit 2024 and later).</li>
         </ul>
       </article>
         <nav class="pager" aria-label="Previous and next page"></nav>

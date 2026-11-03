@@ -17,7 +17,9 @@ internal static class CurveChainer
         public bool IsContinuous => Curves.Count > 0 && string.IsNullOrEmpty(ErrorMessage);
     }
 
-    public static ChainResult TryChain(IEnumerable<Curve> sourceCurves)
+    /// <param name="sourceCurves">The curves to join end to end.</param>
+    /// <param name="projectToPlan">True to flatten the curves to Z = 0 first; false to keep their elevations (curves must then meet in 3D).</param>
+    public static ChainResult TryChain(IEnumerable<Curve> sourceCurves, bool projectToPlan = true)
     {
         var result = new ChainResult();
 
@@ -44,9 +46,9 @@ internal static class CurveChainer
             return result;
         }
 
-        var curves = picked
-            .Select(ProjectToPlan)
-            .ToList();
+        var curves = projectToPlan
+            ? picked.Select(ProjectToPlan).ToList()
+            : picked;
 
         var (startIndex, reverseStart) = FindStartCurve(curves);
 
