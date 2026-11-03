@@ -4,8 +4,6 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/russgreen/topoalign) 
 
-Also available from the App Store https://apps.autodesk.com/RVT/en/Detail/Index?id=7412914718855875408&appLang=en&os=Win64
-
 For features, usage instructions and known limitations see https://russgreen.github.io/TopoAlign/
 
 
