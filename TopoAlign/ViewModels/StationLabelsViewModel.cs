@@ -113,6 +113,7 @@ internal partial class StationLabelsViewModel : BaseViewModel
     private readonly View _view;
     private Element? _alignment;
     private string _alignmentName = string.Empty;
+    private string _suggestedInterval = string.Empty;
 
     public StationLabelsViewModel()
     {
@@ -251,6 +252,15 @@ internal partial class StationLabelsViewModel : BaseViewModel
             var from = UnitUtils.ConvertFromInternalUnits(info.DisplayedStartStation, unit);
             var to = UnitUtils.ConvertFromInternalUnits(info.DisplayedEndStation, unit);
             AlignmentStatus = $"{_alignmentName}, stations {from:N2} to {to:N2} {SelectedDisplayUnit.Label}";
+
+            // Autodesk's default interval (100 ft / 1000 m) is often longer than a site alignment, which would
+            // leave a single label at the start, so suggest one that gives around ten labels.
+            if (string.IsNullOrWhiteSpace(IntervalText) || IntervalText == _suggestedInterval)
+            {
+                _suggestedInterval = SuggestInterval(to - from);
+                IntervalText = _suggestedInterval;
+            }
+
             return true;
         }
         finally
@@ -258,6 +268,21 @@ internal partial class StationLabelsViewModel : BaseViewModel
             OnPropertyChanged(nameof(HasAlignment));
             CreateCommand.NotifyCanExecuteChanged();
         }
+    }
+
+    /// <summary>A round interval (1, 2 or 5 times a power of ten) that gives roughly ten labels over the length, in the display units.</summary>
+    internal static string SuggestInterval(double length)
+    {
+        if (double.IsNaN(length) || length <= 0)
+        {
+            return string.Empty;
+        }
+
+        var raw = length / 10;
+        var magnitude = Math.Pow(10, Math.Floor(Math.Log10(raw)));
+        var factor = raw / magnitude;
+        var nice = (factor >= 5 ? 5 : factor >= 2 ? 2 : 1) * magnitude;
+        return nice.ToString("0.######", CultureInfo.CurrentCulture);
     }
 
     // ---- creating -----------------------------------------------------------------------------------------------
