@@ -11,7 +11,7 @@ partial class Build
     .TriggeredBy(Sign)
     .Executes(() =>
     {
-        var bundleDirectory = RootDirectory / "Bundle" / "RG tools Topo Align.bundle";
+        var bundleDirectory = RootDirectory / "Bundle" / "RussGreenTopoAlign.bundle";
         var bundleContentsDirectory = bundleDirectory / "Contents";
         var bundlePackageContents = bundleDirectory / "PackageContents.xml";
         var topoAlignProjectFile = Path.Combine(RootDirectory, "TopoAlign", "TopoAlign.csproj");
