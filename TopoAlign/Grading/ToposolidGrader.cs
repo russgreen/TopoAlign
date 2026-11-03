@@ -161,7 +161,7 @@ internal static class ToposolidGrader
     }
 
     /// <summary>
-    /// Points along a chain of curves at the given spacing, raised by the offset. Arcs get at least a point every 5 degrees.
+    /// Points along a chain of curves at the given spacing, raised by the offset. Arcs get at least a point every 5 degrees, and other curves at least 16 points.
     /// A chain that ends where it starts is closed, and its end point isn't repeated.
     /// </summary>
     internal static List<GradePoint> BuildPath(IReadOnlyList<Curve> curves, double interval, double verticalOffset, out bool closed)
@@ -184,6 +184,11 @@ internal static class ToposolidGrader
             if (curve is Arc arc && arc.Radius > 1e-9)
             {
                 segments = Math.Max(segments, (int)Math.Ceiling(curve.Length / arc.Radius / (5.0 * Math.PI / 180.0)));
+            }
+            else if (curve is not Line)
+            {
+                // an ellipse or spline has no single radius to size the pieces by
+                segments = Math.Max(segments, 16);
             }
 
             for (var i = c == 0 ? 0 : 1; i <= segments; i++)

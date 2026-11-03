@@ -40,7 +40,8 @@ internal static class CurveChainer
         }
 
         // Check the types before projecting, because projecting only knows how to rebuild lines and arcs.
-        if (picked.Any(c => c is not Line and not Arc))
+        // Curves that are kept as they are can be any bound curve, such as the ellipse a sloped curved edge makes.
+        if (projectToPlan && picked.Any(c => c is not Line and not Arc))
         {
             result.ErrorMessage = "Only line and arc curves are supported.";
             return result;
@@ -208,6 +209,11 @@ internal static class CurveChainer
         if (curve is Arc)
         {
             return Arc.Create(curve.GetEndPoint(1), curve.GetEndPoint(0), curve.Evaluate(0.5, true));
+        }
+
+        if (curve.IsBound)
+        {
+            return curve.CreateReversed();
         }
 
         throw new NotSupportedException($"Unsupported curve type '{curve.GetType().Name}'.");

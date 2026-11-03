@@ -224,7 +224,7 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
         }
         else
         {
-            foreach (var reference in uidoc.Selection.PickObjects(ObjectType.Element, new CurvePickFilter(), "Select the model lines to grade from"))
+            foreach (var reference in uidoc.Selection.PickObjects(ObjectType.Element, new LinePickFilter(), "Select the model lines to grade from"))
             {
                 if (App.RevitDocument.GetElement(reference) is ModelCurve { GeometryCurve: { } curve })
                 {
