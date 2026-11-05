@@ -1,0 +1,93 @@
+<!-- docs/Commands/CommandAlignTopoEdges.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – Align Topo Edges</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=Fragment+Mono&amp;display=swap">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="../index.html">
+      <span class="brand-wordmark">russ green</span>
+      <span class="brand-product">TopoAlign</span>
+    </a>
+    <nav class="side-nav" aria-label="Documentation"></nav>
+  </div>
+</header>
+
+ <main>
+ <div class="wrap">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Align Topo Edges</li>
+          </ol>
+        </nav>
+ <article>
+ <h1 id="overview">Align Topo Edges</h1>
+ <p>Adds points to two topos that share an edge so that the edges line up. Where the outline of one topo has a point along the edge of the other, a matching point is added to the other, at the same height.</p>
+
+ <h2 id="usage">Usage / Steps</h2>
+ <ol>
+ <li>Launch the command.</li>
+ <li>Select the topo to add points to.</li>
+ <li>Select the neighbouring topo that shares an edge with it.</li>
+ <li>Choose whether both topos get points, or only the first.</li>
+ <li>The points are added and a summary is shown.</li>
+ </ol>
+
+        <script src="../assets/video-loader.js"></script>
+        <script>
+          const VIDEO_URL = 'https://russgreen.github.io/TopoAlign/assets/aligntopoedges.mp4';
+        </script>
+        <div id="video-section" style="display: none;">
+          <h2>Demo Video</h2>
+          <video width="1000" controls preload="metadata" muted>
+            <source src="" type="video/mp4">
+            <!-- Add additional source formats if available -->
+            <!-- <source src="" type="video/webm"> -->
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+ <h2 id="options">Options / Parameters</h2>
+ <ul>
+ <li><strong>Both topos</strong> — each topo gets the other's edge points, so the shared edge has identical points on both sides.</li>
+ <li><strong>First topo only</strong> — the second topo is left alone and the first gets its edge points and has its matching points moved.</li>
+ </ul>
+
+ <h2 id="results">Output / Results</h2>
+ <ul>
+ <li>Points are added on the outline of the topo, at the plan position and height of the neighbour's edge point.</li>
+ <li>Points that already exist on both topos at the same height are left alone.</li>
+ <li>Every existing point on the first topo's shared edge is aligned to the second topo's edge height. Points between the second topo's vertices use the height interpolated along that edge.</li>
+ <li>The second topo's existing points are never moved. Pick the topo whose heights you want to keep second.</li>
+ </ul>
+
+ <h2 id="tips">Tips &amp; Pitfalls</h2>
+ <ul>
+ <li>The outlines must meet to within about 3 mm (0.01 ft) in plan to count as a shared edge.</li>
+ <li>Holes in a topo are treated as edges too, so topos that meet at an inner boundary also work.</li>
+ </ul>
+
+ <h2 id="troubleshooting">Troubleshooting</h2>
+ <ul>
+ <li><strong>The two topos do not appear to share an edge</strong> → Check that the topos touch, and that their boundaries line up in plan.</li>
+ <li><strong>Revit would not accept the new points</strong> → Check the topo is not in a state that stops points being edited, then try again.</li>
+ </ul>
+      </article>
+        <nav class="pager" aria-label="Previous and next page"></nav>
+    </div>
+  </main>
+
+ <footer><div class="wrap">TopoAlign • Documentation</div></footer>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>
