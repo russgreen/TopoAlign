@@ -23,6 +23,7 @@
     var COMMANDS = [
         { title: 'Align to Element', href: 'Commands/CommandAlignTopo.html' },
         { title: 'Align to Topo', href: 'Commands/CommandAlignFloor.html' },
+        { title: 'Align Topo Edges', href: 'Commands/CommandAlignTopoEdges.html' },
         { title: 'Points from Lines', href: 'Commands/CommandPointsOnSurface.html' },
         { title: 'Points Along Contours', href: 'Commands/CommandPointsAlongContours.html' },
         { title: 'Points At Intersection', href: 'Commands/CommandPointsAtIntersection.html' },

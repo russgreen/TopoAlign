@@ -107,6 +107,7 @@
      <None Remove="Images\EditProfile32.png" />
      <None Remove="Images\SweepToToposolid32.png" />
      <None Remove="Images\GradeToSurface32.png" />
+     <None Remove="Images\AlignTopoEdges32.png" />
    </ItemGroup>
 
    <!-- Toposolids arrived in Revit 2024, so the Sweep to Toposolid dialog is only built from there. -->
@@ -131,6 +132,7 @@
      <EmbeddedResource Include="Images\EditProfile32.png" />
      <EmbeddedResource Include="Images\SweepToToposolid32.png" />
      <EmbeddedResource Include="Images\GradeToSurface32.png" />
+     <EmbeddedResource Include="Images\AlignTopoEdges32.png" />
    </ItemGroup>
   
    <ItemGroup>

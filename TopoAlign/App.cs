@@ -101,7 +101,16 @@ class App : IExternalApplication
         pbFloorAlign.LargeImage = PngImageSource("TopoAlign.Images.FloorToTopo32.png");
         pbFloorAlign.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandAlignFloor.html"));
 
-        PushButton pbPointsFromLines = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbAlignTopoEdges = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandAlignTopoEdges),
+            $"Align Topo{Environment.NewLine}Edges",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandAlignTopoEdges)}"));
+        pbAlignTopoEdges.ToolTip = "Add points to two topos that share an edge so that the edges line up.";
+        pbAlignTopoEdges.LargeImage = PngImageSource("TopoAlign.Images.AlignTopoEdges32.png");
+        pbAlignTopoEdges.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandAlignTopoEdges.html"));
+
+        PushButton pbPointsFromLines =(PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandPointsOnSurface),
             $"Points from{Environment.NewLine}Lines",
             Assembly.GetExecutingAssembly().Location,
