@@ -73,7 +73,7 @@ internal static class TopoEdgeAlignerRevit
 #endif
     }
 
-    private static List<EdgeSegment> ReadOutline(Element topography)
+    internal static List<EdgeSegment> ReadOutline(Element topography)
     {
         var triangles = new List<(GradePoint, GradePoint, GradePoint)>();
         TopographyReader.ForEachUpFacingTriangle(topography, (a, b, c) =>

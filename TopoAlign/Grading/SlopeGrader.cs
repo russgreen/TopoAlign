@@ -122,7 +122,8 @@ internal sealed class GradingResult
         return false;
     }
 
-    private static bool QuadContains(GradePoint[] quad, double x, double y, double tolerance)
+    /// <summary>True when (x, y) is inside the plan outline, or within the tolerance of its edge. The outline may have any number of corners.</summary>
+    internal static bool QuadContains(GradePoint[] quad, double x, double y, double tolerance)
     {
         var minX = double.MaxValue;
         var minY = double.MaxValue;

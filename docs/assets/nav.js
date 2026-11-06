@@ -34,7 +34,8 @@
         { title: 'Station Labels', href: 'Commands/CommandStationLabels.html' },
         { title: 'Sweep Along Alignment', href: 'Commands/CommandSweepAlignment.html' },
         { title: 'Sweep to Toposolid', href: 'Commands/CommandSweepToToposolid.html' },
-        { title: 'Grade to Surface', href: 'Commands/CommandGradeToSurface.html' }
+        { title: 'Grade to Surface', href: 'Commands/CommandGradeToSurface.html' },
+        { title: 'Dropped Kerb Ramp', href: 'Commands/CommandDroppedKerbRamp.html' }
     ];
 
     var REFERENCE = [

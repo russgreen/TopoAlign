@@ -57,6 +57,13 @@ public class Settings
     public decimal GradeInterval { get; set; } = Convert.ToDecimal(1.0 / 0.3048);                        // 1 m
     public bool GradeAddEdgePoints { get; set; } = true;
 
+    // Dropped kerb ramp, lengths in feet (internal units).
+    public decimal KerbRampWidth { get; set; } = 4;
+    public decimal KerbRampGradient { get; set; } = 12;
+    public decimal KerbFlareGradient { get; set; } = 12;
+    public decimal KerbRampMaxLength { get; set; } = 10;
+    public decimal KerbRampLevelOffset { get; set; }
+
 #if REVIT2021_OR_GREATER
     public decimal CreateAlignmentStartStation { get; set; } = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(0, UnitTypeId.Meters));
 #else
@@ -116,6 +123,11 @@ public class Settings
                     GradeMaxWidth = ReadDecimal(key, "GradeMaxWidth", GradeMaxWidth);
                     GradeVerticalOffset = ReadDecimal(key, "GradeVerticalOffset", GradeVerticalOffset);
                     GradeInterval = ReadDecimal(key, "GradeInterval", GradeInterval);
+                    KerbRampWidth = ReadDecimal(key, "KerbRampWidth", KerbRampWidth);
+                    KerbRampGradient = ReadDecimal(key, "KerbRampGradient", KerbRampGradient);
+                    KerbFlareGradient = ReadDecimal(key, "KerbFlareGradient", KerbFlareGradient);
+                    KerbRampMaxLength = ReadDecimal(key, "KerbRampMaxLength", KerbRampMaxLength);
+                    KerbRampLevelOffset = ReadDecimal(key, "KerbRampLevelOffset", KerbRampLevelOffset);
 
                     DivideEdgeDistance = divideEdgeDistance;
                     VerticalOffset = verticalOffset;
@@ -159,6 +171,11 @@ public class Settings
             key.SetValue("GradeVerticalOffset", GradeVerticalOffset, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("GradeInterval", GradeInterval, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("GradeAddEdgePoints", GradeAddEdgePoints, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbRampWidth", KerbRampWidth, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbRampGradient", KerbRampGradient, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbFlareGradient", KerbFlareGradient, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbRampMaxLength", KerbRampMaxLength, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbRampLevelOffset", KerbRampLevelOffset, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("DivideEdgeDistance", DivideEdgeDistance, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("VerticalOffset", VerticalOffset, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("CreateAlignmentStartStation", CreateAlignmentStartStation, Microsoft.Win32.RegistryValueKind.String);

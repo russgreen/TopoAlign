@@ -209,6 +209,15 @@ class App : IExternalApplication
         pbGradeToSurface.ToolTip = "Grade a slope from an edge or model line down or up to the toposolid, replacing the toposolid points in between.";
         pbGradeToSurface.LargeImage = PngImageSource("TopoAlign.Images.GradeToSurface32.png");
         pbGradeToSurface.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandGradeToSurface.html"));
+
+        PushButton pbDroppedKerbRamp = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandDroppedKerbRamp),
+            $"Dropped{Environment.NewLine}Kerb Ramp",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandDroppedKerbRamp)}"));
+        pbDroppedKerbRamp.ToolTip = "Shape a toposolid edge into a dropped kerb: a ramp down to the level of a target edge, with a flare either side.";
+        pbDroppedKerbRamp.LargeImage = PngImageSource("TopoAlign.Images.DroppedKerbRamp32.png");
+        pbDroppedKerbRamp.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandDroppedKerbRamp.html"));
 #endif
 
         return panel;

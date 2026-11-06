@@ -108,6 +108,7 @@
      <None Remove="Images\SweepToToposolid32.png" />
      <None Remove="Images\GradeToSurface32.png" />
      <None Remove="Images\AlignTopoEdges32.png" />
+     <None Remove="Images\DroppedKerbRamp32.png" />
    </ItemGroup>
 
    <!-- Toposolids arrived in Revit 2024, so the Sweep to Toposolid dialog is only built from there. -->
@@ -116,6 +117,8 @@
      <Compile Remove="Views\SweepToToposolidView.xaml.cs" />
      <Page Remove="Views\GradeToSurfaceView.xaml" />
      <Compile Remove="Views\GradeToSurfaceView.xaml.cs" />
+     <Page Remove="Views\KerbRampView.xaml" />
+     <Compile Remove="Views\KerbRampView.xaml.cs" />
    </ItemGroup>
   
    <ItemGroup>
@@ -133,6 +136,7 @@
      <EmbeddedResource Include="Images\SweepToToposolid32.png" />
      <EmbeddedResource Include="Images\GradeToSurface32.png" />
      <EmbeddedResource Include="Images\AlignTopoEdges32.png" />
+     <EmbeddedResource Include="Images\DroppedKerbRamp32.png" />
    </ItemGroup>
   
    <ItemGroup>
