@@ -1,0 +1,85 @@
+<!-- docs/Commands/CommandDroppedKerbRamp.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – Dropped Kerb Ramp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=Fragment+Mono&amp;display=swap">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="../index.html">
+      <span class="brand-wordmark">russ green</span>
+      <span class="brand-product">TopoAlign</span>
+    </a>
+    <nav class="side-nav" aria-label="Documentation"></nav>
+  </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Dropped Kerb Ramp</li>
+          </ol>
+        </nav>
+        <article>
+            <h1 id="overview">Dropped Kerb Ramp</h1>
+            <p>Shapes the edge of a footway toposolid into a dropped kerb. A ramp, as wide as you set, falls to the level of the road's edge at the kerb and climbs back to the footway at the ramp gradient. A flare on each side of the ramp brings the kerb line back up to its own level, also at a gradient you set. The existing footway points inside the ramp and flares are replaced, and every other point is kept. This is Revit 2024 and later only.</p>
+
+            <h2 id="usage">Usage / Steps</h2>
+            <ol>
+                <li>Go to a plan or 3D view and launch <strong>Dropped Kerb Ramp</strong>.</li>
+                <li>Click <strong>Pick kerb edge</strong> and pick the edge of the footway toposolid along the kerb. The tool follows the footway's outline from that edge, so the ramp can run over several edge segments.</li>
+                <li>Click <strong>Pick centre of drop</strong>, then click on the kerb where the middle of the dropped section should be. In a plan view you can click anywhere; in a 3D view, click on the footway toposolid near the kerb.</li>
+                <li>Click <strong>Pick target edge</strong> and pick the edge whose level the kerb should drop to, usually the edge of the road toposolid beside the kerb. A sloping road edge gives a sloping ramp foot.</li>
+                <li>Set the <strong>Width of drop</strong>, the gradients and the other options, then click <strong>Create</strong>.</li>
+            </ol>
+
+            <script src="../assets/video-loader.js"></script>
+            <script>
+              const VIDEO_URL = 'https://russgreen.github.io/TopoAlign/assets/droppedkerbramp.mp4';
+            </script>
+            <div id="video-section" style="display: none;">
+              <h2>Demo Video</h2>
+              <video width="1000" controls preload="metadata" muted>
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+            </div>
+
+            <h2 id="options">Options / Parameters</h2>
+            <ul>
+                <li><strong>Units used</strong> — The length unit for the distances below. It starts as the project's length unit.</li>
+                <li><strong>Width of drop</strong> — The width of the ramp along the kerb, centred on the point you picked. The flares are added to each side of this.</li>
+                <li><strong>Ramp gradient</strong> — Enter <code>12</code> for 1 : 12. The ramp climbs from the kerb at this gradient, measured square to the kerb, until it meets the footway surface.</li>
+                <li><strong>Flare gradient</strong> — Enter <code>12</code> for 1 : 12. Each flare climbs along the kerb from the end of the ramp at this gradient until the kerb is back at its own level.</li>
+                <li><strong>Maximum ramp length</strong> — The furthest the ramp may run from the kerb. If it has not met the footway by then, nothing is changed and the tool says so.</li>
+                <li><strong>Offset above road edge</strong> — Optional. Raises the bottom of the dropped kerb this far above the picked target edge, or lowers it if negative, for example to leave a small upstand at the road edge. Leave it at 0 to finish level with the edge. The ramp and the flares start from this raised level, so both get shorter. The last values you used are remembered.</li>
+            </ul>
+
+            <h2 id="notes">Notes</h2>
+            <ul>
+                <li>The level at each point of the ramp comes from the nearest point on the target edge, so the two toposolids do not have to share an edge exactly, for example when a kerb stone sits between them.</li>
+                <li>Each flare is the surface between the stretch of kerb that climbs back to its own level and the top corner of the ramp's side. On a straight kerb it is a flat triangle.</li>
+                <li>The kerb can have extra points along it and can curve gently. If it turns a corner sharper than 45 degrees inside the ramp, the tool stops. A flare that reaches such a corner, or the end of the edge, finishes there and the summary says so.</li>
+                <li>If the road is higher than the footway at the kerb the ramp falls to meet it and there are no flares.</li>
+                <li>Toposolid points can only be removed by rebuilding the shape, so on a very large toposolid the tool can take a moment, and any shape edits made by hand with the toposolid's own point tools are rebuilt from the points that remain.</li>
+                <li>The whole change is one undo step.</li>
+            </ul>
+      </article>
+        <nav class="pager" aria-label="Previous and next page"></nav>
+    </div>
+  </main>
+
+<footer><div class="wrap">TopoAlign • Documentation</div></footer>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

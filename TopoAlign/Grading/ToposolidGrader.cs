@@ -126,7 +126,16 @@ internal static class ToposolidGrader
             .ToList();
         result.PointsAdded = points.Count - kept.Count;
 
-        using var transaction = new Transaction(document, "Grade to surface");
+        ReplacePoints(document, toposolid, points, "Grade to surface");
+        return result;
+    }
+
+    /// <summary>
+    /// Gives the toposolid exactly these points, in one transaction. Must be called from within the Revit API context.
+    /// </summary>
+    internal static void ReplacePoints(Document document, Toposolid toposolid, IReadOnlyList<XYZ> points, string transactionName)
+    {
+        using var transaction = new Transaction(document, transactionName);
         transaction.Start();
 
         var failureHandlingOptions = transaction.GetFailureHandlingOptions();
@@ -139,7 +148,7 @@ internal static class ToposolidGrader
             editor.ResetSlabShape();
             editor.Enable();
             document.Regenerate();
-            editor.AddPoints(points);
+            editor.AddPoints(points.ToList());
 
             if (transaction.Commit() != TransactionStatus.Committed)
             {
@@ -148,7 +157,7 @@ internal static class ToposolidGrader
         }
         catch (Exception ex)
         {
-            log.Warning(ex, "Grading the toposolid failed");
+            log.Warning(ex, "{transaction} failed", transactionName);
             if (transaction.HasStarted())
             {
                 transaction.RollBack();
@@ -156,8 +165,6 @@ internal static class ToposolidGrader
 
             throw;
         }
-
-        return result;
     }
 
     /// <summary>

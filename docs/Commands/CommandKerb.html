@@ -1,0 +1,99 @@
+<!-- docs/Commands/CommandKerb.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – Sweep Kerb</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=Fragment+Mono&amp;display=swap">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="../index.html">
+      <span class="brand-wordmark">russ green</span>
+      <span class="brand-product">TopoAlign</span>
+    </a>
+    <nav class="side-nav" aria-label="Documentation"></nav>
+  </div>
+</header>
+
+ <main>
+ <div class="wrap">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">Sweep Kerb</li>
+          </ol>
+        </nav>
+ <article>
+ <h1 id="overview">Sweep Kerb</h1>
+ <p>Sweeps a profile along picked edges or model lines to make a kerb. The profile always stands vertical, however the edge rises or falls, and corners are mitred so the kerb keeps its true width. The kerb is made as a direct shape or as a loaded family, in the Roads, Hardscape or Generic Models category.</p>
+
+ <h2 id="usage">Usage / Steps</h2>
+ <ol>
+ <li>Launch the command. Model lines that are already selected are picked up for you.</li>
+ <li>Click <strong>Pick edges</strong> and select the edges of a toposolid, floor, road or any other element, or click <strong>Pick model lines</strong> and select model lines or arcs. You can pick more than once; picks are added together. <strong>Clear picks</strong> starts again.</li>
+ <li>Choose the kerb profile. Profile families come from the project, for example from Revit's Profiles library.</li>
+ <li>Set the options and click <strong>Create Kerb</strong>.</li>
+ <li>With <em>Show the kerb and ask before keeping it</em> ticked (the default) the kerb is built in the model and selected, and you choose <strong>Keep the kerb</strong>, <strong>Flip to the other side</strong> (it is rebuilt on the other side and you are asked again) or <strong>Cancel</strong>, which leaves nothing behind. The side you end on is remembered for next time.</li>
+ </ol>
+
+        <script src="../assets/video-loader.js"></script>
+        <script>
+          const VIDEO_URL = 'https://russgreen.github.io/TopoAlign/assets/kerb.mp4';
+        </script>
+        <div id="video-section" style="display: none;">
+          <h2>Demo Video</h2>
+          <video width="1000" controls preload="metadata" muted>
+            <source src="" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+ <h2 id="options">Options / Parameters</h2>
+ <ul>
+ <li><strong>Kerb profile</strong> — a closed shape of lines and arcs drawn in a profile family. The family's origin sits on the edge; X runs across the kerb and Y runs up.</li>
+ <li><strong>Show the kerb and ask before keeping it</strong> — builds the kerb in the model, selected, before it is committed, so you can see which side the profile is on and flip it.</li>
+ <li><strong>Flip profile left to right</strong> — the profile's positive X goes to the right of the direction of travel. A run keeps the direction of the first edge picked, and a closed loop goes anticlockwise so the right-hand side is the outside. Tick this to put the kerb on the other side.</li>
+ <li><strong>Section spacing</strong> — the longest distance between sections on a curved edge. Straight edges only get a section at each end.</li>
+ <li><strong>Vertical offset</strong> — raises or lowers the whole kerb relative to the edges.</li>
+ <li><strong>Category</strong> — Roads, Hardscape or Generic Models, as far as your version of Revit offers them.</li>
+ <li><strong>Create as</strong> — a direct shape, or a family loaded into the project with a type you can see in the Project Browser.</li>
+ </ul>
+
+ <h2 id="results">Output / Results</h2>
+ <ul>
+ <li>One element per run: a direct shape, or an instance of a new family named "TopoAlign Kerb - ...".</li>
+ <li>Edges that join end to end make one continuous kerb; edges that don't touch make separate runs in the same element.</li>
+ <li>Each use creates a new kerb. Nothing is replaced; use Undo to remove one.</li>
+ </ul>
+
+ <h2 id="tips">Tips &amp; Pitfalls</h2>
+ <ul>
+ <li>Edges must meet to within about 0.1 mm to be joined into one run. No more than two edges may meet at a point.</li>
+ <li>A corner sharper than about 130 degrees is not mitred: the kerb is cut in two there with square ends.</li>
+ <li>A completely vertical edge can't be followed by a vertical profile.</li>
+ <li>The profile must be narrower than the tightest curve on its inside. Where it is not, Revit can't make that span and the kerb has a gap.</li>
+ </ul>
+
+ <h2 id="troubleshooting">Troubleshooting</h2>
+ <ul>
+ <li><strong>The picked edges branch</strong> → Pick one run of edges at a time.</li>
+ <li><strong>No profile families are loaded</strong> → Load one from Revit's Profiles library, or draw your own closed shape in a profile family.</li>
+ <li><strong>The kerb is on the wrong side</strong> → Choose <em>Flip to the other side</em> when asked, or tick <em>Flip profile left to right</em> in the dialog.</li>
+ <li><strong>Revit could not build any geometry</strong> → The profile may be too wide for a curve or corner, or may overlap itself.</li>
+ </ul>
+      </article>
+        <nav class="pager" aria-label="Previous and next page"></nav>
+    </div>
+  </main>
+
+ <footer><div class="wrap">TopoAlign • Documentation</div></footer>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

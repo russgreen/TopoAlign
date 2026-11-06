@@ -191,6 +191,15 @@ class App : IExternalApplication
         pbSweepAlignment.LargeImage = PngImageSource("TopoAlign.Images.SweepAlongAlignment32.png");
         pbSweepAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepAlignment.html"));
 
+        PushButton pbKerb = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandKerb),
+            $"Sweep{Environment.NewLine}Kerb",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandKerb)}"));
+        pbKerb.ToolTip = "Sweep a kerb profile along picked edges or model lines, keeping the profile vertical, to make a kerb as a direct shape or family.";
+        pbKerb.LargeImage = PngImageSource("TopoAlign.Images.Kerb32.png");
+        pbKerb.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandKerb.html"));
+
 #if REVIT2024_OR_GREATER
         PushButton pbSweepToToposolid = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandSweepToToposolid),
@@ -209,6 +218,15 @@ class App : IExternalApplication
         pbGradeToSurface.ToolTip = "Grade a slope from an edge or model line down or up to the toposolid, replacing the toposolid points in between.";
         pbGradeToSurface.LargeImage = PngImageSource("TopoAlign.Images.GradeToSurface32.png");
         pbGradeToSurface.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandGradeToSurface.html"));
+
+        PushButton pbDroppedKerbRamp = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandDroppedKerbRamp),
+            $"Dropped{Environment.NewLine}Kerb Ramp",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandDroppedKerbRamp)}"));
+        pbDroppedKerbRamp.ToolTip = "Shape a toposolid edge into a dropped kerb: a ramp down to the level of a target edge, with a flare either side.";
+        pbDroppedKerbRamp.LargeImage = PngImageSource("TopoAlign.Images.DroppedKerbRamp32.png");
+        pbDroppedKerbRamp.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandDroppedKerbRamp.html"));
 #endif
 
         return panel;

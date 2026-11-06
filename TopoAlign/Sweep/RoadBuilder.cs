@@ -143,13 +143,14 @@ internal static class RoadSolidBuilder
 internal static class SectionLoopFactory
 {
     /// <summary>The section as a closed loop of Revit curves at <paramref name="centre"/>, across the horizontal direction <paramref name="tangent"/>.</summary>
-    public static CurveLoop CreateLoop(SectionProfile profile, XYZ centre, XYZ tangent, double verticalOffset)
+    /// <param name="uScale">Stretches the section across the path; a kerb at a mitred corner is widened so it keeps its true width.</param>
+    public static CurveLoop CreateLoop(SectionProfile profile, XYZ centre, XYZ tangent, double verticalOffset, double uScale = 1.0)
     {
         var origin = new PathPoint(centre.X, centre.Y, centre.Z);
 
         XYZ ToWorld(PlanPoint point)
         {
-            var world = SectionFrame.ToWorld(point.X, point.Y, origin, tangent.X, tangent.Y, verticalOffset);
+            var world = SectionFrame.ToWorld(point.X * uScale, point.Y, origin, tangent.X, tangent.Y, verticalOffset);
             return new XYZ(world.X, world.Y, world.Z);
         }
 
@@ -208,7 +209,7 @@ internal static class RoadBuilder
         return valid.Count > 0 ? valid : new List<RoadCategory> { generic };
     }
 
-    private static bool IsValidCategory(Document document, BuiltInCategory category)
+    internal static bool IsValidCategory(Document document, BuiltInCategory category)
     {
         try
         {

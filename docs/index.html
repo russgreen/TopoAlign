@@ -58,6 +58,7 @@
           <li>Use <strong>Sweep Along Alignment</strong> to build a road or path by sweeping a profile family along an alignment.</li>
           <li>Use <strong>Sweep to Toposolid</strong> to convert a swept road into a toposolid that follows its surface (Revit 2024 and later).</li>
           <li>Use <strong>Grade to Surface</strong> to grade a slope at a set gradient from an edge or model line to meet a toposolid (Revit 2024 and later).</li>
+          <li>Use <strong>Dropped Kerb Ramp</strong> to shape a footway edge into a dropped kerb with a ramp and flares down to a road edge (Revit 2024 and later).</li>
           <li>Use <strong>Points At Intersection</strong> to place points where a face intersects the topography.</li>
           <li>Use <strong>Reset Topo Region</strong> to replace points within a rectangle from a source topo into a target topo.</li>
         </ol>
@@ -125,6 +126,11 @@
             <p class="muted">Sweeps a profile family along an alignment, following its plan and profile, to make a road or path.</p>
           </div>
           <div class="card">
+            <img src="./assets/Kerb32.png" alt="Sweep Kerb" class="card-icon">
+            <h3><a href="./Commands/CommandKerb.html">Sweep Kerb</a></h3>
+            <p class="muted">Sweeps a profile along picked edges or model lines, keeping the profile vertical, to make a kerb as a direct shape or family.</p>
+          </div>
+          <div class="card">
             <img src="./assets/SweepToToposolid32.png" alt="Sweep to Toposolid" class="card-icon">
             <h3><a href="./Commands/CommandSweepToToposolid.html">Sweep to Toposolid</a></h3>
             <p class="muted">Converts a swept road into a toposolid whose top surface follows the road (Revit 2024 and later).</p>
@@ -133,6 +139,11 @@
             <img src="./assets/GradeToSurface32.png" alt="Grade to Surface" class="card-icon">
             <h3><a href="./Commands/CommandGradeToSurface.html">Grade to Surface</a></h3>
             <p class="muted">Grades a slope at a set gradient from an edge or model line to meet a toposolid, replacing the points in between (Revit 2024 and later).</p>
+          </div>
+          <div class="card">
+            <img src="./assets/DroppedKerbRamp32.png" alt="Dropped Kerb Ramp" class="card-icon">
+            <h3><a href="./Commands/CommandDroppedKerbRamp.html">Dropped Kerb Ramp</a></h3>
+            <p class="muted">Shapes a footway edge into a dropped kerb: a ramp down to the level of a road edge with a flare either side (Revit 2024 and later).</p>
           </div>
         </div>
 
@@ -154,6 +165,7 @@
 
         <h2 id="whats-new">What's New</h2>
         <ul>
+          <li>New Sweep Kerb command: pick edges or model lines and a profile, and sweep the profile along them with the profile kept vertical, as a direct shape or a family in Roads, Hardscape or Generic Models.</li>
           <li>Recent fixes and improvements to topography point handling.</li>
           <li>Updates for Revit2026 compatibility.</li>
           <li>Create Alignment: point (PI) and CAD input, transition spirals, and draping the profile on a toposolid.</li>
@@ -162,6 +174,7 @@
           <li>New Sweep to Toposolid command to convert a swept road into a toposolid (Revit 2024 and later).</li>
           <li>New Edit Profile command to add stations to an alignment's profile and set their elevations.</li>
           <li>New Grade to Surface command to grade a slope from an edge or model line to meet a toposolid (Revit 2024 and later).</li>
+          <li>New Dropped Kerb Ramp command to shape a footway edge into a dropped kerb with a ramp and flares (Revit 2024 and later).</li>
         </ul>
       </article>
         <nav class="pager" aria-label="Previous and next page"></nav>
