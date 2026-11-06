@@ -21,10 +21,28 @@ internal static class RoadFamilyBuilder
     /// <summary>The family name for an alignment's road. The id on the end keeps two alignments with the same name apart and survives renaming.</summary>
     public static string FamilyName(Element alignment, string? alignmentName)
     {
-        var cleaned = new string((alignmentName is null || string.IsNullOrWhiteSpace(alignmentName) ? "Alignment" : alignmentName.Trim())
+        return $"{NamePrefix}{CleanName(alignmentName, "Alignment")} ({IdOf(alignment)})";
+    }
+
+    private const string KerbNamePrefix = "TopoAlign Kerb - ";
+
+    /// <summary>A new family name for a kerb. Kerbs aren't tied to an alignment, so each one gets its own family and the suffix keeps them apart.</summary>
+    public static string KerbFamilyName(string? profileName)
+    {
+        return $"{KerbNamePrefix}{CleanName(profileName, "Kerb")} ({Guid.NewGuid().ToString("N").Substring(0, 6)})";
+    }
+
+    /// <summary>True for a kerb family this add-in made.</summary>
+    public static bool IsKerbFamily(Family? family)
+    {
+        return family is not null && family.Name.StartsWith(KerbNamePrefix, StringComparison.Ordinal);
+    }
+
+    private static string CleanName(string? name, string fallback)
+    {
+        return new string((name is null || string.IsNullOrWhiteSpace(name) ? fallback : name.Trim())
             .Select(c => InvalidNameCharacters.Contains(c) ? '_' : c)
             .ToArray());
-        return $"{NamePrefix}{cleaned} ({IdOf(alignment)})";
     }
 
     /// <summary>True for a road family this add-in made, whichever alignment it is for.</summary>

@@ -57,6 +57,15 @@ public class Settings
     public decimal GradeInterval { get; set; } = Convert.ToDecimal(1.0 / 0.3048);                        // 1 m
     public bool GradeAddEdgePoints { get; set; } = true;
 
+    // Kerb sweep along picked edges, lengths in feet (internal units).
+    public decimal KerbSweepInterval { get; set; } = Convert.ToDecimal(1.0 / 0.3048);                    // 1 m
+    public decimal KerbSweepVerticalOffset { get; set; }
+    public bool KerbSweepFlip { get; set; }
+    public bool KerbSweepReview { get; set; } = true;
+    public string KerbSweepCategory { get; set; } = string.Empty;
+    public string KerbSweepProfileName { get; set; } = string.Empty;
+    public string KerbSweepOutput { get; set; } = "DirectShape";
+
     // Dropped kerb ramp, lengths in feet (internal units).
     public decimal KerbRampWidth { get; set; } = 4;
     public decimal KerbRampGradient { get; set; } = 12;
@@ -105,6 +114,11 @@ public class Settings
                     GradeSource = Convert.ToString(key.GetValue("GradeSource", GradeSource)) ?? "Edges";
                     GradeSlopeMode = Convert.ToString(key.GetValue("GradeSlopeMode", GradeSlopeMode)) ?? "Ratio";
                     GradeAddEdgePoints = Convert.ToBoolean(key.GetValue("GradeAddEdgePoints", GradeAddEdgePoints));
+                    KerbSweepFlip = Convert.ToBoolean(key.GetValue("KerbSweepFlip", KerbSweepFlip));
+                    KerbSweepReview = Convert.ToBoolean(key.GetValue("KerbSweepReview", KerbSweepReview));
+                    KerbSweepCategory = Convert.ToString(key.GetValue("KerbSweepCategory", KerbSweepCategory)) ?? string.Empty;
+                    KerbSweepProfileName = Convert.ToString(key.GetValue("KerbSweepProfileName", KerbSweepProfileName)) ?? string.Empty;
+                    KerbSweepOutput = Convert.ToString(key.GetValue("KerbSweepOutput", KerbSweepOutput)) ?? "DirectShape";
 
                     _ = decimal.TryParse(key.GetValue("DivideEdgeDistance", DivideEdgeDistance).ToString(), out decimal divideEdgeDistance);
                     _ = decimal.TryParse(key.GetValue("VerticalOffset", VerticalOffset).ToString(), out decimal verticalOffset);
@@ -123,6 +137,8 @@ public class Settings
                     GradeMaxWidth = ReadDecimal(key, "GradeMaxWidth", GradeMaxWidth);
                     GradeVerticalOffset = ReadDecimal(key, "GradeVerticalOffset", GradeVerticalOffset);
                     GradeInterval = ReadDecimal(key, "GradeInterval", GradeInterval);
+                    KerbSweepInterval = ReadDecimal(key, "KerbSweepInterval", KerbSweepInterval);
+                    KerbSweepVerticalOffset = ReadDecimal(key, "KerbSweepVerticalOffset", KerbSweepVerticalOffset);
                     KerbRampWidth = ReadDecimal(key, "KerbRampWidth", KerbRampWidth);
                     KerbRampGradient = ReadDecimal(key, "KerbRampGradient", KerbRampGradient);
                     KerbFlareGradient = ReadDecimal(key, "KerbFlareGradient", KerbFlareGradient);
@@ -171,6 +187,13 @@ public class Settings
             key.SetValue("GradeVerticalOffset", GradeVerticalOffset, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("GradeInterval", GradeInterval, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("GradeAddEdgePoints", GradeAddEdgePoints, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbSweepInterval", KerbSweepInterval, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbSweepVerticalOffset", KerbSweepVerticalOffset, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbSweepFlip", KerbSweepFlip, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbSweepReview", KerbSweepReview, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbSweepCategory", KerbSweepCategory ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbSweepProfileName", KerbSweepProfileName ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
+            key.SetValue("KerbSweepOutput", KerbSweepOutput ?? "DirectShape", Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("KerbRampWidth", KerbRampWidth, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("KerbRampGradient", KerbRampGradient, Microsoft.Win32.RegistryValueKind.String);
             key.SetValue("KerbFlareGradient", KerbFlareGradient, Microsoft.Win32.RegistryValueKind.String);

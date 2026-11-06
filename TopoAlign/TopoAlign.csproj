@@ -108,6 +108,7 @@
      <None Remove="Images\SweepToToposolid32.png" />
      <None Remove="Images\GradeToSurface32.png" />
      <None Remove="Images\AlignTopoEdges32.png" />
+     <None Remove="Images\Kerb32.png" />
      <None Remove="Images\DroppedKerbRamp32.png" />
    </ItemGroup>
 
@@ -136,6 +137,7 @@
      <EmbeddedResource Include="Images\SweepToToposolid32.png" />
      <EmbeddedResource Include="Images\GradeToSurface32.png" />
      <EmbeddedResource Include="Images\AlignTopoEdges32.png" />
+     <EmbeddedResource Include="Images\Kerb32.png" />
      <EmbeddedResource Include="Images\DroppedKerbRamp32.png" />
    </ItemGroup>
   
