@@ -1,3 +1,4 @@
+using Nice3point.Revit.Extensions;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
@@ -144,12 +145,12 @@ internal partial class KerbViewModel : BaseViewModel
 
     private double ToInternal(decimal displayValue)
     {
-        return UnitUtils.ConvertToInternalUnits((double)displayValue, SelectedDisplayUnit.DisplayUnit);
+        return ((double)displayValue).FromUnit(SelectedDisplayUnit.DisplayUnit);
     }
 
     private decimal ToDisplay(decimal internalValue)
     {
-        return decimal.Round((decimal)UnitUtils.ConvertFromInternalUnits((double)internalValue, SelectedDisplayUnit.DisplayUnit), 3);
+        return decimal.Round((decimal)((double)internalValue).ToUnit(SelectedDisplayUnit.DisplayUnit), 3);
     }
 
     // ---- choosing the path --------------------------------------------------------------------------------------
@@ -266,8 +267,14 @@ internal partial class KerbViewModel : BaseViewModel
 
     partial void OnFlipProfileChanged(bool value) => RefreshProfileStatus();
 
-    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel value)
+    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel value)
     {
+        if (oldValue is not null)
+        {
+            Interval = Helpers.UnitConversion.Convert(Interval, oldValue.DisplayUnit, value.DisplayUnit);
+            VerticalOffset = Helpers.UnitConversion.Convert(VerticalOffset, oldValue.DisplayUnit, value.DisplayUnit);
+        }
+
         RefreshProfileStatus();
         if (_curves.Count > 0)
         {

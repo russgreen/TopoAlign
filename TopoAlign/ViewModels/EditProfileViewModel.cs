@@ -1,3 +1,4 @@
+using Nice3point.Revit.Extensions;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
@@ -191,14 +192,14 @@ internal partial class EditProfileViewModel : BaseViewModel
 
     private double ToInternal(decimal displayValue)
     {
-        return UnitUtils.ConvertToInternalUnits((double)displayValue, SelectedDisplayUnit.DisplayUnit);
+        return ((double)displayValue).FromUnit(SelectedDisplayUnit.DisplayUnit);
     }
 
     private decimal ToDisplay(decimal internalValue) => ToDisplay((double)internalValue);
 
     private decimal ToDisplay(double internalValue)
     {
-        return decimal.Round((decimal)UnitUtils.ConvertFromInternalUnits(internalValue, SelectedDisplayUnit.DisplayUnit), 3);
+        return decimal.Round((decimal)internalValue.ToUnit(SelectedDisplayUnit.DisplayUnit), 3);
     }
 
     private double SharedToProject(double sharedElevation) => _sharedToInternal.OfPoint(new XYZ(0.0, 0.0, sharedElevation)).Z;
