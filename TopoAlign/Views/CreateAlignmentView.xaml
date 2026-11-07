@@ -115,8 +115,8 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{Binding Number}" IsReadOnly="True" Width="30"/>
                     <DataGridTextColumn Header="Location" Binding="{Binding Location}" IsReadOnly="True" Width="*"/>
-                    <DataGridTextColumn Header="Radius" Binding="{Binding Radius, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}" Width="70"/>
-                    <DataGridTextColumn Header="Spiral" Binding="{Binding SpiralLength, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}" Width="70"/>
+                    <DataGridTextColumn Header="Radius" Binding="{Binding Radius}" Width="70"/>
+                    <DataGridTextColumn Header="Spiral" Binding="{Binding SpiralLength}" Width="70"/>
                 </DataGrid.Columns>
             </DataGrid>
             <Grid>
