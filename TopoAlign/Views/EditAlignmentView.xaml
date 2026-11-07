@@ -64,7 +64,7 @@
 
         <TextBlock Grid.Row="4" Text="Start station"/>
         <TextBox Grid.Row="4" Grid.Column="1" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
-                 Text="{Binding StartStation, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding StartStation, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
 
         <CheckBox Grid.Row="5" Grid.ColumnSpan="2" Content="Reverse direction"

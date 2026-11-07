@@ -82,13 +82,13 @@
 
         <TextBlock Grid.Row="7" Text="Section spacing"/>
         <TextBox Grid.Row="7" Grid.Column="1" HorizontalContentAlignment="Right"
-                 Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Longest distance between sections along a curved edge. Straight edges only get a section at each end."/>
 
         <TextBlock Grid.Row="8" Text="Vertical offset"/>
         <TextBox Grid.Row="8" Grid.Column="1" HorizontalContentAlignment="Right"
-                 Text="{Binding VerticalOffset, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding VerticalOffset, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"
                  ToolTip="Raises (positive) or lowers (negative) the whole kerb relative to the edges."/>
 

@@ -80,7 +80,7 @@
                         <DataTemplate>
                             <TextBox Margin="0" Height="Auto" BorderThickness="0" HorizontalContentAlignment="Right"
                                      IsEnabled="{Binding CanEditStation}"
-                                     Text="{Binding Station, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding Station, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                                      MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -89,7 +89,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Margin="0" Height="Auto" BorderThickness="0" HorizontalContentAlignment="Right"
-                                     Text="{Binding Elevation, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding Elevation, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                                      MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -99,7 +99,7 @@
                         <DataTemplate>
                             <TextBox Margin="0" Height="Auto" BorderThickness="0" HorizontalContentAlignment="Right"
                                      IsEnabled="{Binding CanEditCurveLength}"
-                                     Text="{Binding CurveLength, UpdateSourceTrigger=PropertyChanged}"
+                                     Text="{Binding CurveLength, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                                      MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -111,12 +111,12 @@
 
         <TextBlock Grid.Row="5" Text="New station"/>
         <TextBox Grid.Row="5" Grid.Column="1" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
-                 Text="{Binding NewStation, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding NewStation, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"
                  ToolTip="The station to add. Its height starts on the existing profile, so adding it changes nothing until you edit its elevation."/>
         <TextBlock Grid.Row="5" Grid.Column="2" Text="Curve length" Margin="10,0,0,6"/>
         <TextBox Grid.Row="5" Grid.Column="3" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
-                 Text="{Binding DefaultCurveLength, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding DefaultCurveLength, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Vertical curve length given to a new station. 0 leaves a sharp change of grade."/>
 

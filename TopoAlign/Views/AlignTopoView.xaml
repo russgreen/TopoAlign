@@ -63,7 +63,7 @@
         <TextBlock Grid.Row="4" Text="Vertical offset"/>
         <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,0,5"
                  HorizontalContentAlignment="Right"
-                 Text="{Binding Offset, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
+                 Text="{Binding Offset, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"
                  ToolTip="Enter a negative value to offset points above the topo"
                  MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$" />
         

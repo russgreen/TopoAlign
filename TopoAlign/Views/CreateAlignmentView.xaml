@@ -74,7 +74,7 @@
 
         <TextBlock Grid.Row="1" Text="Start station"/>
         <TextBox Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Right"
-                 Text="{Binding StartStation, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding StartStation, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
 
         <TextBlock Grid.Row="2" Text="Units"/>
@@ -115,8 +115,8 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{Binding Number}" IsReadOnly="True" Width="30"/>
                     <DataGridTextColumn Header="Location" Binding="{Binding Location}" IsReadOnly="True" Width="*"/>
-                    <DataGridTextColumn Header="Radius" Binding="{Binding Radius, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
-                    <DataGridTextColumn Header="Spiral" Binding="{Binding SpiralLength, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                    <DataGridTextColumn Header="Radius" Binding="{Binding Radius, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}" Width="70"/>
+                    <DataGridTextColumn Header="Spiral" Binding="{Binding SpiralLength, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}" Width="70"/>
                 </DataGrid.Columns>
             </DataGrid>
             <Grid>
@@ -136,14 +136,14 @@
                    Visibility="{Binding IsPointsInput, Converter={StaticResource BoolToVisibility}}"/>
         <TextBox Grid.Row="10" Grid.Column="1" HorizontalContentAlignment="Right"
                  Visibility="{Binding IsPointsInput, Converter={StaticResource BoolToVisibility}}"
-                 Text="{Binding DefaultRadius, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding DefaultRadius, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
 
         <CheckBox Grid.Row="11" Content="Add transition spirals"
                   IsChecked="{Binding AddSpirals}"/>
         <TextBox Grid.Row="11" Grid.Column="1" HorizontalContentAlignment="Right"
                  IsEnabled="{Binding AddSpirals}"
-                 Text="{Binding SpiralLength, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding SpiralLength, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Length of each spiral (entry and exit) at every curve"/>
 
@@ -181,22 +181,22 @@
 
                 <TextBlock Grid.Row="0" Text="Sample interval"/>
                 <TextBox Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Right"
-                         Text="{Binding SampleInterval, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding SampleInterval, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                          MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
 
                 <TextBlock Grid.Row="1" Text="Vertical tolerance"/>
                 <TextBox Grid.Row="1" Grid.Column="1" HorizontalContentAlignment="Right"
-                         Text="{Binding VerticalTolerance, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding VerticalTolerance, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                          MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
 
                 <TextBlock Grid.Row="2" Text="Elevation offset"/>
                 <TextBox Grid.Row="2" Grid.Column="1" HorizontalContentAlignment="Right"
-                         Text="{Binding ElevationOffset, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding ElevationOffset, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                          MaxLength="12" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
 
                 <TextBlock Grid.Row="3" Text="Min vertical curve length"/>
                 <TextBox Grid.Row="3" Grid.Column="1" HorizontalContentAlignment="Right"
-                         Text="{Binding MinVerticalCurveLength, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding MinVerticalCurveLength, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                          MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"/>
             </Grid>
         </StackPanel>
