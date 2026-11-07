@@ -147,6 +147,7 @@ internal partial class CreateAlignmentViewModel
 
     private void ResetPickKind()
     {
+        PreviewLayoutRequested = false;
         PickToposolidRequested = false;
         PickPointsRequested = false;
         PickCadRequested = false;

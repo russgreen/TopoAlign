@@ -129,6 +129,28 @@ internal sealed class AlignmentPickPreview : IDisposable
         Refresh();
     }
 
+    /// <summary>Shows an already laid-out alignment, such as the one a profile preview was computed for, and redraws.</summary>
+    public void SetSegments(IReadOnlyList<PlanSegment> segments)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        try
+        {
+            var lines = new List<PreviewLine>();
+            AddPolyline(lines, PlanPolyline.FromSegments(segments, CurveDeviation), AlignmentColour);
+            _server.SetLines(lines, _elevation);
+        }
+        catch (Exception ex)
+        {
+            log.Warning(ex, "The alignment preview could not be updated");
+        }
+
+        Refresh();
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -222,9 +244,28 @@ internal sealed class AlignmentPickPreview : IDisposable
             log.Debug(ex, "The view could not be refreshed");
         }
 
+        // switching the server off and on again makes Revit rebuild what it draws for the view
+        try
+        {
+            var others = (_service.GetActiveServerIds() ?? new List<Guid>()).Where(id => id != _server.ServerId).ToList();
+            _service.SetActiveServers(others);
+            if (!_disposed)
+            {
+                others.Add(_server.ServerId);
+                _service.SetActiveServers(others);
+            }
+        }
+        catch (Exception ex)
+        {
+            log.Debug(ex, "The preview server could not be toggled");
+        }
+
+        // zooming to a view that is a hair larger and straight back is a change Revit has to draw, as a pan is
         try
         {
             var corners = _uiView.GetZoomCorners();
+            var nudge = (corners[1] - corners[0]) * 1e-4;
+            _uiView.ZoomAndCenterRectangle(corners[0] - nudge, corners[1] + nudge);
             _uiView.ZoomAndCenterRectangle(corners[0], corners[1]);
         }
         catch (Exception ex)

@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using System.Reflection;
 using TopoAlign.Alignments;
+using TopoAlign.Preview;
 
 namespace TopoAlign.ViewModels;
 
@@ -134,7 +135,6 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
 
     partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel value)
     {
-        UpdateChainStatus();
         if (oldValue is not null)
         {
             StartStation = Helpers.UnitConversion.Convert(StartStation, oldValue.DisplayUnit, value.DisplayUnit);
@@ -151,6 +151,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
             }
         }
 
+        UpdateChainStatus();
         RefreshPoints();
     }
 
@@ -191,7 +192,12 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     /// <summary>Runs whichever pick the dialog asked for. Called by the command while the dialog is hidden.</summary>
     internal void RunPendingPick()
     {
-        if (PickToposolidRequested)
+        if (PreviewLayoutRequested)
+        {
+            PreviewLayoutRequested = false;
+            ShowLayoutInPlan();
+        }
+        else if (PickToposolidRequested)
         {
             PickToposolidElement();
         }
@@ -404,11 +410,61 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
             }
 
             ProfilePreview = text;
+
+            // Revit doesn't redraw its view under a modal dialog, so hide the dialog and show the alignment in the plan view
+            // while the user looks at it; the command shows the dialog again afterwards
+            ResetPickKind();
+            PickRequested = true;
+            PreviewLayoutRequested = true;
+            _previewSegments = layout.Segments;
+            HideRequested?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
         {
             log.Warning(ex, "Profile preview failed");
             ProfilePreview = ex.Message;
+        }
+    }
+
+    /// <summary>With <see cref="PickRequested"/>: show the laid-out alignment in the plan view rather than pick anything.</summary>
+    public bool PreviewLayoutRequested { get; set; }
+
+    private IReadOnlyList<PlanSegment>? _previewSegments;
+
+    /// <summary>
+    /// Draws the alignment the profile preview was computed for as temporary lines in the plan view, and holds it there until the
+    /// user presses Esc or clicks. Called by the command while the dialog is hidden.
+    /// </summary>
+    internal void ShowLayoutInPlan()
+    {
+        var segments = _previewSegments;
+        _previewSegments = null;
+        if (segments is null || segments.Count == 0)
+        {
+            return;
+        }
+
+        AlignmentPickPreview? preview = null;
+        try
+        {
+            var uidoc = App.CachedUiApp.ActiveUIDocument;
+            preview = AlignmentPickPreview.TryStart(uidoc);
+            preview?.SetSegments(segments);
+            uidoc.UpdateAllOpenViews();
+            uidoc.Selection.PickPoint("Previewing the alignment. Click or press Esc to return to the dialog");
+            
+        }
+        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+        {
+            // Esc returns to the dialog
+        }
+        catch (Exception ex)
+        {
+            log.Warning(ex, "Showing the alignment preview failed");
+        }
+        finally
+        {
+            preview?.Dispose();
         }
     }
 
