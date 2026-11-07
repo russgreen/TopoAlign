@@ -610,6 +610,7 @@ internal static class AlignmentApi
         private readonly MethodInfo _pointAtStation;
         private readonly MethodInfo _tangentAtStation;
         private readonly MethodInfo? _curveEndpoints;
+        private readonly Transform _toModel;
 
         public PathReader(Element alignmentElement)
         {
@@ -622,6 +623,11 @@ internal static class AlignmentApi
             {
                 throw new ArgumentException("The element is not a valid alignment.", nameof(alignmentElement));
             }
+
+            // GetPointAtStation returns points in Revit coordinates (the active project location's transform is applied), but
+            // GetHCurveTangentAtStation returns the direction in the alignment's own coordinates. In a project whose location is
+            // rotated (true north, shared coordinates) the two disagree, so the tangent is brought across here.
+            _toModel = alignmentElement.Document.ActiveProjectLocation.GetTotalTransform();
 
             _alignment = GetAlignment(alignmentElement)
                          ?? throw new InvalidOperationException("The alignment could not be read.");
@@ -644,7 +650,15 @@ internal static class AlignmentApi
         public XYZ PointAt(double station) => Invoke(_pointAtStation, station);
 
         /// <summary>The horizontal direction of travel at a station as a unit vector (Z is 0).</summary>
-        public XYZ HorizontalTangentAt(double station) => Invoke(_tangentAtStation, station);
+        public XYZ HorizontalTangentAt(double station) => ToModelDirection(Invoke(_tangentAtStation, station));
+
+        /// <summary>The direction as seen in Revit coordinates, flattened to the horizontal and made a unit vector.</summary>
+        private XYZ ToModelDirection(XYZ direction)
+        {
+            var rotated = _toModel.OfVector(direction);
+            var flat = new XYZ(rotated.X, rotated.Y, 0.0);
+            return flat.GetLength() < 1e-12 ? direction : flat.Normalize();
+        }
 
         /// <summary>Stations where one horizontal curve ends and the next begins.</summary>
         public IList<double> HorizontalCurveStations()
