@@ -7,6 +7,7 @@ using Serilog;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using TopoAlign.Alignments;
+using TopoAlign.Preview;
 
 namespace TopoAlign.ViewModels;
 
@@ -146,6 +147,7 @@ internal partial class CreateAlignmentViewModel
 
     private void ResetPickKind()
     {
+        PreviewLayoutRequested = false;
         PickToposolidRequested = false;
         PickPointsRequested = false;
         PickCadRequested = false;
@@ -193,16 +195,22 @@ internal partial class CreateAlignmentViewModel
     /// <summary>Picks points in plan until the user presses Esc. Called by the command while the dialog is hidden.</summary>
     internal void PickPointsInPlan()
     {
+        AlignmentPickPreview? preview = null;
         try
         {
             var uidoc = App.CachedUiApp.ActiveUIDocument;
             var snaps = ObjectSnapTypes.Endpoints | ObjectSnapTypes.Intersections | ObjectSnapTypes.Midpoints |
                         ObjectSnapTypes.Centers | ObjectSnapTypes.Points | ObjectSnapTypes.Nearest;
 
+            // in a plan view the alignment is drawn as it takes shape, with a rubber band to the cursor
+            preview = AlignmentPickPreview.TryStart(uidoc);
+            preview?.SetPoints(CurrentPiPoints());
+
             while (true)
             {
                 var point = uidoc.Selection.PickPoint(snaps, $"Pick point {PiPoints.Count + 1} of the alignment (Esc when finished)");
                 AddPoint(point.X, point.Y, point.Z);
+                preview?.SetPoints(CurrentPiPoints());
             }
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)
@@ -213,6 +221,10 @@ internal partial class CreateAlignmentViewModel
         {
             log.Error(ex, "Failed while picking alignment points");
             TaskDialog.Show("Create Alignment", ex.Message);
+        }
+        finally
+        {
+            preview?.Dispose();
         }
     }
 
@@ -281,11 +293,17 @@ internal partial class CreateAlignmentViewModel
 
     // ---- laying the points out ----------------------------------------------------------------------------------
 
-    private PiResult LayoutPoints(bool reversed)
+    /// <summary>The picked points in feet, with each radius and spiral length converted from display units.</summary>
+    private List<PiPoint> CurrentPiPoints()
     {
-        var pis = PiPoints
+        return PiPoints
             .Select(row => new PiPoint(row.X, row.Y, Math.Max(ToInternal(row.Radius), 0.0), Math.Max(ToInternal(row.SpiralLength), 0.0)))
             .ToList();
+    }
+
+    private PiResult LayoutPoints(bool reversed)
+    {
+        var pis = CurrentPiPoints();
 
         if (reversed)
         {

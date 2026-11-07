@@ -147,6 +147,7 @@
 	 <PackageReference Include="System.Text.Json" Version="10.0.14" Condition="'$(TargetFramework)'=='net48'" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*" />
 	 <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*" />
+	 <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*" />
 
 	 <PackageReference Include="Serilog" Version="4.4.0" />
 

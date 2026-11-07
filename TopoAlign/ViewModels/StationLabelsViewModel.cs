@@ -233,6 +233,29 @@ internal partial class StationLabelsViewModel : BaseViewModel
         }
     }
 
+    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel newValue)
+    {
+        if (oldValue is null || newValue is null)
+        {
+            return;
+        }
+
+        var wasSuggested = IntervalText == _suggestedInterval;
+        IntervalText = Helpers.UnitConversion.ConvertText(IntervalText, oldValue.DisplayUnit, newValue.DisplayUnit);
+        OffsetText = Helpers.UnitConversion.ConvertText(OffsetText, oldValue.DisplayUnit, newValue.DisplayUnit);
+        StartStationText = Helpers.UnitConversion.ConvertText(StartStationText, oldValue.DisplayUnit, newValue.DisplayUnit);
+        EndStationText = Helpers.UnitConversion.ConvertText(EndStationText, oldValue.DisplayUnit, newValue.DisplayUnit);
+        if (wasSuggested)
+        {
+            _suggestedInterval = IntervalText;
+        }
+
+        if (_alignment is not null)
+        {
+            SelectAlignment(_alignment);
+        }
+    }
+
     /// <summary>Chooses the alignment to label. False, with the reason in the status, if the element isn't an alignment.</summary>
     internal bool SelectAlignment(Element element)
     {

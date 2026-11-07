@@ -1,4 +1,5 @@
-﻿using Autodesk.Revit.DB;
+﻿using Nice3point.Revit.Extensions;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -90,10 +91,21 @@ internal partial class AlignTopoViewModel : BaseViewModel
         SingleElement = _settings.SingleElement;
         CleanTopoPoints = _settings.CleanTopoPoints;
         TopFace = _settings.TopFace;
-        Divide = Decimal.Round(Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)_settings.DivideEdgeDistance, _docDisplayUnits)), 2);
-        Offset = Decimal.Round(Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)_settings.VerticalOffset, _docDisplayUnits)), 2);
+        Divide = Decimal.Round(Convert.ToDecimal(((double)_settings.DivideEdgeDistance).ToUnit(_docDisplayUnits)), 2);
+        Offset = Decimal.Round(Convert.ToDecimal(((double)_settings.VerticalOffset).ToUnit(_docDisplayUnits)), 2);
     }
 
+
+    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel newValue)
+    {
+        if (oldValue is null || newValue is null)
+        {
+            return;
+        }
+
+        Divide = Helpers.UnitConversion.Convert(Divide, oldValue.DisplayUnit, newValue.DisplayUnit);
+        Offset = Helpers.UnitConversion.Convert(Offset, oldValue.DisplayUnit, newValue.DisplayUnit);
+    }
 
     [RelayCommand]
     private void AlignTopo()
@@ -101,8 +113,8 @@ internal partial class AlignTopoViewModel : BaseViewModel
         IsWindowVisible = System.Windows.Visibility.Hidden;
 
         //converts the units to internal units
-        Divide = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)Divide, SelectedDisplayUnit.DisplayUnit));
-        Offset = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)Offset, SelectedDisplayUnit.DisplayUnit)); ;
+        Divide = Convert.ToDecimal(((double)Divide).FromUnit(SelectedDisplayUnit.DisplayUnit));
+        Offset = Convert.ToDecimal(((double)Offset).FromUnit(SelectedDisplayUnit.DisplayUnit)); ;
 
         AlignTopoSurface();
 

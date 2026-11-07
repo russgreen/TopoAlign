@@ -79,13 +79,13 @@
 
         <TextBlock Grid.Row="6" Text="Section spacing"/>
         <TextBox Grid.Row="6" Grid.Column="1" HorizontalContentAlignment="Right"
-                 Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding Interval, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Distance between sections along the alignment. Curves and changes of grade get extra sections."/>
 
         <TextBlock Grid.Row="7" Text="Vertical offset"/>
         <TextBox Grid.Row="7" Grid.Column="1" HorizontalContentAlignment="Right"
-                 Text="{Binding VerticalOffset, UpdateSourceTrigger=PropertyChanged}"
+                 Text="{Binding VerticalOffset, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"
                  ToolTip="Raises (positive) or lowers (negative) the whole road relative to the alignment's profile."/>
 

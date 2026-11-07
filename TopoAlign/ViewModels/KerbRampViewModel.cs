@@ -1,3 +1,4 @@
+using Nice3point.Revit.Extensions;
 #if REVIT2024_OR_GREATER
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
@@ -242,9 +243,21 @@ internal partial class KerbRampViewModel : BaseViewModel
         }
     }
 
-    private double ToInternalUnits(decimal value) => UnitUtils.ConvertToInternalUnits((double)value, SelectedDisplayUnit.DisplayUnit);
+    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel newValue)
+    {
+        if (oldValue is null || newValue is null)
+        {
+            return;
+        }
 
-    private decimal FromInternalUnits(decimal value) => decimal.Round(Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)value, _documentUnit)), 2);
+        Width = Helpers.UnitConversion.Convert(Width, oldValue.DisplayUnit, newValue.DisplayUnit);
+        MaxRampLength = Helpers.UnitConversion.Convert(MaxRampLength, oldValue.DisplayUnit, newValue.DisplayUnit);
+        LevelOffset = Helpers.UnitConversion.Convert(LevelOffset, oldValue.DisplayUnit, newValue.DisplayUnit);
+    }
+
+    private double ToInternalUnits(decimal value) => ((double)value).FromUnit(SelectedDisplayUnit.DisplayUnit);
+
+    private decimal FromInternalUnits(decimal value) => decimal.Round(Convert.ToDecimal(((double)value).ToUnit(_documentUnit)), 2);
 
     // ---- settings -----------------------------------------------------------------------------------------------
 

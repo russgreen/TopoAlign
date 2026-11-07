@@ -1,3 +1,4 @@
+using Nice3point.Revit.Extensions;
 using Autodesk.Revit.DB;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -50,7 +51,7 @@ internal partial class DivideLinesViewModel : BaseViewModel
 
         PopulateDisplayUnitList(docDisplayUnits);
 
-        Divide = Decimal.Round(Convert.ToDecimal(UnitUtils.ConvertFromInternalUnits((double)internalDivide, docDisplayUnits)), 2);
+        Divide = Decimal.Round(Convert.ToDecimal(((double)internalDivide).ToUnit(docDisplayUnits)), 2);
         Offset = 0;
     }
 
@@ -84,9 +85,20 @@ internal partial class DivideLinesViewModel : BaseViewModel
     }
 #endif
 
+    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel newValue)
+    {
+        if (oldValue is null || newValue is null)
+        {
+            return;
+        }
+
+        Divide = Helpers.UnitConversion.Convert(Divide, oldValue.DisplayUnit, newValue.DisplayUnit);
+        Offset = Helpers.UnitConversion.Convert(Offset, oldValue.DisplayUnit, newValue.DisplayUnit);
+    }
+
     private decimal ToInternalUnits(decimal value)
     {
-        return Convert.ToDecimal(UnitUtils.ConvertToInternalUnits((double)value, SelectedDisplayUnit.DisplayUnit));
+        return Convert.ToDecimal(((double)value).FromUnit(SelectedDisplayUnit.DisplayUnit));
     }
 
     [RelayCommand]

@@ -1,3 +1,4 @@
+using Nice3point.Revit.Extensions;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
@@ -212,12 +213,12 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
 
     private double ToInternal(decimal displayValue)
     {
-        return UnitUtils.ConvertToInternalUnits((double)displayValue, SelectedDisplayUnit.DisplayUnit);
+        return ((double)displayValue).FromUnit(SelectedDisplayUnit.DisplayUnit);
     }
 
     private decimal ToDisplay(decimal internalValue)
     {
-        return decimal.Round((decimal)UnitUtils.ConvertFromInternalUnits((double)internalValue, SelectedDisplayUnit.DisplayUnit), 3);
+        return decimal.Round((decimal)((double)internalValue).ToUnit(SelectedDisplayUnit.DisplayUnit), 3);
     }
 
     // ---- choosing the alignment ---------------------------------------------------------------------------------
@@ -289,7 +290,16 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
 
     partial void OnMirrorProfileChanged(bool value) => RefreshProfileStatus();
 
-    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel value) => RefreshProfileStatus();
+    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel value)
+    {
+        if (oldValue is not null)
+        {
+            Interval = Helpers.UnitConversion.Convert(Interval, oldValue.DisplayUnit, value.DisplayUnit);
+            VerticalOffset = Helpers.UnitConversion.Convert(VerticalOffset, oldValue.DisplayUnit, value.DisplayUnit);
+        }
+
+        RefreshProfileStatus();
+    }
 
     /// <summary>Reads the shape drawn in the chosen profile family (once per type) and shows its size.</summary>
     private void LoadProfile(ProfileTypeInfo? type)

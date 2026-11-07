@@ -1,3 +1,4 @@
+using Nice3point.Revit.Extensions;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
@@ -6,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using System.Reflection;
 using TopoAlign.Alignments;
+using TopoAlign.Preview;
 
 namespace TopoAlign.ViewModels;
 
@@ -131,8 +133,24 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         SetDefaultName();
     }
 
-    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel value)
+    partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel value)
     {
+        if (oldValue is not null)
+        {
+            StartStation = Helpers.UnitConversion.Convert(StartStation, oldValue.DisplayUnit, value.DisplayUnit);
+            SampleInterval = Helpers.UnitConversion.Convert(SampleInterval, oldValue.DisplayUnit, value.DisplayUnit);
+            VerticalTolerance = Helpers.UnitConversion.Convert(VerticalTolerance, oldValue.DisplayUnit, value.DisplayUnit);
+            ElevationOffset = Helpers.UnitConversion.Convert(ElevationOffset, oldValue.DisplayUnit, value.DisplayUnit);
+            MinVerticalCurveLength = Helpers.UnitConversion.Convert(MinVerticalCurveLength, oldValue.DisplayUnit, value.DisplayUnit);
+            SpiralLength = Helpers.UnitConversion.Convert(SpiralLength, oldValue.DisplayUnit, value.DisplayUnit);
+            DefaultRadius = Helpers.UnitConversion.Convert(DefaultRadius, oldValue.DisplayUnit, value.DisplayUnit);
+            foreach (var row in PiPoints)
+            {
+                row.Radius = Helpers.UnitConversion.Convert(row.Radius, oldValue.DisplayUnit, value.DisplayUnit);
+                row.SpiralLength = Helpers.UnitConversion.Convert(row.SpiralLength, oldValue.DisplayUnit, value.DisplayUnit);
+            }
+        }
+
         UpdateChainStatus();
         RefreshPoints();
     }
@@ -174,7 +192,12 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     /// <summary>Runs whichever pick the dialog asked for. Called by the command while the dialog is hidden.</summary>
     internal void RunPendingPick()
     {
-        if (PickToposolidRequested)
+        if (PreviewLayoutRequested)
+        {
+            PreviewLayoutRequested = false;
+            ShowLayoutInPlan();
+        }
+        else if (PickToposolidRequested)
         {
             PickToposolidElement();
         }
@@ -332,7 +355,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
 
     private double ToInternal(decimal displayValue)
     {
-        return UnitUtils.ConvertToInternalUnits((double)displayValue, SelectedDisplayUnit.DisplayUnit);
+        return ((double)displayValue).FromUnit(SelectedDisplayUnit.DisplayUnit);
     }
 
     /// <summary>Samples the toposolid along the chain and reduces it to PVIs. Throws with a user-readable message on bad input.</summary>
@@ -387,11 +410,61 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
             }
 
             ProfilePreview = text;
+
+            // Revit doesn't redraw its view under a modal dialog, so hide the dialog and show the alignment in the plan view
+            // while the user looks at it; the command shows the dialog again afterwards
+            ResetPickKind();
+            PickRequested = true;
+            PreviewLayoutRequested = true;
+            _previewSegments = layout.Segments;
+            HideRequested?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
         {
             log.Warning(ex, "Profile preview failed");
             ProfilePreview = ex.Message;
+        }
+    }
+
+    /// <summary>With <see cref="PickRequested"/>: show the laid-out alignment in the plan view rather than pick anything.</summary>
+    public bool PreviewLayoutRequested { get; set; }
+
+    private IReadOnlyList<PlanSegment>? _previewSegments;
+
+    /// <summary>
+    /// Draws the alignment the profile preview was computed for as temporary lines in the plan view, and holds it there until the
+    /// user presses Esc or clicks. Called by the command while the dialog is hidden.
+    /// </summary>
+    internal void ShowLayoutInPlan()
+    {
+        var segments = _previewSegments;
+        _previewSegments = null;
+        if (segments is null || segments.Count == 0)
+        {
+            return;
+        }
+
+        AlignmentPickPreview? preview = null;
+        try
+        {
+            var uidoc = App.CachedUiApp.ActiveUIDocument;
+            preview = AlignmentPickPreview.TryStart(uidoc);
+            preview?.SetSegments(segments);
+            uidoc.UpdateAllOpenViews();
+            uidoc.Selection.PickPoint("Previewing the alignment. Click or press Esc to return to the dialog");
+            
+        }
+        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+        {
+            // Esc returns to the dialog
+        }
+        catch (Exception ex)
+        {
+            log.Warning(ex, "Showing the alignment preview failed");
+        }
+        finally
+        {
+            preview?.Dispose();
         }
     }
 
@@ -414,7 +487,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
 
             var layout = BuildLayout();
 
-            var startStationInternal = UnitUtils.ConvertToInternalUnits((double)StartStation, SelectedDisplayUnit.DisplayUnit);
+            var startStationInternal = ((double)StartStation).FromUnit(SelectedDisplayUnit.DisplayUnit);
 
             // Alignment JSON is written in shared coordinates; the profile elevation takes the same offset.
             var internalToShared = App.RevitDocument.ActiveProjectLocation.GetTotalTransform().Inverse;
@@ -485,7 +558,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         ReverseDirection = _settings.CreateAlignmentReverseDirection;
         DeleteSourceLines = _settings.CreateAlignmentDeleteSourceLines;
 
-        var displayStation = UnitUtils.ConvertFromInternalUnits((double)_settings.CreateAlignmentStartStation, SelectedDisplayUnit.DisplayUnit);
+        var displayStation = ((double)_settings.CreateAlignmentStartStation).ToUnit(SelectedDisplayUnit.DisplayUnit);
         StartStation = decimal.Round((decimal)displayStation, 2);
 
         DrapeOnTopo = _settings.CreateAlignmentDrapeOnTopo;
@@ -499,7 +572,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
 
     private decimal ToDisplay(decimal internalValue)
     {
-        return decimal.Round((decimal)UnitUtils.ConvertFromInternalUnits((double)internalValue, SelectedDisplayUnit.DisplayUnit), 3);
+        return decimal.Round((decimal)((double)internalValue).ToUnit(SelectedDisplayUnit.DisplayUnit), 3);
     }
 
     private void SaveSettings(double startStationInternal)
