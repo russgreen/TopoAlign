@@ -122,6 +122,33 @@ internal sealed class SectionProfile
         return new SectionProfile(flipped);
     }
 
+    /// <summary>
+    /// The same section moved across the road by <paramref name="du"/> (positive to the right of the direction of travel) and
+    /// up by <paramref name="dv"/>, in feet. Used to position one part of an assembly relative to the centreline.
+    /// </summary>
+    public SectionProfile Offset(double du, double dv)
+    {
+        var moved = new List<PlanSegment>(Segments.Count);
+        foreach (var segment in Segments)
+        {
+            switch (segment)
+            {
+                case PlanLine line:
+                    moved.Add(new PlanLine(Move(line.StartPoint, du, dv), Move(line.EndPoint, du, dv)));
+                    break;
+
+                case PlanArc arc:
+                    moved.Add(new PlanArc(Move(arc.Center, du, dv), arc.Radius, arc.StartAngle, arc.Sweep));
+                    break;
+
+                default:
+                    throw new NotSupportedException($"Unsupported segment type '{segment.GetType().Name}'.");
+            }
+        }
+
+        return new SectionProfile(moved);
+    }
+
     /// <summary>The points of the loop in order, with arcs sampled finely enough to measure the shape.</summary>
     public List<PlanPoint> Outline()
     {
@@ -142,6 +169,8 @@ internal sealed class SectionProfile
     }
 
     private static PlanPoint Flip(PlanPoint point) => new PlanPoint(-point.X, point.Y);
+
+    private static PlanPoint Move(PlanPoint point, double du, double dv) => new PlanPoint(point.X + du, point.Y + dv);
 }
 
 /// <summary>Places section points on the path of an alignment.</summary>

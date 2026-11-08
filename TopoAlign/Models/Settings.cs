@@ -36,6 +36,12 @@ public class Settings
     /// <summary>Name of the last profile type used, as "Family : Type".</summary>
     public string SweepProfileName { get; set; } = string.Empty;
 
+    /// <summary>Whether the sweep makes a single profile ("Profile") or an assembly of profiles ("Assembly").</summary>
+    public string SweepMode { get; set; } = "Profile";
+
+    /// <summary>Name of the last assembly used.</summary>
+    public string SweepAssemblyName { get; set; } = string.Empty;
+
     /// <summary>How the road solid is made: SegmentedLoft or SmoothSurfaces.</summary>
     public string SweepGeometryMethod { get; set; } = "SegmentedLoft";
 
