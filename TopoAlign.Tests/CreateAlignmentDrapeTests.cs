@@ -67,7 +67,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task Constructor_DrapeIsOffWithSensibleDefaults()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
 
         var viewModel = NewViewModel();
 
@@ -84,7 +84,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task Settings_DefaultToOneMetreSamplingAndFiftyMillimetreTolerance()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
 
         var settings = new Settings();
 
@@ -96,9 +96,9 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     }
 
     [Test]
-    public async Task Settings_DrapeOptionsRoundTripThroughTheRegistry()
+    public async Task Settings_DrapeOptionsRoundTripThroughTheSettingsFile()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         new Settings
         {
             CreateAlignmentDrapeOnTopo = true,
@@ -121,7 +121,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task Constructor_LoadsSavedDrapeOptionsInDisplayUnits()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         new Settings
         {
             CreateAlignmentDrapeOnTopo = true,
@@ -142,7 +142,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_WithDrapeOnButNoToposolid_IsDisabled()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, new Curve[] { Ln(0, 0, 100, 0) });
         await Assert.That(viewModel.CreateAlignmentCommand.CanExecute(null)).IsTrue();
@@ -155,7 +155,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_WithDrapeOnAndAToposolid_IsEnabled()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         SetChain(viewModel, new Curve[] { Ln(10, 10, 90, 10) });
@@ -169,7 +169,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_WithDrapeOff_DoesNotNeedAToposolid()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, new Curve[] { Ln(0, 0, 100, 0) });
         viewModel.DrapeOnTopo = false;
@@ -182,7 +182,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task PickToposolid_RequestsAToposolidPickAndHidesTheWindow()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         var hidden = 0;
         viewModel.HideRequested += (_, _) => hidden++;
@@ -197,7 +197,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task PickLines_AfterPickToposolid_RequestsLinesAgain()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.PickToposolidCommand.Execute(null);
 
@@ -212,7 +212,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task PreviewProfile_WithoutLines_AsksForLines()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.DrapeOnTopo = true;
 
@@ -224,7 +224,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task PreviewProfile_WithoutAToposolid_AsksForOne()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, new Curve[] { Ln(0, 0, 100, 0) });
         viewModel.DrapeOnTopo = true;
@@ -237,7 +237,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task PreviewProfile_ZeroInterval_IsRejected()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         UseFeet(viewModel);
@@ -254,7 +254,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task PreviewProfile_NegativeTolerance_IsRejected()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         UseFeet(viewModel);
@@ -271,7 +271,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task PreviewProfile_LineOffTheToposolid_ExplainsWhy()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         UseFeet(viewModel);
@@ -288,7 +288,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task PreviewProfile_OnFlatGround_ReportsTwoPvisAndNoGrade()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         UseFeet(viewModel);
@@ -307,7 +307,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task PreviewProfile_AppliesTheElevationOffset()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         UseFeet(viewModel);
@@ -325,7 +325,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task ChangingAnyDrapeInput_ClearsTheStalePreview()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         var changes = new Action[]
         {
@@ -350,7 +350,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_DrapedOnFlatGround_WritesAFlatProfileAtGroundLevel()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         UseFeet(viewModel);
@@ -382,7 +382,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_DrapedWithOffset_RaisesTheProfile()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         UseFeet(viewModel);
@@ -403,7 +403,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_WithDrapeOff_WritesTheFlatProfileAsBefore()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, new Curve[] { Ln(0, 0, 100, 0, 7.5) });
         viewModel.DrapeOnTopo = false;
@@ -418,7 +418,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_SavesTheDrapeOptions()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         UseFeet(viewModel);
@@ -444,7 +444,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_ReversedChain_IsSampledFromTheReversedStart()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var viewModel = NewViewModel(document);
         UseFeet(viewModel);
@@ -468,7 +468,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignmentView_HidesItselfWhenAToposolidPickIsRequested()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
         var viewModel = new CreateAlignmentViewModel();
         Visibility visibility = Visibility.Visible;
@@ -487,7 +487,7 @@ public class CreateAlignmentDrapeTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignmentView_ShowsTheDrapeControlsAndBindsThem()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
         var viewModel = new CreateAlignmentViewModel();
         var buttons = new List<string>();

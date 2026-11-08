@@ -231,7 +231,7 @@ public class AlignTopoViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Constructor_UsesDefaultsWhenNothingIsSaved()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
 
         var viewModel = new AlignTopoViewModel();
@@ -249,7 +249,7 @@ public class AlignTopoViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Constructor_LoadsSavedSettings()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         new Settings
         {
             SingleElement = false,
@@ -274,7 +274,7 @@ public class AlignTopoViewModelTests : TopoAlignUiTest
     [Test]
     public async Task ChangingSingleElementAndTopFace_NotifiesTheDerivedProperties()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
         var viewModel = new AlignTopoViewModel();
         var changed = new List<string>();
@@ -334,7 +334,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Constructor_StartsEmptyWithDefaults()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
 
         var viewModel = NewViewModel();
 
@@ -355,7 +355,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Constructor_LoadsSavedOptions()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         new Settings { CreateAlignmentReverseDirection = true, CreateAlignmentDeleteSourceLines = true }.SaveSettings();
 
         var viewModel = NewViewModel();
@@ -367,7 +367,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Constructor_DefaultNameSkipsNamesAlreadyInTheModel()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var internalToShared = document.ActiveProjectLocation.GetTotalTransform().Inverse;
         var json = TopoAlign.Alignments.AlignmentJsonBuilder.Build("Alignment 1", TwoLines, internalToShared, 0.0, out var length);
@@ -383,7 +383,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_IsDisabledUntilLinesAreChained()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
 
         await Assert.That(viewModel.CreateAlignmentCommand.CanExecute(null)).IsFalse();
@@ -395,7 +395,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_IsDisabledForABlankName()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, TwoLines);
 
@@ -410,7 +410,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task PickLines_RequestsAPickAndAsksTheWindowToHide()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         var hidden = 0;
         viewModel.HideRequested += (_, _) => hidden++;
@@ -424,7 +424,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_BuildsTheRequestAndClosesTheDialog()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.AlignmentName = "Access Road";
         SetChain(viewModel, TwoLines);
@@ -447,7 +447,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_ReverseDirection_StartsFromTheEndOfTheChain()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, TwoLines);
         viewModel.ReverseDirection = true;
@@ -463,7 +463,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_StartStation_IsConvertedFromTheDisplayUnitToFeet()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, TwoLines);
         viewModel.StartStation = 250m;
@@ -478,7 +478,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_DeleteSourceLines_PassesTheSelectedElementIds()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         var first = NewModelCurve(document, TwoLines[0]);
         var second = NewModelCurve(document, TwoLines[1]);
@@ -497,7 +497,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignment_RemembersTheOptionsForNextTime()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, TwoLines);
         viewModel.ReverseDirection = true;
@@ -519,7 +519,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task ChangingTheDisplayUnit_RefreshesTheChainStatus()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, TwoLines);
         var feet = viewModel.DisplayUnits.Single(u => u.DisplayUnit == UnitTypeId.Feet);
@@ -539,7 +539,7 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task ChangingTheDisplayUnit_WithoutAChain_LeavesTheStatusAlone()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
 
         viewModel.SelectedDisplayUnit = viewModel.DisplayUnits.First(u => u != viewModel.SelectedDisplayUnit);

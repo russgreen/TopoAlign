@@ -86,123 +86,192 @@ public class Settings
     public decimal DivideEdgeDistance { get; set; } = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(5000, DisplayUnitType.DUT_MILLIMETERS)); // 5000
     public decimal VerticalOffset { get; set; } = Convert.ToDecimal(UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS)); // 50
 #endif
-    private static decimal ReadDecimal(Microsoft.Win32.RegistryKey key, string name, decimal fallback)
+
+    // ---- persistence: %AppData%\TopoAlign\settings.json ------------------------------------------------------
+
+    /// <summary>Where the settings are stored. Tests point this at a temporary file.</summary>
+    internal static string FilePath { get; set; } = System.IO.Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TopoAlign", "settings.json");
+
+    /// <summary>The HKCU key older versions stored the settings in. Only read once, to migrate them to the JSON file.</summary>
+    internal const string DefaultLegacyRegistryKeyPath = @"SOFTWARE\RGTools\TopoAlign";
+    internal static string LegacyRegistryKeyPath { get; set; } = DefaultLegacyRegistryKeyPath;
+
+    private static readonly System.Text.Json.JsonSerializerOptions _writeOptions = new() { WriteIndented = true };
+
+    /// <summary>Every public bool, decimal and string property is a setting.</summary>
+    private static IEnumerable<System.Reflection.PropertyInfo> SettingProperties()
     {
-        return decimal.TryParse(key.GetValue(name, fallback)?.ToString(), out var value) ? value : fallback;
+        return typeof(Settings)
+            .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+            .Where(p => p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0
+                        && (p.PropertyType == typeof(bool) || p.PropertyType == typeof(decimal) || p.PropertyType == typeof(string)));
     }
 
+    /// <summary>
+    /// Loads the settings from the JSON file. Missing, blank or malformed values keep their defaults, and a missing or
+    /// unreadable file leaves every default. If there is no file yet but the old registry key exists, its values are
+    /// moved into the JSON file and the key is removed.
+    /// </summary>
     public void LoadSettings()
-    {               
-            using (Microsoft.Win32.RegistryKey? key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\RGTools\TopoAlign", false))
+    {
+        try
+        {
+            if (System.IO.File.Exists(FilePath))
             {
-                if (key != null)
-                {
-                    SingleElement = Convert.ToBoolean(key.GetValue("SingleElement", SingleElement));
-                    CleanTopoPoints = Convert.ToBoolean(key.GetValue("CleanTopoPoints", CleanTopoPoints));
-                    TopFace = Convert.ToBoolean(key.GetValue("TopFace", TopFace));
-                    CreateAlignmentReverseDirection = Convert.ToBoolean(key.GetValue("CreateAlignmentReverseDirection", CreateAlignmentReverseDirection));
-                    CreateAlignmentDeleteSourceLines = Convert.ToBoolean(key.GetValue("CreateAlignmentDeleteSourceLines", CreateAlignmentDeleteSourceLines));
-                    CreateAlignmentDrapeOnTopo = Convert.ToBoolean(key.GetValue("CreateAlignmentDrapeOnTopo", CreateAlignmentDrapeOnTopo));
-                    CreateAlignmentAddSpirals = Convert.ToBoolean(key.GetValue("CreateAlignmentAddSpirals", CreateAlignmentAddSpirals));
-                    SweepMirrorProfile = Convert.ToBoolean(key.GetValue("SweepMirrorProfile", SweepMirrorProfile));
-                    SweepCategory = Convert.ToString(key.GetValue("SweepCategory", SweepCategory)) ?? string.Empty;
-                    SweepProfileName = Convert.ToString(key.GetValue("SweepProfileName", SweepProfileName)) ?? string.Empty;
-                    SweepGeometryMethod = Convert.ToString(key.GetValue("SweepGeometryMethod", SweepGeometryMethod)) ?? "SegmentedLoft";
-                    SweepOutput = Convert.ToString(key.GetValue("SweepOutput", SweepOutput)) ?? "DirectShape";
-                    RoadToposolidType = Convert.ToString(key.GetValue("RoadToposolidType", RoadToposolidType)) ?? string.Empty;
-                    RoadToposolidDeleteRoad = Convert.ToBoolean(key.GetValue("RoadToposolidDeleteRoad", RoadToposolidDeleteRoad));
-                    GradeSource = Convert.ToString(key.GetValue("GradeSource", GradeSource)) ?? "Edges";
-                    GradeSlopeMode = Convert.ToString(key.GetValue("GradeSlopeMode", GradeSlopeMode)) ?? "Ratio";
-                    GradeAddEdgePoints = Convert.ToBoolean(key.GetValue("GradeAddEdgePoints", GradeAddEdgePoints));
-                    KerbSweepFlip = Convert.ToBoolean(key.GetValue("KerbSweepFlip", KerbSweepFlip));
-                    KerbSweepReview = Convert.ToBoolean(key.GetValue("KerbSweepReview", KerbSweepReview));
-                    KerbSweepCategory = Convert.ToString(key.GetValue("KerbSweepCategory", KerbSweepCategory)) ?? string.Empty;
-                    KerbSweepProfileName = Convert.ToString(key.GetValue("KerbSweepProfileName", KerbSweepProfileName)) ?? string.Empty;
-                    KerbSweepOutput = Convert.ToString(key.GetValue("KerbSweepOutput", KerbSweepOutput)) ?? "DirectShape";
-
-                    _ = decimal.TryParse(key.GetValue("DivideEdgeDistance", DivideEdgeDistance).ToString(), out decimal divideEdgeDistance);
-                    _ = decimal.TryParse(key.GetValue("VerticalOffset", VerticalOffset).ToString(), out decimal verticalOffset);
-                    _ = decimal.TryParse(key.GetValue("CreateAlignmentStartStation", CreateAlignmentStartStation).ToString(), out decimal createAlignmentStartStation);
-
-                    CreateAlignmentSampleInterval = ReadDecimal(key, "CreateAlignmentSampleInterval", CreateAlignmentSampleInterval);
-                    CreateAlignmentVerticalTolerance = ReadDecimal(key, "CreateAlignmentVerticalTolerance", CreateAlignmentVerticalTolerance);
-                    CreateAlignmentElevationOffset = ReadDecimal(key, "CreateAlignmentElevationOffset", CreateAlignmentElevationOffset);
-                    CreateAlignmentMinVerticalCurveLength = ReadDecimal(key, "CreateAlignmentMinVerticalCurveLength", CreateAlignmentMinVerticalCurveLength);
-                    CreateAlignmentSpiralLength = ReadDecimal(key, "CreateAlignmentSpiralLength", CreateAlignmentSpiralLength);
-                    CreateAlignmentDefaultRadius = ReadDecimal(key, "CreateAlignmentDefaultRadius", CreateAlignmentDefaultRadius);
-                    SweepInterval = ReadDecimal(key, "SweepInterval", SweepInterval);
-                    SweepVerticalOffset = ReadDecimal(key, "SweepVerticalOffset", SweepVerticalOffset);
-                    EditProfileCurveLength = ReadDecimal(key, "EditProfileCurveLength", EditProfileCurveLength);
-                    GradeSlopeValue = ReadDecimal(key, "GradeSlopeValue", GradeSlopeValue);
-                    GradeMaxWidth = ReadDecimal(key, "GradeMaxWidth", GradeMaxWidth);
-                    GradeVerticalOffset = ReadDecimal(key, "GradeVerticalOffset", GradeVerticalOffset);
-                    GradeInterval = ReadDecimal(key, "GradeInterval", GradeInterval);
-                    KerbSweepInterval = ReadDecimal(key, "KerbSweepInterval", KerbSweepInterval);
-                    KerbSweepVerticalOffset = ReadDecimal(key, "KerbSweepVerticalOffset", KerbSweepVerticalOffset);
-                    KerbRampWidth = ReadDecimal(key, "KerbRampWidth", KerbRampWidth);
-                    KerbRampGradient = ReadDecimal(key, "KerbRampGradient", KerbRampGradient);
-                    KerbFlareGradient = ReadDecimal(key, "KerbFlareGradient", KerbFlareGradient);
-                    KerbRampMaxLength = ReadDecimal(key, "KerbRampMaxLength", KerbRampMaxLength);
-                    KerbRampLevelOffset = ReadDecimal(key, "KerbRampLevelOffset", KerbRampLevelOffset);
-
-                    DivideEdgeDistance = divideEdgeDistance;
-                    VerticalOffset = verticalOffset;
-                    CreateAlignmentStartStation = createAlignmentStartStation;
-                }
+                ApplyJson(System.IO.File.ReadAllText(FilePath));
+                return;
             }
+
+            if (LoadLegacyRegistry() && TrySave())
+            {
+                DeleteLegacyRegistry();
+            }
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Could not load the TopoAlign settings from {Path}", FilePath);
+        }
     }
 
     public void SaveSettings()
     {
-        Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\RGTools\TopoAlign", true)
-                                          ?? Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\RGTools\TopoAlign", true);
-
-            key.SetValue("SingleElement", SingleElement, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CleanTopoPoints", CleanTopoPoints, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("TopFace", TopFace, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentReverseDirection", CreateAlignmentReverseDirection, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentDeleteSourceLines", CreateAlignmentDeleteSourceLines, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentDrapeOnTopo", CreateAlignmentDrapeOnTopo, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentSampleInterval", CreateAlignmentSampleInterval, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentVerticalTolerance", CreateAlignmentVerticalTolerance, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentElevationOffset", CreateAlignmentElevationOffset, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentMinVerticalCurveLength", CreateAlignmentMinVerticalCurveLength, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentAddSpirals", CreateAlignmentAddSpirals, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentSpiralLength", CreateAlignmentSpiralLength, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentDefaultRadius", CreateAlignmentDefaultRadius, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("SweepInterval", SweepInterval, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("SweepVerticalOffset", SweepVerticalOffset, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("EditProfileCurveLength", EditProfileCurveLength, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("SweepMirrorProfile", SweepMirrorProfile, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("SweepCategory", SweepCategory ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("SweepProfileName", SweepProfileName ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("SweepGeometryMethod", SweepGeometryMethod ?? "SegmentedLoft", Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("SweepOutput", SweepOutput ?? "DirectShape", Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("RoadToposolidType", RoadToposolidType ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("RoadToposolidDeleteRoad", RoadToposolidDeleteRoad, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("GradeSource", GradeSource ?? "Edges", Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("GradeSlopeMode", GradeSlopeMode ?? "Ratio", Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("GradeSlopeValue", GradeSlopeValue, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("GradeMaxWidth", GradeMaxWidth, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("GradeVerticalOffset", GradeVerticalOffset, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("GradeInterval", GradeInterval, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("GradeAddEdgePoints", GradeAddEdgePoints, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbSweepInterval", KerbSweepInterval, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbSweepVerticalOffset", KerbSweepVerticalOffset, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbSweepFlip", KerbSweepFlip, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbSweepReview", KerbSweepReview, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbSweepCategory", KerbSweepCategory ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbSweepProfileName", KerbSweepProfileName ?? string.Empty, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbSweepOutput", KerbSweepOutput ?? "DirectShape", Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbRampWidth", KerbRampWidth, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbRampGradient", KerbRampGradient, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbFlareGradient", KerbFlareGradient, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbRampMaxLength", KerbRampMaxLength, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("KerbRampLevelOffset", KerbRampLevelOffset, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("DivideEdgeDistance", DivideEdgeDistance, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("VerticalOffset", VerticalOffset, Microsoft.Win32.RegistryValueKind.String);
-            key.SetValue("CreateAlignmentStartStation", CreateAlignmentStartStation, Microsoft.Win32.RegistryValueKind.String);
-   
+        _ = TrySave();
     }
 
+    private bool TrySave()
+    {
+        try
+        {
+            var root = new System.Text.Json.Nodes.JsonObject();
+            foreach (var property in SettingProperties())
+            {
+                var value = property.GetValue(this);
+                root[property.Name] = value switch
+                {
+                    bool b => System.Text.Json.Nodes.JsonValue.Create(b),
+                    decimal d => System.Text.Json.Nodes.JsonValue.Create(d),
+                    _ => System.Text.Json.Nodes.JsonValue.Create(value as string ?? string.Empty)
+                };
+            }
+
+            var directory = System.IO.Path.GetDirectoryName(FilePath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                System.IO.Directory.CreateDirectory(directory);
+            }
+
+            // write beside the target and swap it in, so a crash never leaves a half-written settings file
+            var temp = FilePath + ".tmp";
+            System.IO.File.WriteAllText(temp, root.ToJsonString(_writeOptions), new System.Text.UTF8Encoding(false));
+            if (System.IO.File.Exists(FilePath))
+            {
+                System.IO.File.Replace(temp, FilePath, null);
+            }
+            else
+            {
+                System.IO.File.Move(temp, FilePath);
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Could not save the TopoAlign settings to {Path}", FilePath);
+            return false;
+        }
+    }
+
+    private void ApplyJson(string json)
+    {
+        if (System.Text.Json.Nodes.JsonNode.Parse(json) is not System.Text.Json.Nodes.JsonObject root)
+        {
+            return;
+        }
+
+        foreach (var property in SettingProperties())
+        {
+            if (root.TryGetPropertyValue(property.Name, out var node) && node is System.Text.Json.Nodes.JsonValue jsonValue
+                && TryConvert(jsonValue, property.PropertyType, out var value))
+            {
+                property.SetValue(this, value);
+            }
+        }
+    }
+
+    private static bool TryConvert(System.Text.Json.Nodes.JsonValue node, Type type, out object? value)
+    {
+        value = null;
+
+        if (type == typeof(bool))
+        {
+            if (node.TryGetValue(out bool b)) { value = b; return true; }
+            if (node.TryGetValue(out string? s) && bool.TryParse(s, out b)) { value = b; return true; }
+        }
+        else if (type == typeof(decimal))
+        {
+            if (node.TryGetValue(out decimal d)) { value = d; return true; }
+            if (node.TryGetValue(out string? s)
+                && decimal.TryParse(s, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out d))
+            {
+                value = d;
+                return true;
+            }
+        }
+        else if (node.TryGetValue(out string? text) && !string.IsNullOrWhiteSpace(text))
+        {
+            value = text;
+            return true;
+        }
+
+        return false;
+    }
+
+    // ---- one-time migration from the old registry location ------------------------------------------------------
+
+    /// <summary>Reads the old registry values (written as culture-formatted strings). Returns true if the key existed.</summary>
+    private bool LoadLegacyRegistry()
+    {
+        using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(LegacyRegistryKeyPath, false);
+        if (key is null)
+        {
+            return false;
+        }
+
+        foreach (var property in SettingProperties())
+        {
+            var raw = key.GetValue(property.Name)?.ToString();
+            if (raw is null)
+            {
+                continue;
+            }
+
+            if (property.PropertyType == typeof(bool) && bool.TryParse(raw, out var b))
+            {
+                property.SetValue(this, b);
+            }
+            else if (property.PropertyType == typeof(decimal) && decimal.TryParse(raw, out var d))
+            {
+                property.SetValue(this, d);
+            }
+            else if (property.PropertyType == typeof(string) && !string.IsNullOrWhiteSpace(raw))
+            {
+                property.SetValue(this, raw);
+            }
+        }
+
+        return true;
+    }
+
+    private static void DeleteLegacyRegistry()
+    {
+        try
+        {
+            Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(LegacyRegistryKeyPath, false);
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "Could not remove the old TopoAlign registry settings");
+        }
+    }
 }

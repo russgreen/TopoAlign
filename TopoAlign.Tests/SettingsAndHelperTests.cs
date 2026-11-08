@@ -29,24 +29,24 @@ public class SettingsTests : TopoAlignTest
     }
 
     [Test]
-    public async Task LoadSettings_NoKey_KeepsTheDefaults()
+    public async Task LoadSettings_NoFile_KeepsTheDefaults()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var settings = new Settings();
 
         settings.LoadSettings();
 
         await Assert.That(settings.SingleElement).IsTrue();
         await Assert.That((double)settings.DivideEdgeDistance).IsEqualTo(5000 / 304.8).Within(1e-6);
-        await Assert.That(RegistryBackup.KeyExists()).IsFalse();
+        await Assert.That(SettingsBackup.FileExists()).IsFalse();
     }
 
     // ---- saving and loading -------------------------------------------------------------------------------------
 
     [Test]
-    public async Task SaveSettings_CreatesTheKeyAndLoadSettingsReadsItBack()
+    public async Task SaveSettings_CreatesTheFileAndLoadSettingsReadsItBack()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var saved = new Settings
         {
             SingleElement = false,
@@ -63,7 +63,7 @@ public class SettingsTests : TopoAlignTest
         var loaded = new Settings();
         loaded.LoadSettings();
 
-        await Assert.That(RegistryBackup.KeyExists()).IsTrue();
+        await Assert.That(SettingsBackup.FileExists()).IsTrue();
         await Assert.That(loaded.SingleElement).IsFalse();
         await Assert.That(loaded.CleanTopoPoints).IsFalse();
         await Assert.That(loaded.TopFace).IsFalse();
@@ -77,7 +77,7 @@ public class SettingsTests : TopoAlignTest
     [Test]
     public async Task SaveSettings_CalledTwice_OverwritesThePreviousValues()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var settings = new Settings { SingleElement = false };
         settings.SaveSettings();
 
@@ -90,21 +90,35 @@ public class SettingsTests : TopoAlignTest
     }
 
     [Test]
-    public async Task SaveSettings_WritesValuesAsStrings()
+    public async Task SaveSettings_WritesTypedJsonValues()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
 
-        new Settings { TopFace = false }.SaveSettings();
+        new Settings { TopFace = false, DivideEdgeDistance = 3.25m, SweepOutput = "Family" }.SaveSettings();
 
-        await Assert.That(RegistryBackup.GetRaw("TopFace")).IsEqualTo("False");
-        await Assert.That(RegistryBackup.GetRaw("SingleElement")).IsEqualTo("True");
+        await Assert.That(SettingsBackup.GetRaw("TopFace")).IsEqualTo("false");
+        await Assert.That(SettingsBackup.GetRaw("SingleElement")).IsEqualTo("true");
+        await Assert.That(SettingsBackup.GetRaw("DivideEdgeDistance")).IsEqualTo("3.25");
+        await Assert.That(SettingsBackup.GetRaw("SweepOutput")).IsEqualTo("\"Family\"");
     }
 
     [Test]
-    public async Task LoadSettings_PartialKey_KeepsDefaultsForMissingValues()
+    public async Task SaveSettings_LeavesNoTemporaryFileBehind()
     {
-        using var backup = new RegistryBackup();
-        RegistryBackup.SetRaw("SingleElement", "False");
+        using var backup = new SettingsBackup();
+
+        var settings = new Settings();
+        settings.SaveSettings();
+        settings.SaveSettings();
+
+        await Assert.That(File.Exists(Settings.FilePath + ".tmp")).IsFalse();
+    }
+
+    [Test]
+    public async Task LoadSettings_PartialFile_KeepsDefaultsForMissingValues()
+    {
+        using var backup = new SettingsBackup();
+        SettingsBackup.SetRaw("SingleElement", "False");
         var settings = new Settings();
 
         settings.LoadSettings();
@@ -115,36 +129,89 @@ public class SettingsTests : TopoAlignTest
     }
 
     [Test]
-    public async Task LoadSettings_UnparseableNumber_FallsBackToZero()
+    public async Task LoadSettings_UnparseableNumber_KeepsTheDefault()
     {
-        using var backup = new RegistryBackup();
-        RegistryBackup.SetRaw("DivideEdgeDistance", "not a number");
+        using var backup = new SettingsBackup();
+        SettingsBackup.SetRaw("DivideEdgeDistance", "not a number");
         var settings = new Settings();
 
         settings.LoadSettings();
 
-        await Assert.That(settings.DivideEdgeDistance).IsEqualTo(0m);
+        await Assert.That((double)settings.DivideEdgeDistance).IsEqualTo(5000 / 304.8).Within(1e-6);
     }
 
     [Test]
-    public async Task RegistryBackup_RestoresThePreviousValuesAndKey()
+    public async Task LoadSettings_CorruptFile_KeepsTheDefaults()
+    {
+        using var backup = new SettingsBackup();
+        SettingsBackup.WriteFile("{ this is not json");
+        var settings = new Settings();
+
+        settings.LoadSettings();
+
+        await Assert.That(settings.SingleElement).IsTrue();
+        await Assert.That((double)settings.DivideEdgeDistance).IsEqualTo(5000 / 304.8).Within(1e-6);
+    }
+
+    // ---- migration from the old registry location ---------------------------------------------------------------
+
+    [Test]
+    public async Task LoadSettings_OldRegistryKey_IsMovedToTheJsonFile()
+    {
+        using var backup = new SettingsBackup();
+        SettingsBackup.SetLegacy("SingleElement", "False");
+        SettingsBackup.SetLegacy("DivideEdgeDistance", 3.25m.ToString());
+        SettingsBackup.SetLegacy("SweepCategory", "OST_Roads");
+        var settings = new Settings();
+
+        settings.LoadSettings();
+
+        await Assert.That(settings.SingleElement).IsFalse();
+        await Assert.That(settings.DivideEdgeDistance).IsEqualTo(3.25m);
+        await Assert.That(settings.SweepCategory).IsEqualTo("OST_Roads");
+        await Assert.That(SettingsBackup.FileExists()).IsTrue();
+        await Assert.That(SettingsBackup.LegacyKeyExists()).IsFalse();
+
+        var reloaded = new Settings();
+        reloaded.LoadSettings();
+        await Assert.That(reloaded.SingleElement).IsFalse();
+        await Assert.That(reloaded.DivideEdgeDistance).IsEqualTo(3.25m);
+    }
+
+    [Test]
+    public async Task LoadSettings_JsonFileWins_OverTheOldRegistryKey()
+    {
+        using var backup = new SettingsBackup();
+        new Settings { SingleElement = true }.SaveSettings();
+        SettingsBackup.SetLegacy("SingleElement", "False");
+        var settings = new Settings();
+
+        settings.LoadSettings();
+
+        await Assert.That(settings.SingleElement).IsTrue();
+        await Assert.That(SettingsBackup.LegacyKeyExists()).IsTrue();
+    }
+
+    [Test]
+    public async Task SettingsBackup_RedirectsAndRestoresTheSettingsLocations()
     {
         // the helper protects real user settings, so it deserves a test of its own
-        RegistryBackup.SetRaw("BackupProbe", "before");
-        try
-        {
-            using (new RegistryBackup())
-            {
-                RegistryBackup.SetRaw("BackupProbe", "during");
-            }
+        var realFile = Settings.FilePath;
+        var realKey = Settings.LegacyRegistryKeyPath;
+        string duringFile;
 
-            await Assert.That(RegistryBackup.GetRaw("BackupProbe")).IsEqualTo("before");
-        }
-        finally
+        using (new SettingsBackup())
         {
-            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(RegistryBackup.KeyPath, true);
-            key?.DeleteValue("BackupProbe", false);
+            duringFile = Settings.FilePath;
+            new Settings().SaveSettings();
+            await Assert.That(duringFile).IsNotEqualTo(realFile);
+            await Assert.That(Settings.LegacyRegistryKeyPath).IsNotEqualTo(realKey);
+            await Assert.That(File.Exists(duringFile)).IsTrue();
         }
+
+        await Assert.That(Settings.FilePath).IsEqualTo(realFile);
+        await Assert.That(Settings.LegacyRegistryKeyPath).IsEqualTo(realKey);
+        await Assert.That(File.Exists(duringFile)).IsFalse();
     }
 }
 

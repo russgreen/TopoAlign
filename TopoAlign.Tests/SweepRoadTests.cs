@@ -706,7 +706,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Constructor_ExplainsWhenThereAreNoProfileFamilies()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
 
         var viewModel = new SweepAlignmentViewModel();
@@ -726,7 +726,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task SelectAlignment_NotAnAlignment_IsRejected()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, document, _) = NewViewModel();
         var line = NewModelCurve(document, Ln(0, 0, 10, 0));
 
@@ -738,7 +738,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task SelectAlignment_ShowsNameAndLength()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, _, alignment) = NewViewModel();
 
         await Assert.That(viewModel.SelectAlignment(alignment)).IsTrue();
@@ -752,7 +752,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task SelectAlignment_WithAnExistingRoad_SaysItWillBeReplaced()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, document, alignment) = NewViewModel();
         RoadBuilder.Create(document, alignment, RoadFixtures.Slab(), new RoadOptions { Interval = 25.0 });
 
@@ -764,7 +764,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Create_NeedsAnAlignmentASectionAndASpacing()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, _, alignment) = NewViewModel();
         await Assert.That(viewModel.CreateCommand.CanExecute(null)).IsFalse();
 
@@ -782,7 +782,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Create_BuildsTheRequestInInternalUnitsAndClosesTheDialog()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, _, alignment) = NewViewModel();
         viewModel.SelectAlignment(alignment);
         viewModel.Interval = 12m;
@@ -804,7 +804,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Create_ConvertsFromTheSelectedUnits()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, _, alignment) = NewViewModel();
         viewModel.SelectAlignment(alignment);
         viewModel.SelectedDisplayUnit = viewModel.DisplayUnits.First(u => u.DisplayUnit == UnitTypeId.Meters);
@@ -818,7 +818,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Create_MirrorFlipsTheSection()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, _, alignment) = NewViewModel();
         var offsetSection = new List<PlanSegment>
         {
@@ -841,7 +841,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Create_SavesTheOptions()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, _, alignment) = NewViewModel();
         viewModel.SelectAlignment(alignment);
         viewModel.Interval = 7m;
@@ -861,7 +861,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task Settings_SweepDefaultsAndRoundTrip()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var defaults = new Settings();
         await Assert.That((double)defaults.SweepInterval).IsEqualTo(1.0 / 0.3048).Within(1e-9);
         await Assert.That(defaults.SweepVerticalOffset).IsEqualTo(0m);
@@ -882,7 +882,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task PickAlignment_RequestsAPickAndHidesTheWindow()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, _, _) = NewViewModel();
         var hidden = 0;
         viewModel.HideRequested += (_, _) => hidden++;
@@ -896,7 +896,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task EndToEnd_TheRequestMakesARoad()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var (viewModel, document, alignment) = NewViewModel();
         viewModel.SelectAlignment(alignment);
         viewModel.Interval = 20m;
@@ -912,7 +912,7 @@ public class SweepAlignmentViewModelTests : TopoAlignUiTest
     [Test]
     public async Task SweepAlignmentView_HasItsControls_AndHidesWhenAPickIsRequested()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
         var viewModel = new SweepAlignmentViewModel();
         var buttons = new List<string>();
