@@ -172,7 +172,7 @@ public class CreateAlignmentViewTests : TopoAlignUiTest
         var previous = App.RevitDocument;
         try
         {
-            using var backup = new RegistryBackup();
+            using var backup = new SettingsBackup();
             App.RevitDocument = NewDocument();
             var viewModel = new CreateAlignmentViewModel();
             Visibility visibility = Visibility.Visible;

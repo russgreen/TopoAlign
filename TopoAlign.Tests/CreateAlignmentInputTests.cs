@@ -435,7 +435,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Constructor_StartsWithLinesAsTheInput()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
 
         var viewModel = NewViewModel();
 
@@ -451,7 +451,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task InputSource_RadioPropertiesStayInStep_AndRaiseChangeNotifications()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         var changed = new List<string>();
         viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
@@ -474,7 +474,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task InputSource_SettingARadioToFalse_DoesNothing()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
 
         viewModel.IsPointsInput = false;
@@ -485,7 +485,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task InputSource_ChangingClearsTheStaleProfilePreview()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.ProfilePreview = "old";
 
@@ -499,7 +499,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task AddPoint_NumbersTheRowsAndShowsTheLocation()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
 
         viewModel.AddPoint(0, 0, 0);
@@ -514,7 +514,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task AddPoint_UsesTheDefaultRadius_AndSpiralOnlyWhenEnabled()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.DefaultRadius = 120m;
         viewModel.SpiralLength = 40m;
@@ -531,7 +531,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task AddPoint_RepeatOfThePreviousPoint_IsIgnored()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
 
         viewModel.AddPoint(10, 10, 0);
@@ -543,7 +543,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Points_StatusFollowsTheNumberOfPoints()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         await Assert.That(viewModel.PointsStatus).IsEqualTo("No points picked.");
 
@@ -557,7 +557,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Points_AnImpossibleCurve_IsReportedAndBlocksCreate()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.IsPointsInput = true;
         viewModel.DefaultRadius = 500m;
@@ -572,7 +572,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Points_EditingARadius_RelaysTheCurveAndUpdatesTheStatus()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.IsPointsInput = true;
         viewModel.DefaultRadius = 500m;
@@ -590,7 +590,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task RemoveLastPoint_AndClearPoints_ShrinkTheList()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         AddCorner(viewModel);
 
@@ -607,7 +607,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Create_InPointsMode_NeedsAValidPointList()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.IsPointsInput = true;
         await Assert.That(viewModel.CreateAlignmentCommand.CanExecute(null)).IsFalse();
@@ -620,7 +620,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Create_InPointsMode_BuildsTheCurvedAlignment()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.IsPointsInput = true;
         viewModel.AlignmentName = "PI road";
@@ -643,7 +643,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Create_InPointsMode_WithSpirals_WritesTransitionStraights()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.IsPointsInput = true;
         AddCorner(viewModel, radius: 100m, spiral: 40m);
@@ -658,7 +658,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Create_InPointsMode_ReverseDirectionStartsAtTheOtherEnd()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.IsPointsInput = true;
         AddCorner(viewModel);
@@ -674,7 +674,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Create_InPointsMode_FlatProfileTakesTheElevationOfTheFirstPoint()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         App.RevitDocument = document;
         var viewModel = new CreateAlignmentViewModel();
@@ -695,7 +695,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task ChangingTheUnits_RefreshesThePointLocations()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         viewModel.AddPoint(100, 0, 0);
         var inFeet = viewModel.PiPoints[0].Location;
@@ -710,7 +710,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Create_WithSpiralsOnPickedLines_InsertsTransitionsAndKeepsTheEnds()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, CornerChain());
         viewModel.AddSpirals = true;
@@ -730,7 +730,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Create_WithoutSpirals_KeepsThePickedCurvesExactly()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, CornerChain());
 
@@ -743,7 +743,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Preview_SpiralsOnAChainThatStartsWithAnArc_ExplainsWhy()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, new Curve[] { QuarterArcCcw(50), Ln(0, 50, 0, 150) });
         viewModel.AddSpirals = true;
@@ -757,7 +757,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Preview_SpiralLengthOfZero_AsksForALength()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, CornerChain());
         viewModel.AddSpirals = true;
@@ -771,7 +771,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Preview_SpiralsThatDoNotFit_AreExplained()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, CornerChain());
         viewModel.AddSpirals = true;
@@ -787,7 +787,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task PickPoints_RequestsAPointPickAndHidesTheWindow()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         var hidden = 0;
         viewModel.HideRequested += (_, _) => hidden++;
@@ -804,7 +804,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task PickCad_RequestsACadPickAndHidesTheWindow()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         var hidden = 0;
         viewModel.HideRequested += (_, _) => hidden++;
@@ -820,7 +820,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task EachPickCommand_ClearsTheOtherPickKinds()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
 
         viewModel.PickPointsCommand.Execute(null);
@@ -838,7 +838,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Settings_SpiralAndRadiusDefaults()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
 
         var settings = new Settings();
 
@@ -848,9 +848,9 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     }
 
     [Test]
-    public async Task Settings_SpiralOptionsRoundTripThroughTheRegistry()
+    public async Task Settings_SpiralOptionsRoundTripThroughTheSettingsFile()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         new Settings { CreateAlignmentAddSpirals = true, CreateAlignmentSpiralLength = 75m, CreateAlignmentDefaultRadius = 410m }.SaveSettings();
 
         var loaded = new Settings();
@@ -864,7 +864,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task Create_SavesTheSpiralOptions()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var viewModel = NewViewModel();
         SetChain(viewModel, CornerChain());
         viewModel.AddSpirals = true;
@@ -885,7 +885,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignmentView_HasTheInputSourceControls()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
         var viewModel = new CreateAlignmentViewModel();
         var buttons = new List<string>();
@@ -918,7 +918,7 @@ public class CreateAlignmentInputTests : TopoAlignUiTest
     [Test]
     public async Task CreateAlignmentView_HidesItselfWhenAPointPickIsRequested()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
         var viewModel = new CreateAlignmentViewModel();
         System.Windows.Visibility visibility = System.Windows.Visibility.Visible;

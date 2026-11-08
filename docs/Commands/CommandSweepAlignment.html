@@ -42,18 +42,20 @@
                 <li>Set the section spacing, an optional vertical offset and the category, then click <strong>Create Road</strong>.</li>
             </ol>
 
+            <p>To sweep several profiles at once, for example a carriageway, a kerb on each side and a footway beyond each kerb, set <strong>Sweep</strong> to <em>Assembly of profiles</em>. See <a href="#assemblies">Assemblies</a> below.</p>
+
             <script src="../assets/video-loader.js"></script>
             <script>
-              const VIDEO_URL = 'https://russgreen.github.io/TopoAlign/assets/sweepalignment.mp4';
+                const VIDEO_URL = 'https://russgreen.github.io/TopoAlign/assets/sweepalignment.mp4';
             </script>
             <div id="video-section" style="display: none;">
-              <h2>Demo Video</h2>
-              <video width="1000" controls preload="metadata" muted>
-                <source src="" type="video/mp4">
-                <!-- Add additional source formats if available -->
-                <!-- <source src="" type="video/webm"> -->
-                Your browser does not support the video tag.
-              </video>
+                <h2>Demo Video</h2>
+                <video width="1000" controls preload="metadata" muted>
+                    <source src="" type="video/mp4">
+                    <!-- Add additional source formats if available -->
+                    <!-- <source src="" type="video/webm"> -->
+                    Your browser does not support the video tag.
+                </video>
             </div>
 
             <h2 id="options">Options / Parameters</h2>
@@ -68,6 +70,24 @@
                 <li><strong>Category</strong> — The Revit category the road is filed under: Roads, Hardscape or Generic Models, whichever your version of Revit accepts. The last choice is remembered. A family uses the same category where the family editor allows it, otherwise Generic Models.</li>
             </ul>
 
+            <h2 id="assemblies">Assemblies</h2>
+            <p>An assembly is a named list of <strong>parts</strong>. Each part is a profile family type placed at a lateral and a vertical offset from the alignment, and each part is swept along the alignment and made as its own element. Every part uses the same sections as the others, so they line up along the whole length.</p>
+            <ol>
+                <li>Set <strong>Sweep</strong> to <em>Assembly of profiles</em> and click <strong>Edit assemblies...</strong>.</li>
+                <li>Name the assembly, then add a row for each part (<strong>Add part</strong>) and fill in its columns. The picture on the right shows the outline of every part as it will stand across the road, so you can check the sides and heights before creating anything.</li>
+                <li>Click <strong>Save</strong>, then <strong>Close</strong>, choose the assembly in the dialog and click <strong>Create Road Assembly</strong>.</li>
+            </ol>
+            <ul>
+                <li><strong>Part</strong> — A name for the part, for example <em>Kerb (left)</em>. It is kept in the comments of the element the part makes.</li>
+                <li><strong>Profile</strong> — The profile family type swept for the part. It is drawn in the same way as a single road section, with the family's origin at the point that is placed on the offset.</li>
+                <li><strong>Lateral offset</strong> — How far across the road the profile's origin is placed. Positive is to the <strong>right</strong> of the direction of travel and negative is to the left.</li>
+                <li><strong>Vertical offset</strong> — How far up (positive) or down (negative) the origin is placed from the alignment's finished level.</li>
+                <li><strong>Mirror</strong> — Flips the profile left to right about its own origin before it is placed. A kerb drawn for the left of the road needs this ticked when it is used on the right. Every part is defined explicitly, so a road with a kerb on each side has two kerb rows, one of them mirrored.</li>
+                <li><strong>Category</strong> — The category the part is filed under, so the road, kerbs and footways can be scheduled, given materials and hidden separately.</li>
+            </ul>
+            <p>Section spacing, geometry and the vertical offset in the sweep dialog apply to the whole assembly, and the vertical offset is added to each part's own. An assembly is always made as direct shapes. Running the command again for the same alignment replaces everything TopoAlign made for it before, whether that was a single road or an assembly.</p>
+            <p>Assemblies are saved as one JSON file each in <code>%AppData%\TopoAlign\Assemblies</code>, with lengths in millimetres, so you can copy a file to share an assembly. Parts refer to profile types by their name (<em>Family : Type</em>), so those types need to be loaded in the project; a part whose profile is missing is flagged and the assembly can't be built until it is fixed.</p>
+
             <h2 id="notes">Notes</h2>
             <ul>
                 <li>The road is one element (a Direct Shape or a family instance). It is tagged with the alignment it follows, so running the command again for the same alignment <strong>replaces</strong> the earlier road, whichever way it was made before.</li>
@@ -77,7 +97,7 @@
                 <li>If a curve is tighter than the road is wide, the inside of the road would fold back on itself. Revit cannot build those spans, so they are left as gaps and the summary says how many; use a narrower section or a larger radius.</li>
                 <li>Not included yet: a section that changes along the road, banking (superelevation), junctions, and cutting the road into the topography. To turn a road into a toposolid, use <a href="./CommandSweepToToposolid.html">Sweep to Toposolid</a>.</li>
             </ul>
-      </article>
+        </article>
         <nav class="pager" aria-label="Previous and next page"></nav>
     </div>
   </main>

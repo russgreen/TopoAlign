@@ -67,7 +67,12 @@ public class CommandSweepAlignment : IExternalCommand
         // Build after the dialog has closed so the transaction runs in the Revit API context.
         try
         {
-            var result = RoadBuilder.Create(App.RevitDocument, request.Alignment, request.Profile, request.Options);
+            if (request.Assembly is not null)
+            {
+                return ShowAssemblyResult(request, AssemblyBuilder.Create(App.RevitDocument, request.Alignment, request.Assembly, request.AssemblyProfiles, request.Options));
+            }
+
+            var result = RoadBuilder.Create(App.RevitDocument, request.Alignment, request.Profile!, request.Options);
 
             var summary = request.Options.Output == RoadOutput.Toposolid
                 ? $"Toposolid created along '{request.AlignmentName}' from {result.StationCount} sections and {result.ToposolidPointCount} surface points. No road was added to the model."
@@ -103,5 +108,37 @@ public class CommandSweepAlignment : IExternalCommand
             TaskDialog.Show("Sweep Along Alignment", ex.Message);
             return Result.Failed;
         }
+    }
+
+    private static Result ShowAssemblyResult(SweepAlignmentRequest request, AssemblyResult result)
+    {
+        var partWord = result.BuiltParts.Count == 1 ? "part" : "parts";
+        var summary = $"Road assembly '{request.Assembly!.Name}' created along '{request.AlignmentName}': " +
+                      $"{result.BuiltParts.Count} {partWord} from {result.StationCount} sections ({string.Join(", ", result.BuiltParts)}).";
+
+        if (result.ReplacedPrevious)
+        {
+            summary += " The earlier road for this alignment was replaced.";
+        }
+
+        if (result.SkippedParts.Count > 0)
+        {
+            summary += $"{Environment.NewLine}{Environment.NewLine}These parts were not built:{Environment.NewLine}" +
+                       string.Join(Environment.NewLine, result.SkippedParts);
+        }
+
+        if (!string.IsNullOrEmpty(result.Notice))
+        {
+            summary += $"{Environment.NewLine}{Environment.NewLine}{result.Notice}";
+        }
+
+        if (result.SkippedSpans > 0)
+        {
+            summary += $"{Environment.NewLine}{Environment.NewLine}{result.SkippedSpans} span{(result.SkippedSpans == 1 ? string.Empty : "s")} could not be built, " +
+                       "so some parts have gaps there. This usually means a curve is tighter than a part is wide or far from the alignment: try a narrower part.";
+        }
+
+        TaskDialog.Show("Sweep Along Alignment", summary);
+        return Result.Succeeded;
     }
 }

@@ -255,6 +255,49 @@ internal static class RoadBuilder
     }
 
     /// <summary>
+    /// Builds the solids of one profile along a path, smooth if asked (falling back to segments, and saying so in the notice)
+    /// and otherwise as segmented lofts. Nothing is added to the model.
+    /// </summary>
+    internal static (RoadSolidBuilder.SolidResult Solids, string Notice) BuildSolids(
+        AlignmentApi.PathReader path, List<double> stations, SectionProfile profile, RoadOptions options, string alignmentId)
+    {
+        var notice = string.Empty;
+        if (options.GeometryMethod == RoadGeometryMethod.SmoothSurfaces)
+        {
+            if (SmoothRoadBuilder.TryBuild(path, stations, profile, options, out var smoothSolids, out var problem))
+            {
+                var smooth = new RoadSolidBuilder.SolidResult();
+                smooth.Solids.AddRange(smoothSolids);
+                return (smooth, notice);
+            }
+
+            log.Warning("Smooth road along {alignment} fell back to segments: {problem}", alignmentId, problem);
+            notice = $"The smooth surfaces could not be made ({problem}), so the road was made from segments instead.";
+        }
+
+        return (RoadSolidBuilder.Build(CreateLoops(path, stations, profile, options, out _)), notice);
+    }
+
+    /// <summary>Adds a DirectShape of the solids, tagged as this add-in's road for the alignment. Call it inside a transaction.</summary>
+    internal static DirectShape CreateShape(Document document, ElementId categoryId, IEnumerable<Solid> solids, Element alignment)
+    {
+        var shape = DirectShape.CreateElement(document, categoryId);
+        shape.ApplicationId = ApplicationId;
+        shape.ApplicationDataId = alignment.UniqueId;
+        shape.SetShape(solids.Cast<GeometryObject>().ToList());
+        return shape;
+    }
+
+    internal static void SetComments(Element element, string text)
+    {
+        var comments = element.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
+        if (comments is not null && !comments.IsReadOnly)
+        {
+            comments.Set(text);
+        }
+    }
+
+    /// <summary>
     /// Builds the road and puts it in the model, replacing an earlier road for the same alignment. Must be called from within
     /// the Revit API context; it opens its own transaction.
     /// </summary>
@@ -280,27 +323,7 @@ internal static class RoadBuilder
         var path = new AlignmentApi.PathReader(alignment);
         var stations = PlanStations(path, options);
 
-        var notice = string.Empty;
-        var solids = new RoadSolidBuilder.SolidResult();
-        var smooth = false;
-        if (options.GeometryMethod == RoadGeometryMethod.SmoothSurfaces)
-        {
-            if (SmoothRoadBuilder.TryBuild(path, stations, profile, options, out var smoothSolids, out var problem))
-            {
-                solids.Solids.AddRange(smoothSolids);
-                smooth = true;
-            }
-            else
-            {
-                log.Warning("Smooth road along {alignment} fell back to segments: {problem}", alignment.UniqueId, problem);
-                notice = $"The smooth surfaces could not be made ({problem}), so the road was made from segments instead.";
-            }
-        }
-
-        if (!smooth)
-        {
-            solids = RoadSolidBuilder.Build(CreateLoops(path, stations, profile, options, out _));
-        }
+        var (solids, notice) = BuildSolids(path, stations, profile, options, alignment.UniqueId);
 
         if (solids.Solids.Count == 0)
         {
@@ -362,18 +385,10 @@ internal static class RoadBuilder
             }
             else
             {
-                var shape = DirectShape.CreateElement(document, categoryId);
-                shape.ApplicationId = ApplicationId;
-                shape.ApplicationDataId = alignment.UniqueId;
-                shape.SetShape(solids.Solids.Cast<GeometryObject>().ToList());
-                road = shape;
+                road = CreateShape(document, categoryId, solids.Solids, alignment);
             }
 
-            var comments = road.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
-            if (comments is not null && !comments.IsReadOnly)
-            {
-                comments.Set(description);
-            }
+            SetComments(road, description);
 
             transaction.Commit();
             result.RoadId = road.Id;
@@ -451,7 +466,7 @@ internal static class RoadBuilder
     }
 
     /// <summary>Everything an earlier road for this alignment left in the model: the shapes, and the families (which take their instances with them).</summary>
-    private static List<ElementId> FindPreviousIds(Document document, Element alignment, string? alignmentName)
+    internal static List<ElementId> FindPreviousIds(Document document, Element alignment, string? alignmentName)
     {
         var ids = new List<ElementId>();
         ids.AddRange(new FilteredElementCollector(document)

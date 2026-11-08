@@ -523,7 +523,7 @@ public class SweepGeometryOptionsTests : TopoAlignUiTest
     [Test]
     public async Task Defaults_KeepTodaysBehaviour()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
 
         var viewModel = new SweepAlignmentViewModel();
@@ -537,7 +537,7 @@ public class SweepGeometryOptionsTests : TopoAlignUiTest
     [Test]
     public async Task Create_PassesTheChosenOptionsOnAndRemembersThem()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         var document = NewDocument();
         App.RevitDocument = document;
         var alignment = RoadFixtures.CurvedAlignment(document, "Options");
@@ -566,7 +566,7 @@ public class SweepGeometryOptionsTests : TopoAlignUiTest
     [Test]
     public async Task Settings_AnUnknownSavedValue_FallsBackToTheDefault()
     {
-        using var backup = new RegistryBackup();
+        using var backup = new SettingsBackup();
         App.RevitDocument = NewDocument();
         new Settings { SweepGeometryMethod = "Nonsense", SweepOutput = "Nonsense" }.SaveSettings();
 

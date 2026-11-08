@@ -17,4 +17,4 @@ dotnet run -c "Debug R27"
 
 Building the tests also builds `TopoAlign`, which substitutes the Google Analytics keys into `App.cs` during the build, so `ApiSecret.txt` and `MeasurementId.txt` need to be present in the repository root as for a normal build.
 
-The settings and view model tests back up and restore the `HKCU\SOFTWARE\RGTools\TopoAlign` registry key, so your own TopoAlign settings are left as they were.
+TopoAlign stores its settings in `%AppData%\TopoAlign\settings.json`. Older versions used the `HKCU\SOFTWARE\RGTools\TopoAlign` registry key; those values are moved into the JSON file the first time settings are loaded. The settings and view model tests redirect the settings file and the old registry key to temporary locations, so your own TopoAlign settings are left as they were.

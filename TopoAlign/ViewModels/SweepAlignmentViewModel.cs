@@ -14,7 +14,7 @@ namespace TopoAlign.ViewModels;
 /// <summary>What the Sweep Along Alignment dialog hands back to the command.</summary>
 internal sealed class SweepAlignmentRequest
 {
-    public SweepAlignmentRequest(Element alignment, string alignmentName, SectionProfile profile, RoadOptions options)
+    public SweepAlignmentRequest(Element alignment, string alignmentName, SectionProfile? profile, RoadOptions options)
     {
         Alignment = alignment;
         AlignmentName = alignmentName;
@@ -26,9 +26,24 @@ internal sealed class SweepAlignmentRequest
     public string AlignmentName { get; }
 
     /// <summary>The cross-section, already mirrored if the user asked for that.</summary>
-    public SectionProfile Profile { get; }
+    public SectionProfile? Profile { get; }
 
     public RoadOptions Options { get; }
+
+    /// <summary>The assembly to sweep, or null for a single profile.</summary>
+    public SweepAssembly? Assembly { get; set; }
+
+    /// <summary>The section of each part's profile type, by name, when sweeping an assembly.</summary>
+    public IReadOnlyDictionary<string, SectionProfile> AssemblyProfiles { get; set; } = new Dictionary<string, SectionProfile>();
+
+    public bool IsAssembly => Assembly is not null;
+}
+
+/// <summary>What the sweep makes: one profile, or an assembly of profiles.</summary>
+internal enum SweepMode
+{
+    Profile,
+    Assembly
 }
 
 /// <summary>A value with the name the dialog shows for it.</summary>
@@ -89,12 +104,101 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     private RoadChoice<ElementId>? _selectedLevel;
 
     /// <summary>True when no road is added and the swept geometry only makes a toposolid.</summary>
-    public bool IsToposolidOutput => SelectedOutput?.Value == RoadOutput.Toposolid;
+    public bool IsToposolidOutput => !IsAssemblyMode && SelectedOutput?.Value == RoadOutput.Toposolid;
 
     /// <summary>True when a road is added to the model, so it has a category.</summary>
     public bool IsRoadOutput => !IsToposolidOutput;
 
-    public string CreateButtonText => IsToposolidOutput ? "Create Toposolid" : "Create Road";
+    public string CreateButtonText => IsAssemblyMode ? "Create Road Assembly" : IsToposolidOutput ? "Create Toposolid" : "Create Road";
+
+    // ---- single profile or assembly -----------------------------------------------------------------------------
+
+    public List<RoadChoice<SweepMode>> Modes { get; } = new()
+    {
+        new RoadChoice<SweepMode>(SweepMode.Profile, "Single profile"),
+        new RoadChoice<SweepMode>(SweepMode.Assembly, "Assembly of profiles")
+    };
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAssemblyMode))]
+    [NotifyPropertyChangedFor(nameof(IsProfileMode))]
+    [NotifyPropertyChangedFor(nameof(ShowCategory))]
+    [NotifyPropertyChangedFor(nameof(IsToposolidOutput))]
+    [NotifyPropertyChangedFor(nameof(IsRoadOutput))]
+    [NotifyPropertyChangedFor(nameof(CreateButtonText))]
+    [NotifyPropertyChangedFor(nameof(ExistingRoadNote))]
+    [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
+    private RoadChoice<SweepMode>? _selectedMode;
+
+    public bool IsAssemblyMode => SelectedMode?.Value == SweepMode.Assembly;
+    public bool IsProfileMode => !IsAssemblyMode;
+
+    /// <summary>A single profile is filed under one category; the parts of an assembly each have their own.</summary>
+    public bool ShowCategory => IsProfileMode && IsRoadOutput;
+
+    [ObservableProperty]
+    private List<SweepAssembly> _assemblies = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AssemblyStatus))]
+    [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
+    private SweepAssembly? _selectedAssembly;
+
+    /// <summary>What the chosen assembly holds, or what to do if there is none.</summary>
+    public string AssemblyStatus
+    {
+        get
+        {
+            if (Assemblies.Count == 0)
+            {
+                return "No assemblies yet. Choose Edit assemblies to make one.";
+            }
+
+            if (SelectedAssembly is null)
+            {
+                return string.Empty;
+            }
+
+            var missing = SelectedAssembly.Parts
+                .Where(p => _library.Get(p.ProfileName) is null)
+                .Select(p => string.IsNullOrWhiteSpace(p.Name) ? p.ProfileName : p.Name)
+                .ToList();
+            var count = SelectedAssembly.Parts.Count;
+            var text = $"{count} part{(count == 1 ? string.Empty : "s")}";
+            return missing.Count == 0 ? text + "." : $"{text}. Profile missing or unreadable for: {string.Join(", ", missing)}.";
+        }
+    }
+
+    /// <summary>Raised when the assembly editor should be shown; the view owns the window.</summary>
+    public event EventHandler? EditAssembliesRequested;
+
+    [RelayCommand]
+    private void EditAssemblies() => EditAssembliesRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>The editor for the assemblies, started on the selected one.</summary>
+    internal AssemblyEditorViewModel CreateEditor()
+    {
+        return new AssemblyEditorViewModel(_library, _assemblyStore, Categories, DisplayUnits, SelectedDisplayUnit, SelectedAssembly?.Name);
+    }
+
+    /// <summary>Takes up what the editor changed: reloads the list and selects the assembly last saved.</summary>
+    internal void ApplyEditor(AssemblyEditorViewModel editor)
+    {
+        if (!editor.Changed)
+        {
+            return;
+        }
+
+        LoadAssemblies(editor.SavedName ?? SelectedAssembly?.Name);
+    }
+
+    private void LoadAssemblies(string? select)
+    {
+        Assemblies = _assemblyStore.LoadAll();
+        SelectedAssembly = Assemblies.FirstOrDefault(a => string.Equals(a.Name, select, StringComparison.OrdinalIgnoreCase))
+                           ?? Assemblies.FirstOrDefault();
+        OnPropertyChanged(nameof(AssemblyStatus));
+    }
 
     [ObservableProperty]
     private string _alignmentStatus = "No alignment selected.";
@@ -149,13 +253,23 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     public SweepAlignmentRequest? Request { get; private set; }
 
     private readonly Models.Settings _settings = new();
+    private readonly ProfileLibrary _library;
+    private readonly AssemblyStore _assemblyStore;
     private readonly Dictionary<long, (SectionProfile? Profile, string? Error)> _profileCache = new();
     private Element? _alignment;
     private string _alignmentName = string.Empty;
     private SectionProfile? _profile;
 
-    public SweepAlignmentViewModel()
+    public SweepAlignmentViewModel() : this(new AssemblyStore())
     {
+    }
+
+    /// <param name="assemblyStore">Where the assemblies are kept; tests point it at a temporary folder.</param>
+    internal SweepAlignmentViewModel(AssemblyStore assemblyStore)
+    {
+        _assemblyStore = assemblyStore;
+        _library = new ProfileLibrary(App.RevitDocument);
+
         var informationVersion = Assembly.GetExecutingAssembly()
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion;
@@ -176,7 +290,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
 
         Categories = RoadBuilder.GetCategories(App.RevitDocument);
         FillToposolidChoices();
-        ProfileTypes = SectionProfileReader.ListProfileTypes(App.RevitDocument);
+        ProfileTypes = _library.Types;
         ProfileStatus = ProfileTypes.Count == 0
             ? "No profile families are loaded. Load one from Revit's Profiles library, or draw your own closed shape in a profile family."
             : string.Empty;
@@ -186,8 +300,21 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
 
     public bool HasAlignment => _alignment is not null;
 
-    private bool CanCreate() => HasAlignment && _profile is not null && Interval > 0m
-                                && (!IsToposolidOutput || (SelectedToposolidType is not null && SelectedLevel is not null));
+    private bool CanCreate()
+    {
+        if (!HasAlignment || Interval <= 0m)
+        {
+            return false;
+        }
+
+        if (IsAssemblyMode)
+        {
+            return SelectedAssembly is { Parts.Count: > 0 };
+        }
+
+        return _profile is not null
+               && (!IsToposolidOutput || (SelectedToposolidType is not null && SelectedLevel is not null));
+    }
 
     /// <summary>Lists the toposolid types and levels. There are no toposolids before Revit 2024, so the lists stay empty there.</summary>
     private void FillToposolidChoices()
@@ -360,7 +487,18 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     [RelayCommand(CanExecute = nameof(CanCreate))]
     private void Create()
     {
-        if (_alignment is null || _profile is null)
+        if (_alignment is null)
+        {
+            return;
+        }
+
+        if (IsAssemblyMode)
+        {
+            CreateAssembly();
+            return;
+        }
+
+        if (_profile is null)
         {
             return;
         }
@@ -397,11 +535,72 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         }
     }
 
+    /// <summary>Checks every part's profile can be read, then hands the assembly to the command. Nothing is built here.</summary>
+    private void CreateAssembly()
+    {
+        if (_alignment is null || SelectedAssembly is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var profiles = new Dictionary<string, SectionProfile>(StringComparer.OrdinalIgnoreCase);
+            var problems = new List<string>();
+            foreach (var part in SelectedAssembly.Parts)
+            {
+                var name = string.IsNullOrWhiteSpace(part.Name) ? part.ProfileName : part.Name;
+                var profile = _library.Get(part.ProfileName, out var error);
+                if (profile is null)
+                {
+                    problems.Add($"{name}: {error}");
+                }
+                else
+                {
+                    profiles[part.ProfileName] = profile;
+                }
+            }
+
+            if (problems.Count > 0)
+            {
+                TaskDialog.Show("Sweep Along Alignment",
+                    "The assembly can't be built until these are fixed. Choose Edit assemblies to change the profiles.\n\n" + string.Join("\n", problems));
+                return;
+            }
+
+            var options = new RoadOptions
+            {
+                Interval = ToInternal(Interval),
+                VerticalOffset = ToInternal(VerticalOffset),
+                ProfileName = SelectedAssembly.Name,
+                GeometryMethod = SelectedGeometryMethod?.Value ?? RoadGeometryMethod.SegmentedLoft,
+                Output = RoadOutput.DirectShape
+            };
+
+            SaveSettings();
+
+            Request = new SweepAlignmentRequest(_alignment, _alignmentName, null, options)
+            {
+                Assembly = SelectedAssembly,
+                AssemblyProfiles = profiles
+            };
+            OnClosingRequest();
+        }
+        catch (Exception ex)
+        {
+            log.Error(ex, "Sweep of an assembly along an alignment failed");
+            TaskDialog.Show("Sweep Along Alignment", ex.Message);
+        }
+    }
+
     // ---- settings -----------------------------------------------------------------------------------------------
 
     private void LoadSettings()
     {
         _settings.LoadSettings();
+
+        SelectedMode = Modes.FirstOrDefault(m => m.Value.ToString() == _settings.SweepMode) ?? Modes[0];
+        LoadAssemblies(_settings.SweepAssemblyName);
 
         Interval = ToDisplay(_settings.SweepInterval);
         VerticalOffset = ToDisplay(_settings.SweepVerticalOffset);
@@ -418,6 +617,12 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     private void SaveSettings()
     {
         _settings.LoadSettings();
+        _settings.SweepMode = (SelectedMode?.Value ?? SweepMode.Profile).ToString();
+        if (SelectedAssembly is not null)
+        {
+            _settings.SweepAssemblyName = SelectedAssembly.Name;
+        }
+
         _settings.SweepInterval = (decimal)ToInternal(Interval);
         _settings.SweepVerticalOffset = (decimal)ToInternal(VerticalOffset);
         _settings.SweepMirrorProfile = MirrorProfile;
