@@ -173,7 +173,7 @@ internal static class SmoothRoadBuilder
     /// Builds the road along <paramref name="stations"/>. False, with the reason, if Revit can't make a valid smooth solid
     /// (for example the section is wider than the tightest turn); the caller then falls back to another method.
     /// </summary>
-    public static bool TryBuild(AlignmentApi.PathReader path, IReadOnlyList<double> stations, SectionProfile profile, RoadOptions options,
+    public static bool TryBuild(PathReader path, IReadOnlyList<double> stations, SectionProfile profile, RoadOptions options,
         out List<Solid> solids, out string? problem)
     {
         solids = new List<Solid>();

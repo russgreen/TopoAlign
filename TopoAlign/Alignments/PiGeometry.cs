@@ -64,16 +64,6 @@ internal static class PiGeometry
     private const double Epsilon = 1e-9;
     private const double StraightAngle = 1e-7;
 
-    private sealed class Corner
-    {
-        public bool HasCurve;
-        public double Turn;            // signed deflection angle, left positive
-        public double Radius;
-        public double SpiralLength;
-        public double SpiralAngle;
-        public double TangentLength;
-    }
-
     public static PiResult Create(IReadOnlyList<PiPoint> pis)
     {
         var errors = new List<string>();
@@ -108,7 +98,7 @@ internal static class PiGeometry
         }
 
         // size the curve at every interior PI
-        var corners = new Corner[count];
+        var corners = new PiCorner[count];
         for (var i = 1; i < count - 1; i++)
         {
             corners[i] = SizeCorner(i, pis[i], headings[i - 1], headings[i], errors);
@@ -197,9 +187,9 @@ internal static class PiGeometry
         return new PiResult(segments, errors);
     }
 
-    private static Corner SizeCorner(int index, PiPoint pi, double inHeading, double outHeading, List<string> errors)
+    private static PiCorner SizeCorner(int index, PiPoint pi, double inHeading, double outHeading, List<string> errors)
     {
-        var corner = new Corner();
+        var corner = new PiCorner();
         var turn = NormalizeAngle(outHeading - inHeading);
         corner.Turn = turn;
 

@@ -20,7 +20,7 @@ public class CommandCreateAlignment : IExternalCommand
         App.CachedUiApp = commandData.Application;
         App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
 
-        if (!Alignments.AlignmentApi.Supports(Alignments.AlignmentApi.AlignmentFeature.Read | Alignments.AlignmentApi.AlignmentFeature.Create, out var problem))
+        if (!Alignments.AlignmentApi.Supports(Alignments.AlignmentFeature.Read | Alignments.AlignmentFeature.Create, out var problem))
         {
             TaskDialog.Show("Create Alignment", problem);
             return Result.Cancelled;

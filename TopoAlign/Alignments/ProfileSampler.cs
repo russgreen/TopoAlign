@@ -8,19 +8,6 @@ internal static class ProfileSampler
     /// <summary>Smallest sampling interval allowed, in feet, so a zero interval can't loop forever.</summary>
     private const double MinInterval = 0.01;
 
-    /// <summary>Ground elevations sampled along the alignment, in feet, plus how many stations missed the surface.</summary>
-    internal sealed class SampleResult
-    {
-        public SampleResult(List<ProfilePoint> samples, int missingCount)
-        {
-            Samples = samples;
-            MissingCount = missingCount;
-        }
-
-        public List<ProfilePoint> Samples { get; }
-        public int MissingCount { get; }
-    }
-
     /// <summary>
     /// Samples the surface along a chain of lines/arcs every <paramref name="interval"/> feet, and at the end of
     /// every curve. Stations are plan distances from the start of the chain and match the alignment's stationing.
@@ -28,7 +15,7 @@ internal static class ProfileSampler
     /// first and last station must hit it.
     /// </summary>
     /// <param name="elevationOffset">Added to every ground elevation (feet); positive lifts the profile above the ground.</param>
-    public static SampleResult Sample(IReadOnlyList<Curve> curves, TriangleSurface surface, double interval, double elevationOffset)
+    public static ProfileSampleResult Sample(IReadOnlyList<Curve> curves, TriangleSurface surface, double interval, double elevationOffset)
     {
         if (curves is null || curves.Count == 0)
         {
@@ -41,7 +28,7 @@ internal static class ProfileSampler
     /// <summary>
     /// As the curve overload, for a chain of plan segments (lines, arcs and spirals).
     /// </summary>
-    public static SampleResult Sample(IReadOnlyList<PlanSegment> segments, TriangleSurface surface, double interval, double elevationOffset)
+    public static ProfileSampleResult Sample(IReadOnlyList<PlanSegment> segments, TriangleSurface surface, double interval, double elevationOffset)
     {
         if (segments is null || segments.Count == 0)
         {
@@ -104,6 +91,6 @@ internal static class ProfileSampler
             throw new InvalidOperationException("The start or end of the alignment is outside the selected toposolid, so a profile can't be draped on it.");
         }
 
-        return new SampleResult(samples, missing);
+        return new ProfileSampleResult(samples, missing);
     }
 }

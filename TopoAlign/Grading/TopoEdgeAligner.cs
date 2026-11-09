@@ -57,7 +57,7 @@ internal static class TopoEdgeAligner
             throw new ArgumentNullException(nameof(triangles));
         }
 
-        var edges = new Dictionary<(Key, Key), (int Count, GradePoint Start, GradePoint End)>();
+        var edges = new Dictionary<(TopoEdgeKey, TopoEdgeKey), (int Count, GradePoint Start, GradePoint End)>();
 
         void Add(GradePoint start, GradePoint end)
         {
@@ -178,7 +178,7 @@ internal static class TopoEdgeAligner
     private static List<GradePoint> UniqueVertices(IReadOnlyList<EdgeSegment> segments, double tolerance)
     {
         var vertices = new List<GradePoint>();
-        var keys = new HashSet<Key>();
+        var keys = new HashSet<TopoEdgeKey>();
         foreach (var segment in segments)
         {
             foreach (var point in new[] { segment.Start, segment.End })
@@ -218,46 +218,8 @@ internal static class TopoEdgeAligner
         return new GradePoint(px, py, segment.Start.Z + t * (segment.End.Z - segment.Start.Z));
     }
 
-    private static Key KeyOf(GradePoint point)
+    private static TopoEdgeKey KeyOf(GradePoint point)
     {
-        return new Key((long)Math.Round(point.X / SnapSize), (long)Math.Round(point.Y / SnapSize), (long)Math.Round(point.Z / SnapSize));
-    }
-
-    private readonly struct Key : IEquatable<Key>, IComparable<Key>
-    {
-        private readonly long _x;
-        private readonly long _y;
-        private readonly long _z;
-
-        public Key(long x, long y, long z)
-        {
-            _x = x;
-            _y = y;
-            _z = z;
-        }
-
-        public bool Equals(Key other) => _x == other._x && _y == other._y && _z == other._z;
-
-        public override bool Equals(object? obj) => obj is Key other && Equals(other);
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (int)(_x * 73856093 ^ _y * 19349663 ^ _z * 83492791);
-            }
-        }
-
-        public int CompareTo(Key other)
-        {
-            var c = _x.CompareTo(other._x);
-            if (c != 0)
-            {
-                return c;
-            }
-
-            c = _y.CompareTo(other._y);
-            return c != 0 ? c : _z.CompareTo(other._z);
-        }
+        return new TopoEdgeKey((long)Math.Round(point.X / SnapSize), (long)Math.Round(point.Y / SnapSize), (long)Math.Round(point.Z / SnapSize));
     }
 }

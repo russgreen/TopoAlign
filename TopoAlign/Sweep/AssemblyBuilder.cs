@@ -69,7 +69,7 @@ internal static class AssemblyBuilder
 
         options ??= new RoadOptions();
 
-        var path = new AlignmentApi.PathReader(alignment);
+        var path = new PathReader(alignment);
         var stations = RoadBuilder.PlanStations(path, options);
         var alignmentName = AlignmentApi.GetInfo(alignment)?.Name;
 
@@ -167,7 +167,7 @@ internal static class AssemblyBuilder
     }
 
     private static void GradeTopography(Document document, IReadOnlyList<Element> topographies, SweepAssembly assembly, IReadOnlyList<SectionProfile> placedParts,
-        AlignmentApi.PathReader path, IReadOnlyList<double> stations, RoadOptions options, AssemblyResult result)
+        PathReader path, IReadOnlyList<double> stations, RoadOptions options, AssemblyResult result)
     {
 #if REVIT2024_OR_GREATER
         var toposolids = topographies.OfType<Toposolid>().Where(t => t.IsValidObject).ToList();

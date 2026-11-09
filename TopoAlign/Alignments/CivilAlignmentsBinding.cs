@@ -30,7 +30,7 @@ internal static class CivilAlignmentsBinding
     private static readonly ILogger log = Log.ForContext(typeof(CivilAlignmentsBinding));
 
     // The static initialiser runs once, on first use, and never throws: when the add-in can't be bound everything is null.
-    private static readonly Resolved? resolved = Resolve();
+    private static readonly ResolvedCivilMembers? resolved = Resolve();
 
     /// <summary>True if the Civil Alignments add-in was found and its alignment type could be bound.</summary>
     public static bool IsAvailable => resolved?.Alignment is not null;
@@ -79,32 +79,7 @@ internal static class CivilAlignmentsBinding
     public static MethodInfo? LabelIsRecommendedTypeForSet => resolved?.LabelIsRecommendedTypeForSet;
     public static MethodInfo? LabelCreateRecommendedTypeForSet => resolved?.LabelCreateRecommendedTypeForSet;
 
-    private sealed class Resolved
-    {
-        public Type? Alignment;
-        public Type? AlignmentData;
-        public Type? Label;
-        public Type? LabelSetOptions;
-
-        public MethodInfo? Get;
-        public MethodInfo? IsValid;
-        public MethodInfo? CreateAlignment;
-        public MethodInfo? UpdateAlignment;
-        public MethodInfo? GetPointAtStation;
-        public MethodInfo? GetHCurveTangentAtStation;
-        public MethodInfo? GetDisplayedHorizontalCurveEndpoints;
-        public MethodInfo? GetJson;
-        public MethodInfo? GetAlignmentLength;
-        public PropertyInfo? DataJson;
-        public PropertyInfo? DataDisplayedStartDistance;
-        public PropertyInfo? DataDisplayedEndDistance;
-        public MethodInfo? LabelCreateSet;
-        public MethodInfo? LabelIsValidType;
-        public MethodInfo? LabelIsRecommendedTypeForSet;
-        public MethodInfo? LabelCreateRecommendedTypeForSet;
-    }
-
-    private static Resolved? Resolve()
+    private static ResolvedCivilMembers? Resolve()
     {
         try
         {
@@ -134,7 +109,7 @@ internal static class CivilAlignmentsBinding
             var document = new[] { typeof(Document) };
             var documentAndData = data is null ? null : new[] { typeof(Document), data };
 
-            return new Resolved
+            return new ResolvedCivilMembers
             {
                 Alignment = alignment,
                 AlignmentData = data,

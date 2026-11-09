@@ -72,9 +72,9 @@ internal static class KerbBuilder
     private static readonly ILogger log = Log.ForContext(typeof(KerbBuilder));
 
     /// <summary>The solids for the runs: a loft between each pair of mitred sections.</summary>
-    internal static RoadSolidBuilder.SolidResult BuildSolids(IReadOnlyList<KerbChain> chains, SectionProfile profile, double verticalOffset, out int runCount, out int sectionCount, out List<string> problems)
+    internal static SolidResult BuildSolids(IReadOnlyList<KerbChain> chains, SectionProfile profile, double verticalOffset, out int runCount, out int sectionCount, out List<string> problems)
     {
-        var solids = new RoadSolidBuilder.SolidResult();
+        var solids = new SolidResult();
         runCount = 0;
         sectionCount = 0;
         problems = new List<string>();

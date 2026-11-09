@@ -494,7 +494,7 @@ public class RoadBuilderTests : TopoAlignTest
     {
         var document = NewDocument();
         var alignment = RoadFixtures.CurvedAlignment(document);
-        var path = new AlignmentApi.PathReader(alignment);
+        var path = new PathReader(alignment);
 
         var loops = RoadBuilder.CreateLoops(path, RoadFixtures.Slab(), new RoadOptions { Interval = 10.0 }, out var stations);
 
@@ -512,7 +512,7 @@ public class RoadBuilderTests : TopoAlignTest
     {
         var document = NewDocument();
         var alignment = RoadFixtures.CurvedAlignment(document);
-        var path = new AlignmentApi.PathReader(alignment);
+        var path = new PathReader(alignment);
 
         RoadBuilder.CreateLoops(path, RoadFixtures.Slab(), new RoadOptions { Interval = 40.0 }, out var stations);
 

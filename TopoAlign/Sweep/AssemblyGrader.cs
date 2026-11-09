@@ -200,7 +200,7 @@ internal static class AssemblyGrader
         IReadOnlyList<Toposolid> toposolids,
         SweepAssembly assembly,
         IReadOnlyList<SectionProfile> placedParts,
-        AlignmentApi.PathReader path,
+        PathReader path,
         IReadOnlyList<double> stations,
         RoadOptions options)
     {

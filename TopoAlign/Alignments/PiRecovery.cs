@@ -22,22 +22,6 @@ internal static class PiRecovery
     /// <summary>Largest distance (feet) the laid-out PIs may stray from the stored plan.</summary>
     private const double FitTolerance = 0.02;
 
-    private sealed class Spiral
-    {
-        public Spiral(int tangentOffset, double length)
-        {
-            TangentOffset = tangentOffset;
-            Length = length;
-        }
-
-        /// <summary>How many segments away from the arc the straight is that the spiral grows out of (1 when there is no spiral).</summary>
-        public int TangentOffset { get; }
-
-        public double Length { get; }
-
-        public bool Exists => TangentOffset > 1;
-    }
-
     /// <summary>
     /// Finds the PIs, radii and spiral lengths of a plan made of straights, arcs and spirals written as straights. Returns false,
     /// with the reason, when the plan isn't a chain of tangent straights joined by sharp corners or symmetrical curves, or when
@@ -197,7 +181,7 @@ internal static class PiRecovery
     /// starts. The heading change from that straight to the arc must be the spiral's length over twice the radius, so the straight
     /// is the one where that holds best; the straights between it and the arc are the spiral.
     /// </summary>
-    private static Spiral? FindSpiral(IReadOnlyList<PlanSegment> elements, int arcIndex, int direction, out string? reason)
+    private static SpiralDetection? FindSpiral(IReadOnlyList<PlanSegment> elements, int arcIndex, int direction, out string? reason)
     {
         reason = null;
         var arc = (PlanArc)elements[arcIndex];
@@ -256,8 +240,8 @@ internal static class PiRecovery
 
         // a straight that runs straight into the arc has no spiral
         return bestOffset == 1 && bestChords <= 0.0
-            ? new Spiral(1, 0.0)
-            : new Spiral(bestOffset, 2.0 * arc.Radius * Math.Max(bestTurn, 0.0));
+            ? new SpiralDetection(1, 0.0)
+            : new SpiralDetection(bestOffset, 2.0 * arc.Radius * Math.Max(bestTurn, 0.0));
     }
 
     /// <summary>True if the two chains of segments follow the same path to within <see cref="FitTolerance"/> and are the same length.</summary>

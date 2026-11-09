@@ -130,7 +130,7 @@ internal static class RoadFamilyBuilder
     /// </summary>
     public static (Family Family, FamilyInstance Instance) Place(Document document, string file, IReadOnlyList<Solid> solids)
     {
-        if (!document.LoadFamily(file, new OverwriteOptions(), out var family) || family is null)
+        if (!document.LoadFamily(file, new FamilyOverwriteOptions(), out var family) || family is null)
         {
             throw new InvalidOperationException("Revit could not load the road family.");
         }
@@ -333,22 +333,5 @@ internal static class RoadFamilyBuilder
 #else
         return element.Id.IntegerValue.ToString();
 #endif
-    }
-
-    /// <summary>Replaces a family of the same name instead of asking.</summary>
-    private sealed class OverwriteOptions : IFamilyLoadOptions
-    {
-        public bool OnFamilyFound(bool familyInUse, out bool overwriteParameterValues)
-        {
-            overwriteParameterValues = true;
-            return true;
-        }
-
-        public bool OnSharedFamilyFound(Family sharedFamily, bool familyInUse, out FamilySource source, out bool overwriteParameterValues)
-        {
-            source = FamilySource.Family;
-            overwriteParameterValues = true;
-            return true;
-        }
     }
 }

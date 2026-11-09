@@ -47,13 +47,6 @@ internal static class KerbPlanner
     /// <summary>The widest a section may be stretched at a corner; beyond it (a turn of about 130 degrees) the kerb is split instead.</summary>
     public const double DefaultMaxMitreScale = 2.5;
 
-    private struct Vertex
-    {
-        public double InX, InY, OutX, OutY;
-        public double MitreX, MitreY, Scale;
-        public bool Split;
-    }
-
     public static KerbPlanResult Plan(IReadOnlyList<PathPoint> points, bool closed, double maxMitreScale = DefaultMaxMitreScale)
     {
         var result = new KerbPlanResult();
@@ -88,7 +81,7 @@ internal static class KerbPlanner
             direction[i] = (dx / length, dy / length);
         }
 
-        var vertices = new Vertex[count];
+        var vertices = new KerbPlanVertex[count];
         for (var i = 0; i < count; i++)
         {
             vertices[i] = MakeVertex(i, count, closed, direction, maxMitreScale);
@@ -135,9 +128,9 @@ internal static class KerbPlanner
         return result;
     }
 
-    private static Vertex MakeVertex(int index, int count, bool closed, (double X, double Y)[] direction, double maxMitreScale)
+    private static KerbPlanVertex MakeVertex(int index, int count, bool closed, (double X, double Y)[] direction, double maxMitreScale)
     {
-        var vertex = new Vertex();
+        var vertex = new KerbPlanVertex();
 
         var hasIn = closed || index > 0;
         var hasOut = closed || index < count - 1;
@@ -179,7 +172,7 @@ internal static class KerbPlanner
         return vertex;
     }
 
-    private static KerbSection Mitred(PathPoint point, Vertex vertex) => new(point, vertex.MitreX, vertex.MitreY, vertex.Scale);
+    private static KerbSection Mitred(PathPoint point, KerbPlanVertex vertex) => new(point, vertex.MitreX, vertex.MitreY, vertex.Scale);
 
     private static KerbSection Section(PathPoint point, double dirX, double dirY) => new(point, dirX, dirY, 1.0);
 

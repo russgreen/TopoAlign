@@ -338,21 +338,6 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         ChainStatus = $"{SelectedCurveCount} lines, continuous, {displayLength:N2} {SelectedDisplayUnit.Label}";
     }
 
-    /// <summary>The draped profile for the current chain: simplified PVIs plus the vertical curve length to apply.</summary>
-    private sealed class DrapedProfile
-    {
-        public DrapedProfile(List<ProfilePoint> pvis, int missingCount, double minVerticalCurveLength)
-        {
-            Pvis = pvis;
-            MissingCount = missingCount;
-            MinVerticalCurveLength = minVerticalCurveLength;
-        }
-
-        public List<ProfilePoint> Pvis { get; }
-        public int MissingCount { get; }
-        public double MinVerticalCurveLength { get; }
-    }
-
     private double ToInternal(decimal displayValue)
     {
         return ((double)displayValue).FromUnit(SelectedDisplayUnit.DisplayUnit);

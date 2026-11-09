@@ -77,12 +77,6 @@ internal sealed class RoadResult
 /// <summary>Lofts a run of section loops into solids.</summary>
 internal static class RoadSolidBuilder
 {
-    internal sealed class SolidResult
-    {
-        public List<Solid> Solids { get; } = new();
-        public int SkippedSpans { get; set; }
-    }
-
     /// <summary>
     /// Builds solids between consecutive loops. Loops are lofted <paramref name="groupSize"/> at a time (neighbouring groups
     /// share a loop so the surface is continuous); if a group can't be built it falls back to one span at a time, and a span
@@ -222,7 +216,7 @@ internal static class RoadBuilder
     }
 
     /// <summary>The stations where sections stand: evenly spaced, at the joins between curves, and extra ones wherever the path bends.</summary>
-    internal static List<double> PlanStations(AlignmentApi.PathReader path, RoadOptions options)
+    internal static List<double> PlanStations(PathReader path, RoadOptions options)
     {
         var interval = Math.Max(options.Interval, 0.1);
         var planned = StationPlanner.Plan(path.StartStation, path.EndStation, interval, path.HorizontalCurveStations());
@@ -237,12 +231,12 @@ internal static class RoadBuilder
     }
 
     /// <summary>The loops (one per section) along an alignment, ready to be lofted.</summary>
-    internal static List<CurveLoop> CreateLoops(AlignmentApi.PathReader path, SectionProfile profile, RoadOptions options, out int stationCount)
+    internal static List<CurveLoop> CreateLoops(PathReader path, SectionProfile profile, RoadOptions options, out int stationCount)
     {
         return CreateLoops(path, PlanStations(path, options), profile, options, out stationCount);
     }
 
-    private static List<CurveLoop> CreateLoops(AlignmentApi.PathReader path, List<double> stations, SectionProfile profile, RoadOptions options, out int stationCount)
+    private static List<CurveLoop> CreateLoops(PathReader path, List<double> stations, SectionProfile profile, RoadOptions options, out int stationCount)
     {
         stationCount = stations.Count;
         var loops = new List<CurveLoop>(stations.Count);
@@ -258,15 +252,15 @@ internal static class RoadBuilder
     /// Builds the solids of one profile along a path, smooth if asked (falling back to segments, and saying so in the notice)
     /// and otherwise as segmented lofts. Nothing is added to the model.
     /// </summary>
-    internal static (RoadSolidBuilder.SolidResult Solids, string Notice) BuildSolids(
-        AlignmentApi.PathReader path, List<double> stations, SectionProfile profile, RoadOptions options, string alignmentId)
+    internal static (SolidResult Solids, string Notice) BuildSolids(
+        PathReader path, List<double> stations, SectionProfile profile, RoadOptions options, string alignmentId)
     {
         var notice = string.Empty;
         if (options.GeometryMethod == RoadGeometryMethod.SmoothSurfaces)
         {
             if (SmoothRoadBuilder.TryBuild(path, stations, profile, options, out var smoothSolids, out var problem))
             {
-                var smooth = new RoadSolidBuilder.SolidResult();
+                var smooth = new SolidResult();
                 smooth.Solids.AddRange(smoothSolids);
                 return (smooth, notice);
             }
@@ -320,7 +314,7 @@ internal static class RoadBuilder
 
         options ??= new RoadOptions();
 
-        var path = new AlignmentApi.PathReader(alignment);
+        var path = new PathReader(alignment);
         var stations = PlanStations(path, options);
 
         var (solids, notice) = BuildSolids(path, stations, profile, options, alignment.UniqueId);
@@ -410,7 +404,7 @@ internal static class RoadBuilder
     /// Makes a toposolid from the top of the road. The solids were never added to the model, so nothing of the road is
     /// left behind and an earlier road for the alignment is not touched.
     /// </summary>
-    private static RoadResult CreateToposolid(Document document, RoadSolidBuilder.SolidResult solids, int stationCount, string notice, RoadOptions options)
+    private static RoadResult CreateToposolid(Document document, SolidResult solids, int stationCount, string notice, RoadOptions options)
     {
 #if REVIT2024_OR_GREATER
         var made = ToposolidBuilder.Create(document, solids.Solids, options.ToposolidTypeId, options.LevelId);

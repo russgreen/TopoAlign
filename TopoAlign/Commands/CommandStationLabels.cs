@@ -21,7 +21,7 @@ public class CommandStationLabels : IExternalCommand
         App.CachedUiApp = commandData.Application;
         App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
 
-        if (!AlignmentApi.Supports(AlignmentApi.AlignmentFeature.Read | AlignmentApi.AlignmentFeature.StationLabels, out var problem))
+        if (!AlignmentApi.Supports(AlignmentFeature.Read | AlignmentFeature.StationLabels, out var problem))
         {
             TaskDialog.Show("Station Labels", problem);
             return Result.Cancelled;

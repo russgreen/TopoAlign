@@ -6,17 +6,6 @@ internal static class CurveChainer
 {
     private const double Tolerance = 1.0e-4;
 
-    internal sealed class ChainResult
-    {
-        public List<Curve> Curves { get; } = new();
-
-        public double TotalLength { get; set; }
-
-        public string? ErrorMessage { get; set; }
-
-        public bool IsContinuous => Curves.Count > 0 && string.IsNullOrEmpty(ErrorMessage);
-    }
-
     /// <param name="sourceCurves">The curves to join end to end.</param>
     /// <param name="projectToPlan">True to flatten the curves to Z = 0 first; false to keep their elevations (curves must then meet in 3D).</param>
     public static ChainResult TryChain(IEnumerable<Curve> sourceCurves, bool projectToPlan = true)

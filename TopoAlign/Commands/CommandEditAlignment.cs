@@ -21,7 +21,7 @@ public class CommandEditAlignment : IExternalCommand
         App.CachedUiApp = commandData.Application;
         App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
 
-        if (!AlignmentApi.Supports(AlignmentApi.AlignmentFeature.Read | AlignmentApi.AlignmentFeature.Update, out var problem))
+        if (!AlignmentApi.Supports(AlignmentFeature.Read | AlignmentFeature.Update, out var problem))
         {
             TaskDialog.Show("Edit Alignment", problem);
             return Result.Cancelled;

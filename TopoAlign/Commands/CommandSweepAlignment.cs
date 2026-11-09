@@ -22,7 +22,7 @@ public class CommandSweepAlignment : IExternalCommand
         App.CachedUiApp = commandData.Application;
         App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
 
-        if (!AlignmentApi.Supports(AlignmentApi.AlignmentFeature.Read, out var problem))
+        if (!AlignmentApi.Supports(AlignmentFeature.Read, out var problem))
         {
             TaskDialog.Show("Sweep Along Alignment", problem);
             return Result.Cancelled;
