@@ -53,7 +53,7 @@ public class CommandEditAlignment : IExternalCommand
 
             if (viewModel.PickRequested)
             {
-                viewModel.PickAlignmentElement();
+                viewModel.RunPendingPick();
             }
         }
         while (viewModel.PickRequested);
@@ -77,6 +77,11 @@ public class CommandEditAlignment : IExternalCommand
             if (request.StartStationChanged)
             {
                 changes.Add("start station changed");
+            }
+
+            if (request.PlanChanged)
+            {
+                changes.Add("points, radii or spirals edited");
             }
 
             if (request.Reversed)

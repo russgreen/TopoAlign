@@ -156,6 +156,196 @@ internal sealed class AlignmentJsonDocument
         ReverseOrder(profile);
     }
 
+    // ---- plan editing -------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// True if the plan is made only of straights and circular arcs, the kinds <see cref="ReadPlan"/> and <see cref="SetPlan"/>
+    /// understand (spirals are stored as short straights); otherwise the reason it can't be edited.
+    /// </summary>
+    public bool CanEditPlan(out string? reason)
+    {
+        reason = null;
+        var curves = Curves(HorizontalGeometry()).OfType<JsonNode>().ToList();
+        if (curves.Count == 0)
+        {
+            reason = "The alignment has no horizontal geometry.";
+            return false;
+        }
+
+        foreach (var curve in curves)
+        {
+            var typeId = TypeId(curve);
+            if (typeId != InfraJson.LineTypeId && typeId != InfraJson.CircleTypeId)
+            {
+                reason = $"The alignment contains a '{typeId ?? "unknown"}' curve in plan, which can't be edited here.";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// The plan as lines and arcs, in the JSON's own (shared) coordinates in feet. Throws <see cref="InvalidOperationException"/>
+    /// if <see cref="CanEditPlan"/> is false.
+    /// </summary>
+    public List<PlanSegment> ReadPlan()
+    {
+        if (!CanEditPlan(out var reason))
+        {
+            throw new InvalidOperationException(reason);
+        }
+
+        var segments = new List<PlanSegment>();
+        foreach (var curve in Curves(HorizontalGeometry()).OfType<JsonNode>())
+        {
+            if (TypeId(curve) == InfraJson.LineTypeId)
+            {
+                var position = ReadPoint(curve, InfraJson.Point2DKey, "position");
+                var direction = ReadPoint(curve, InfraJson.Vector2DKey, "direction");
+                var line = new PlanLine(new PlanPoint(position.X, position.Y), new PlanPoint(position.X + direction.X, position.Y + direction.Y));
+                if (line.Length > 1e-9)
+                {
+                    segments.Add(line);
+                }
+            }
+            else
+            {
+                var center = ReadPoint(curve, InfraJson.Point2DKey, "center");
+                var radius = ReadPoint(curve, InfraJson.Vector2DKey, "radius");
+                var turns = ReadDouble(curve[InfraJson.ParamRangeKey]?["range"]?["Float64"]?["high"]) ?? 0.0;
+                var clockwise = curve["Bool"]?["clockwise"]?.GetValue<bool>() ?? false;
+                var r = Math.Sqrt(radius.X * radius.X + radius.Y * radius.Y);
+                if (r > 1e-9 && turns > 1e-12)
+                {
+                    segments.Add(new PlanArc(new PlanPoint(center.X, center.Y), r, Math.Atan2(radius.Y, radius.X),
+                        (clockwise ? -1.0 : 1.0) * 2.0 * Math.PI * turns));
+                }
+            }
+        }
+
+        return segments;
+    }
+
+    /// <summary>
+    /// Replaces the plan with the given chain of lines, arcs and spirals, which must be in the JSON's own (shared) coordinates in
+    /// feet. Spirals are written as short straights within <paramref name="spiralDeviation"/> feet of the true curve. The profile
+    /// keeps its PVI distances and its last grade is extended or trimmed to the new length. Returns the new plan length.
+    /// Throws <see cref="InvalidOperationException"/> if the plan or profile can't be edited, and leaves the document unchanged.
+    /// </summary>
+    public double SetPlan(IReadOnlyList<PlanSegment> segments, double spiralDeviation = 0.005)
+    {
+        if (!CanEditPlan(out var reason))
+        {
+            throw new InvalidOperationException(reason);
+        }
+
+        if (segments is null || segments.Count == 0)
+        {
+            throw new InvalidOperationException("The alignment has no usable length.");
+        }
+
+        var nodes = new JsonArray();
+        var length = 0.0;
+        foreach (var segment in segments)
+        {
+            switch (segment)
+            {
+                case PlanLine line:
+                    length += AddLine(nodes, line.StartPoint, line.EndPoint);
+                    break;
+
+                case PlanArc arc:
+                    if (arc.Length > 1e-6)
+                    {
+                        var start = arc.StartPoint;
+                        nodes.Add(ProfileJson.CreateCircleNode(arc.Center.X, arc.Center.Y, start.X - arc.Center.X, start.Y - arc.Center.Y,
+                            Math.Abs(arc.Sweep) / (2.0 * Math.PI), arc.IsClockwise));
+                        length += arc.Length;
+                    }
+
+                    break;
+
+                case PlanSpiral spiral:
+                    var points = spiral.Tessellate(spiralDeviation);
+                    for (var i = 1; i < points.Count; i++)
+                    {
+                        length += AddLine(nodes, points[i - 1], points[i]);
+                    }
+
+                    break;
+
+                default:
+                    throw new NotSupportedException($"Unsupported segment type '{segment.GetType().Name}'.");
+            }
+        }
+
+        if (nodes.Count == 0)
+        {
+            throw new InvalidOperationException("The alignment has no usable length.");
+        }
+
+        var holder = HorizontalGeometry()?[InfraJson.CurveArrayKey] as JsonObject
+                     ?? throw new InvalidOperationException("The alignment has no horizontal geometry.");
+
+        // work out the new profile before anything is written, so a profile that can't follow leaves the document as it was
+        var profile = ResizedProfile(length);
+
+        holder["curves"] = nodes;
+        if (profile is not null)
+        {
+            WriteProfile(profile);
+        }
+
+        return length;
+    }
+
+    private static double AddLine(JsonArray target, PlanPoint start, PlanPoint end)
+    {
+        var length = PlanPoint.Distance(start, end);
+        if (length < 1e-6)
+        {
+            return 0.0;
+        }
+
+        target.Add(ProfileJson.CreateLineNode(start.X, start.Y, end.X - start.X, end.Y - start.Y));
+        return length;
+    }
+
+    /// <summary>
+    /// The profile's PVIs with the last one moved to <paramref name="newLength"/> along the last grade, or null when the profile
+    /// already ends there or there is no profile. Throws if the profile can't be edited or the new end isn't beyond the PVI before it.
+    /// </summary>
+    private List<ProfileVertex>? ResizedProfile(double newLength)
+    {
+        if (Curves(ProfileGeometry()).Count == 0)
+        {
+            return null;
+        }
+
+        if (!CanEditProfile(out var reason))
+        {
+            throw new InvalidOperationException("The alignment's length changes, but its profile can't follow: " + reason);
+        }
+
+        var vertices = ReadProfile();
+        var last = vertices[vertices.Count - 1];
+        if (Math.Abs(newLength - last.Distance) <= ProfileEditing.MinSpacing)
+        {
+            return null;
+        }
+
+        var before = vertices[vertices.Count - 2];
+        if (newLength - before.Distance < ProfileEditing.MinSpacing)
+        {
+            throw new InvalidOperationException("The edited alignment ends before the last profile point. Edit the profile first, or keep the alignment longer.");
+        }
+
+        var elevation = before.Elevation + ProfileEditing.Grade(before, last) * (newLength - before.Distance);
+        vertices[vertices.Count - 1] = new ProfileVertex(newLength, elevation, 0.0);
+        return vertices;
+    }
+
     // ---- profile editing ----------------------------------------------------------------------------------------
 
     /// <summary>
@@ -291,6 +481,11 @@ internal sealed class AlignmentJsonDocument
             throw new InvalidOperationException(errors[0]);
         }
 
+        WriteProfile(vertices);
+    }
+
+    private void WriteProfile(IReadOnlyList<ProfileVertex> vertices)
+    {
         var origin = ProfileOrigin();
         var points = vertices.Select(v => new ProfilePoint(v.Distance + origin, v.Elevation)).ToList();
         var lengths = vertices.Select(v => v.CurveLength).ToList();

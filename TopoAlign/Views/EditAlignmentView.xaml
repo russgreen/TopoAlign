@@ -10,7 +10,7 @@
         Title="{Binding WindowTitle}"
         FontSize="12" FontFamily="Segoe UI Light"
         WindowStartupLocation="CenterScreen"
-        SizeToContent="Height" Width="380"
+        SizeToContent="Height" Width="440"
         WindowStyle="ToolWindow" ResizeMode="NoResize">
 
     <Grid Margin="10">
@@ -26,8 +26,10 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
             <Style TargetType="TextBlock">
                 <Setter Property="Margin" Value="0,0,0,6"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -71,7 +73,70 @@
                   IsEnabled="{Binding CanReverse}"
                   IsChecked="{Binding ReverseDirection}"/>
 
-        <Button Grid.Row="6" Grid.ColumnSpan="2" Content="Apply" IsDefault="True" Height="30"
+        <StackPanel Grid.Row="6" Grid.ColumnSpan="2"
+                    Visibility="{Binding PlanEditable, Converter={StaticResource BoolToVisibility}}">
+            <DataGrid ItemsSource="{Binding PiPoints}" SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                      AutoGenerateColumns="False" Height="140" Margin="0,0,0,6"
+                      CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal" SelectionMode="Single">
+                <DataGrid.Resources>
+                    <Style TargetType="TextBox">
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="Height" Value="Auto"/>
+                    </Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Margin" Value="0"/>
+                    </Style>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="#" Binding="{Binding Number}" IsReadOnly="True" Width="30"/>
+                    <DataGridTextColumn Header="X" Binding="{Binding X}" Width="*"/>
+                    <DataGridTextColumn Header="Y" Binding="{Binding Y}" Width="*"/>
+                    <DataGridTextColumn Header="Radius" Binding="{Binding Radius}" Width="70">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEnd}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Spiral" Binding="{Binding SpiralLength}" Width="70">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEnd}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Move point" Margin="0,0,3,6" Command="{Binding MovePointCommand}"/>
+                <Button Grid.Column="1" Content="Add point" Margin="3,0,3,6" Command="{Binding AddPointCommand}"/>
+                <Button Grid.Column="2" Content="Remove point" Margin="3,0,3,6" Command="{Binding RemovePointCommand}"/>
+                <Button Grid.Column="3" Content="Reset" Margin="3,0,0,6" Command="{Binding ResetPointsCommand}"/>
+            </Grid>
+            <TextBlock Text="{Binding PointsStatus}" TextWrapping="Wrap"/>
+            <TextBlock Text="Select a point, then Move point to pick its new position in the view, or edit its values. Radius 0 leaves a sharp corner; the first and last points are the ends of the alignment."
+                       TextWrapping="Wrap" FontSize="11" Opacity="0.7"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="6" Grid.ColumnSpan="2" Text="{Binding PlanNote}" TextWrapping="Wrap" FontSize="11" Opacity="0.7"
+                   Visibility="{Binding PlanNotEditable, Converter={StaticResource BoolToVisibility}}"/>
+
+        <Button Grid.Row="7" Grid.ColumnSpan="2" Content="Apply" IsDefault="True" Height="30"
                 Command="{Binding ApplyCommand}"/>
     </Grid>
 </Window>

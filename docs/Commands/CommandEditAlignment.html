@@ -32,12 +32,13 @@
         </nav>
         <article>
             <h1 id="overview">Edit Alignment</h1>
-            <p>Changes an existing native Revit alignment: rename it, move its start station, or reverse its direction. It works on any alignment in the model, including ones made by other tools.</p>
+            <p>Changes an existing native Revit alignment: rename it, move its start station, reverse its direction, move its points, or change the radius and spiral length of its curves. It works on any alignment in the model, including ones made by other tools.</p>
 
             <h2 id="usage">Usage / Steps</h2>
             <ol>
                 <li>Select an alignment in the model first, or launch <strong>Edit Alignment</strong> and click <strong>Pick alignment</strong>.</li>
                 <li>Change the name, the start station, or tick <strong>Reverse direction</strong>.</li>
+                <li>To change the shape, work in a plan view. Select a point in the list and click <strong>Move point</strong> to pick its new position, or type new X and Y values. Edit the <strong>Radius</strong> and <strong>Spiral</strong> of any curve in the list, or use <strong>Add point</strong> and <strong>Remove point</strong>.</li>
                 <li>Click <strong>Apply</strong>.</li>
             </ol>
 
@@ -60,6 +61,8 @@
                 <li><strong>Alignment name</strong> — The new name. The alignment type in the browser is renamed to match.</li>
                 <li><strong>Units</strong> — The units used to show and enter the start station.</li>
                 <li><strong>Start station</strong> — The station at the start of the alignment. Changing it shifts every station along the alignment; the geometry does not move.</li>
+                <li><strong>Points</strong> — The points of intersection of the alignment, with the radius of the curve at each and the length of its transition spirals (each end of the alignment is a point with no curve). A radius of 0 leaves a sharp corner. The blue line in the plan view shows the result while you pick a position.</li>
+                <li><strong>Move point / Add point / Remove point / Reset</strong> — Move the selected point to a position picked in the view, add a point where you click (on the nearest straight, or beyond either end), remove the selected point, or go back to the alignment as it was opened.</li>
                 <li><strong>Reverse direction</strong> — Runs the alignment the other way. The vertical profile is mirrored with it, so every point on the ground keeps its elevation. Available for alignments made of straights, arcs and parabolic vertical curves.</li>
             </ul>
 
@@ -67,6 +70,8 @@
             <ul>
                 <li>Apply is only available once something has changed.</li>
                 <li>If an alignment contains a kind of curve that can't be mirrored, the dialog says so and leaves reverse unavailable; renaming and moving the start station still work.</li>
+                <li>Points can only be edited on alignments made of straights joined by sharp corners or by arcs, with or without equal entry and exit spirals (such as those made by <a href="./CommandCreateAlignment.html">Create Alignment</a>). Spirals are stored as short straights and are recognised from their shape; for any other alignment the dialog says why the points can't be edited.</li>
+                <li>When the edit changes the length of the alignment, the vertical profile keeps its stations and its last grade is extended or trimmed. An edit that would end the alignment before the last profile station is refused; use <a href="./CommandEditProfile.html">Edit Profile</a> first.</li>
                 <li>Station labels already placed on the alignment are not moved by this command; place them again after reversing.</li>
                 <li>To add stations to the vertical profile or change their elevations, use <a href="./CommandEditProfile.html">Edit Profile</a>.</li>
             </ul>

@@ -343,15 +343,7 @@ internal static class AlignmentJsonBuilder
     /// <summary>A circle2d curve: centre, the radius vector to the start point, the sweep as a fraction of a full turn, and the direction.</summary>
     private static JsonObject CreateCircleNode(double centerX, double centerY, double startVectorX, double startVectorY, double turns, bool clockwise)
     {
-        return new JsonObject
-        {
-            ["Bool"] = new JsonObject { ["clockwise"] = clockwise },
-            [Point2DKey] = new JsonObject { ["center"] = CreatePoint(centerX, centerY) },
-            [Vector2DKey] = new JsonObject { ["radius"] = CreatePoint(startVectorX, startVectorY) },
-            ["String"] = new JsonObject { ["guid"] = Guid.NewGuid().ToString() },
-            [ParamRangeKey] = new JsonObject { ["range"] = CreateRange(0.0, turns, 1) },
-            ["typeid"] = CircleTypeId
-        };
+        return ProfileJson.CreateCircleNode(centerX, centerY, startVectorX, startVectorY, turns, clockwise);
     }
 
     /// <summary>

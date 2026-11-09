@@ -59,6 +59,20 @@ internal static class ProfileJson
         };
     }
 
+    /// <summary>A circle2d curve: centre, the radius vector to the start point, the sweep as a fraction of a full turn, and the direction.</summary>
+    public static JsonObject CreateCircleNode(double centerX, double centerY, double startVectorX, double startVectorY, double turns, bool clockwise)
+    {
+        return new JsonObject
+        {
+            ["Bool"] = new JsonObject { ["clockwise"] = clockwise },
+            [InfraJson.Point2DKey] = new JsonObject { ["center"] = CreatePoint(centerX, centerY) },
+            [InfraJson.Vector2DKey] = new JsonObject { ["radius"] = CreatePoint(startVectorX, startVectorY) },
+            ["String"] = new JsonObject { ["guid"] = Guid.NewGuid().ToString() },
+            [InfraJson.ParamRangeKey] = new JsonObject { ["range"] = CreateRange(0.0, turns, 1) },
+            ["typeid"] = InfraJson.CircleTypeId
+        };
+    }
+
     public static JsonObject CreateVerticalCurveNode(ProfileParabola parabola)
     {
         return new JsonObject

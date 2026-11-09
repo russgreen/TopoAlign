@@ -452,7 +452,7 @@ internal static class PiGeometry
         return new SpiralResult(result, added, skipped);
     }
 
-    private static bool TryIntersect(PlanLine a, PlanLine b, out PlanPoint point)
+    internal static bool TryIntersect(PlanLine a, PlanLine b, out PlanPoint point)
     {
         var d1x = a.EndPoint.X - a.StartPoint.X;
         var d1y = a.EndPoint.Y - a.StartPoint.Y;

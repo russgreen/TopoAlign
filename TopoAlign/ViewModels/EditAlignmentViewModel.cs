@@ -12,7 +12,7 @@ namespace TopoAlign.ViewModels;
 /// <summary>What the Edit Alignment dialog hands back to the command: the alignment and its edited JSON.</summary>
 internal sealed class EditAlignmentRequest
 {
-    public EditAlignmentRequest(Element alignment, string name, string json, double planLength, bool renamed, bool startStationChanged, bool reversed)
+    public EditAlignmentRequest(Element alignment, string name, string json, double planLength, bool renamed, bool startStationChanged, bool reversed, bool planChanged = false)
     {
         Alignment = alignment;
         Name = name;
@@ -21,6 +21,7 @@ internal sealed class EditAlignmentRequest
         Renamed = renamed;
         StartStationChanged = startStationChanged;
         Reversed = reversed;
+        PlanChanged = planChanged;
     }
 
     public Element Alignment { get; }
@@ -33,6 +34,9 @@ internal sealed class EditAlignmentRequest
     public bool Renamed { get; }
     public bool StartStationChanged { get; }
     public bool Reversed { get; }
+
+    /// <summary>True when the points, radii or spirals of the alignment were edited.</summary>
+    public bool PlanChanged { get; }
 }
 
 internal partial class EditAlignmentViewModel : BaseViewModel
@@ -117,6 +121,7 @@ internal partial class EditAlignmentViewModel : BaseViewModel
         StartStation = Round(UnitUtils.ConvertFromInternalUnits(feet, newValue.DisplayUnit));
         _originalStartStation = Round(UnitUtils.ConvertFromInternalUnits(_originalStartStationFeet, newValue.DisplayUnit));
         RefreshStatus();
+        RefreshRowDisplays();
         ApplyCommand.NotifyCanExecuteChanged();
     }
 
@@ -133,9 +138,18 @@ internal partial class EditAlignmentViewModel : BaseViewModel
 
     private bool CanApply()
     {
-        return HasAlignment &&
-               !string.IsNullOrWhiteSpace(AlignmentName) &&
-               (NameChanged || StartStationChanged || (ReverseDirection && CanReverse));
+        if (!HasAlignment || string.IsNullOrWhiteSpace(AlignmentName))
+        {
+            return false;
+        }
+
+        // edited points that can't be laid out block everything, so a half-valid edit is never applied
+        if (PlanChanged && !PlanIsValid)
+        {
+            return false;
+        }
+
+        return NameChanged || StartStationChanged || (ReverseDirection && CanReverse) || PlanChanged;
     }
 
     // ---- choosing the alignment ---------------------------------------------------------------------------------
@@ -145,6 +159,7 @@ internal partial class EditAlignmentViewModel : BaseViewModel
     {
         // Hiding a ShowDialog window ends ShowDialog, so the command does the pick (inside the
         // Revit API context) and then shows this same window again.
+        PendingPick = EditAlignmentPick.Alignment;
         PickRequested = true;
         HideRequested?.Invoke(this, EventArgs.Empty);
     }
@@ -176,6 +191,7 @@ internal partial class EditAlignmentViewModel : BaseViewModel
         _originalJson = null;
         ReverseDirection = false;
         CanReverse = false;
+        ClearPlan();
         OnPropertyChanged(nameof(HasAlignment));
 
         try
@@ -199,6 +215,7 @@ internal partial class EditAlignmentViewModel : BaseViewModel
             AlignmentName = document.Name;
             StartStation = _originalStartStation;
             CanReverse = document.CanReverse(out var reason);
+            LoadPlan(document);
             RefreshStatus(CanReverse ? null : reason);
             return true;
         }
@@ -211,6 +228,7 @@ internal partial class EditAlignmentViewModel : BaseViewModel
         finally
         {
             OnPropertyChanged(nameof(HasAlignment));
+            OnPropertyChanged(nameof(PlanNotEditable));
             ApplyCommand.NotifyCanExecuteChanged();
         }
     }
@@ -244,6 +262,12 @@ internal partial class EditAlignmentViewModel : BaseViewModel
             var renamed = NameChanged;
             var startChanged = StartStationChanged;
             var reversed = ReverseDirection && CanReverse;
+            var planChanged = PlanChanged;
+
+            if (planChanged)
+            {
+                ApplyPlan(document);
+            }
 
             if (renamed)
             {
@@ -262,7 +286,7 @@ internal partial class EditAlignmentViewModel : BaseViewModel
 
             // The alignment is updated by the command once this dialog has closed, so the transaction
             // runs inside the Revit API context rather than from a WPF button handler.
-            Request = new EditAlignmentRequest(_alignment, name, document.ToJson(), document.PlanLength, renamed, startChanged, reversed);
+            Request = new EditAlignmentRequest(_alignment, name, document.ToJson(), document.PlanLength, renamed, startChanged, reversed, planChanged);
             OnClosingRequest();
         }
         catch (Exception ex)
