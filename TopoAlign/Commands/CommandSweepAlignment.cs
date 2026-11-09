@@ -164,10 +164,22 @@ public class CommandSweepAlignment : IExternalCommand
 
             lines.Add(line + ".");
 
+            if (!string.IsNullOrEmpty(side.CornerFailure))
+            {
+                lines.Add($"  Revit said, about the corners: {side.CornerFailure}");
+            }
+
             if (side.FallbackLevel > 0)
             {
-                lines.Add($"  Revit would not build the shape with points on the toposolid's edge, so the edge points were put 0.3 ft inside it" +
-                          (side.FallbackLevel == 2 ? " and the points were thinned out." : "."));
+                lines.Add("  Revit would not build the shape from all the points, so a simpler edit was made:" +
+                          (side.PointsWereThinnedOut ? " only well-spaced points clear of the toposolid's edge were used;" : string.Empty) +
+                          (side.EdgePointsWentInside ? " points for the edge went 0.3 ft inside it;" : string.Empty) +
+                          (side.CornerHeightsLeftAlone ? " the corner heights were not set;" : string.Empty));
+                lines[lines.Count - 1] = lines[lines.Count - 1].TrimEnd(';') + ".";
+                foreach (var rejection in side.Rejections)
+                {
+                    lines.Add($"    Revit said {rejection}");
+                }
             }
             else if (side.EdgeStepsIn > 0)
             {

@@ -70,8 +70,23 @@ internal sealed class GradeToSurfaceResult
     public int PointsRemoved { get; set; }
     public int PointsAdded { get; set; }
 
-    /// <summary>0 if everything went in; 1 if Revit rejected the shape and it was redone without edge points; 2 if it was redone with only well-spaced points clear of the edge.</summary>
+    /// <summary>
+    /// 0 if everything went in. Otherwise Revit rejected the shape and a simpler edit was made: 1 with only well-spaced points clear of the edge;
+    /// 2 with the edge points a little inside the edge; 3 with both; 4 with those and the corner heights left alone too.
+    /// </summary>
     public int FallbackLevel { get; set; }
+
+    /// <summary>True when the points meant for the toposolid's edge went a little way inside it, because Revit would not build the shape with them on it.</summary>
+    public bool EdgePointsWentInside => FallbackLevel >= 2;
+
+    /// <summary>True when the points were thinned to well-spaced ones clear of the edge.</summary>
+    public bool PointsWereThinnedOut => FallbackLevel is 1 or 3 or 4;
+
+    /// <summary>True when the toposolid's corner heights were left alone.</summary>
+    public bool CornerHeightsLeftAlone => FallbackLevel >= 4;
+
+    /// <summary>What Revit said about each simpler edit it was asked to try, in order.</summary>
+    public List<string> Rejections { get; } = new();
 
     /// <summary>How many points were left out by that fall-back.</summary>
     public int PointsDroppedForRetry { get; set; }
@@ -251,6 +266,28 @@ internal static class ToposolidGrader
         }
 
         var moves = new List<GradePoint>(split.MoveCorner);
+
+        // A boundary vertex of the toposolid that lies along the line, but not at one of its points, is not among the corners above. Left
+        // alone it goes back to its old height when the shape is reset, and the edge sags to it in a wall beside the road. So it is set
+        // to the height of the line where it lies.
+        if (outline.Count > 0)
+        {
+            foreach (SlabShapeVertex vertex in toposolid.GetSlabShapeEditor().SlabShapeVertices)
+            {
+                var position = vertex.Position;
+                var here = new GradePoint(position.X, position.Y, position.Z);
+                if (BoundaryPoints.DistanceToOutline(here, outline) > TopoEdgeAligner.DefaultPlanTolerance
+                    || !TryHeightAlongPath(path, closed, position.X, position.Y, BoundaryVertexReach, out var height)
+                    || !separation.TryAdd(position.X, position.Y))
+                {
+                    continue;
+                }
+
+                moves.Add(new GradePoint(position.X, position.Y, height));
+                result.CornersMoved++;
+            }
+        }
+
         var onEdge = new List<GradePoint>();
         foreach (var point in split.OnEdge)
         {
@@ -309,19 +346,22 @@ internal static class ToposolidGrader
         // A failed attempt is rolled back completely, so try again with fewer, safer points: first without the edge points,
         // then without the corner heights too, and only well clear of the edge and further apart.
         PointsRejectedException? rejected = null;
-        for (var level = 0; level <= 2; level++)
+        for (var level = 0; level <= 4; level++)
         {
-            var levelInterior = level < 2 ? interior : SafeInterior(interior, outline);
-            var levelOnEdge = level == 0 ? onEdge : new List<GradePoint>();
-            var levelMoves = level < 2 ? moves : new List<GradePoint>();
+            var thin = level is 1 or 3 or 4;
+            var edgeOnEdge = level < 2;
+            var keepMoves = level < 4;
+            var levelInterior = thin ? SafeInterior(interior, outline) : interior;
+            var levelOnEdge = edgeOnEdge ? onEdge : new List<GradePoint>();
+            var levelMoves = keepMoves ? moves : new List<GradePoint>();
 
             // Leaving the edge points out altogether would leave the edge at its old height, so the ground would drop away in a wall
             // beside the road. They go in as ordinary points a little way inside the edge instead, where Revit has no trouble with them.
             var stepIn = new List<GradePoint>();
-            if (level >= 1)
+            if (!edgeOnEdge)
             {
                 var stepIndex = new PlanIndex(SafeSeparation);
-                foreach (var point in level == 1 ? onEdge : onEdge.Concat(moves))
+                foreach (var point in keepMoves ? onEdge : onEdge.Concat(moves))
                 {
                     if (BoundaryPoints.TryInsetFromOutline(point, outline, SafeEdgeClearance, out var inside) && stepIndex.TryAdd(inside.X, inside.Y))
                     {
@@ -342,7 +382,7 @@ internal static class ToposolidGrader
                 ReplacePointsOutcome outcome;
                 try
                 {
-                    outcome = ReplacePoints(document, toposolid, levelPoints, transactionName, levelOnEdge, levelMoves, outline);
+                    outcome = ReplacePoints(document, toposolid, levelPoints, transactionName, levelOnEdge, levelMoves, outline, keepMoves ? path : null, closed);
                 }
                 catch (CornerMovesFailedException ex)
                 {
@@ -361,7 +401,7 @@ internal static class ToposolidGrader
                 result.PointsRefused = outcome.Refused;
                 result.MovesFailed = outcome.MovesFailed;
                 result.MoveFailure = outcome.MoveFailure;
-                result.CornersMoved = level < 2 ? Math.Max(0, split.MoveCorner.Count - outcome.MovesFailed) : 0;
+                result.CornersMoved = keepMoves ? Math.Max(0, moves.Count - outcome.MovesFailed) : 0;
                 result.PointsSkipped += outcome.Refused + outcome.MovesFailed;
                 result.PointsDroppedForRetry = (onEdge.Count - levelOnEdge.Count) + (interior.Count - levelInterior.Count);
                 return result;
@@ -370,10 +410,52 @@ internal static class ToposolidGrader
             {
                 log.Warning(ex, "Revit rejected the shape at fallback level {level}", level);
                 rejected = ex;
+                result.Rejections.Add($"{DescribeLevel(level)}: {ex.Message}");
             }
         }
 
         throw rejected!;
+    }
+
+    private static string DescribeLevel(int level) => level switch
+    {
+        0 => "with every point",
+        1 => "with well-spaced points clear of the edge",
+        2 => "with the edge points a little inside the edge",
+        3 => "with the edge points inside the edge and well-spaced points",
+        _ => "with no corner heights as well",
+    };
+
+    // a boundary vertex this close (in plan, feet) to the line is taken to be on it; the toposolid's edge is rarely exactly on the line
+    private const double BoundaryVertexReach = 0.25;
+
+    /// <summary>The height of the line where (x, y) is nearest to it, if that is within <paramref name="reach"/> of it in plan; and that is on the line, not beyond its ends.</summary>
+    internal static bool TryHeightAlongPath(IReadOnlyList<GradePoint> path, bool closed, double x, double y, double reach, out double height)
+    {
+        height = 0.0;
+        var best = double.MaxValue;
+        var segments = closed ? path.Count : path.Count - 1;
+        for (var i = 0; i < segments; i++)
+        {
+            var a = path[i];
+            var b = path[(i + 1) % path.Count];
+            var dx = b.X - a.X;
+            var dy = b.Y - a.Y;
+            var lengthSquared = dx * dx + dy * dy;
+            var t = lengthSquared < 1e-18 ? 0.0 : ((x - a.X) * dx + (y - a.Y) * dy) / lengthSquared;
+            var clamped = Math.Max(0.0, Math.Min(1.0, t));
+            var distance = Math.Sqrt((x - (a.X + clamped * dx)) * (x - (a.X + clamped * dx)) + (y - (a.Y + clamped * dy)) * (y - (a.Y + clamped * dy)));
+
+            // past the end of the line doesn't count as along it
+            var beyond = !closed && ((i == 0 && t < 0.0) || (i == segments - 1 && t > 1.0));
+            if (distance < best && !beyond)
+            {
+                best = distance;
+                height = a.Z + clamped * (b.Z - a.Z);
+            }
+        }
+
+        return best <= reach;
     }
 
     // the safest points: well inside the toposolid and well apart, so Revit has nothing awkward to triangulate
@@ -414,7 +496,9 @@ internal static class ToposolidGrader
         string transactionName,
         IReadOnlyList<GradePoint>? tryPoints = null,
         IReadOnlyList<GradePoint>? moves = null,
-        IReadOnlyList<EdgeSegment>? outline = null)
+        IReadOnlyList<EdgeSegment>? outline = null,
+        IReadOnlyList<GradePoint>? edgePath = null,
+        bool edgePathClosed = false)
     {
         var outcome = new ReplacePointsOutcome();
 
@@ -441,6 +525,32 @@ internal static class ToposolidGrader
             // can't be moved, and a point put exactly on the edge is often refused, so a point is put at its height on or just inside the edge
             // instead. Without this the edge there keeps its old height and the ground drops away in a wall beside the road.
             var cornerPoints = new List<GradePoint>();
+
+            // Any boundary vertex the toposolid holds that lies along the line is set to the line's height there. They can only be listed
+            // now that the shape is reset and enabled; before that the toposolid may not list its corners at all.
+            if (edgePath is { Count: > 1 } && outline is { Count: > 0 })
+            {
+                var all = moves is null ? new List<GradePoint>() : new List<GradePoint>(moves);
+                var found = 0;
+                foreach (SlabShapeVertex vertex in editor.SlabShapeVertices)
+                {
+                    found++;
+                    var position = vertex.Position;
+                    var here = new GradePoint(position.X, position.Y, position.Z);
+                    if (BoundaryPoints.DistanceToOutline(here, outline) > TopoEdgeAligner.DefaultPlanTolerance
+                        || all.Any(move => Math.Abs(move.X - position.X) <= 0.05 && Math.Abs(move.Y - position.Y) <= 0.05)
+                        || !TryHeightAlongPath(edgePath, edgePathClosed, position.X, position.Y, BoundaryVertexReach, out var height))
+                    {
+                        continue;
+                    }
+
+                    all.Add(new GradePoint(position.X, position.Y, height));
+                }
+
+                log.Information("{transaction}: the toposolid has {count} shape vertices; {moves} boundary vertices to set to the edge height", transactionName, found, all.Count);
+                moves = all;
+            }
+
             if (moves is { Count: > 0 })
             {
                 var movable = new List<GradePoint>();

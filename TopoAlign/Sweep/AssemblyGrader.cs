@@ -51,11 +51,21 @@ internal sealed class SideGradeOutcome
     /// <summary>Corner points on the toposolid's edge that could not be set to the graded height by moving them (points were put beside them instead).</summary>
     public int CornersNotMoved { get; set; }
 
+    /// <summary>Revit's own reason the corners could not be moved, when they could not.</summary>
+    public string CornerFailure { get; set; } = string.Empty;
+
     /// <summary>Edge points Revit refused outright, so the edge there keeps its old height.</summary>
     public int EdgePointsRefused { get; set; }
 
-    /// <summary>0 when the edit went in as planned; 1 or 2 when Revit would not build the shape and a simpler edit was made (see <see cref="ToposolidGrader"/>).</summary>
+    /// <summary>0 when the edit went in as planned; above that, Revit would not build the shape and a simpler edit was made (see <see cref="GradeToSurfaceResult.FallbackLevel"/>).</summary>
     public int FallbackLevel { get; set; }
+
+    public bool EdgePointsWentInside { get; set; }
+    public bool PointsWereThinnedOut { get; set; }
+    public bool CornerHeightsLeftAlone { get; set; }
+
+    /// <summary>What Revit said about each edit it would not build.</summary>
+    public List<string> Rejections { get; } = new();
 
     /// <summary>Points that stand in for the toposolid's edge but were put a little way inside it, because Revit would not take them on it.</summary>
     public int EdgeStepsIn { get; set; }
@@ -285,6 +295,11 @@ internal static class AssemblyGrader
                     outcome.CornersNotMoved = result.MovesFailed;
                     outcome.EdgePointsRefused = result.PointsRefused;
                     outcome.FallbackLevel = result.FallbackLevel;
+                    outcome.EdgePointsWentInside = result.EdgePointsWentInside;
+                    outcome.PointsWereThinnedOut = result.PointsWereThinnedOut;
+                    outcome.CornerHeightsLeftAlone = result.CornerHeightsLeftAlone;
+                    outcome.Rejections.AddRange(result.Rejections);
+                    outcome.CornerFailure = result.MoveFailure ?? string.Empty;
                     outcome.EdgeStepsIn = result.PointsInset;
                     outcomes.Add(outcome);
                     graded++;

@@ -33,6 +33,20 @@ public class SlopeGraderTests : TopoAlignTest
     }
 
     [Test]
+    public async Task ABoundaryVertexAlongTheLine_TakesTheHeightOfTheLineThere()
+    {
+        // the line climbs from 0 to 10 over y = -10 to 10, so a vertex a few millimetres off it at y = 5 should be at 7.5
+        var path = new List<GradePoint> { new(0, -10, 0), new(0, 10, 10) };
+
+        await Assert.That(ToposolidGrader.TryHeightAlongPath(path, false, 0.01, 5, 0.25, out var height)).IsTrue();
+        await Assert.That(height).IsEqualTo(7.5).Within(Tol);
+
+        // too far off the line, and beyond its end, are not along it
+        await Assert.That(ToposolidGrader.TryHeightAlongPath(path, false, 1.0, 5, 0.25, out _)).IsFalse();
+        await Assert.That(ToposolidGrader.TryHeightAlongPath(path, false, 0, 15, 0.25, out _)).IsFalse();
+    }
+
+    [Test]
     public async Task OneToThree_FromAnEdgeFiveFeetAboveFlatGround_MeetsItFifteenFeetAway()
     {
         var result = SlopeGrader.Grade(LineAlongY(5.0), false, 50, 0, SlopeUnits.ToRiseOverRun(SlopeMode.Ratio, 3), 100, Ground(0.0), true);

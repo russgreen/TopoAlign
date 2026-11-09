@@ -75,14 +75,17 @@ public class CommandGradeToSurface : IExternalCommand
             var summary = $"Graded {result.Cut + result.Fill} of {result.Stations} points along the line " +
                           $"({result.Fill} fill, {result.Cut} cut).{Environment.NewLine}" +
                           $"Removed {result.PointsRemoved} existing toposolid points and added {result.PointsAdded}.";
-            if (result.FallbackLevel == 1)
+            if (result.FallbackLevel > 0)
             {
-                summary += $"{Environment.NewLine}Revit would not build the shape with points on the toposolid's edge, so {result.PointsDroppedForRetry} edge point(s) were left out.";
-            }
-            else if (result.FallbackLevel == 2)
-            {
-                summary += $"{Environment.NewLine}Revit would not build the shape from all the points, so only well-spaced points clear of the toposolid's edge were used " +
-                           $"({result.PointsDroppedForRetry} left out) and the edge heights were not set.";
+                summary += $"{Environment.NewLine}Revit would not build the shape from all the points, so a simpler edit was made:" +
+                           (result.PointsWereThinnedOut ? " only well-spaced points clear of the toposolid's edge were used;" : string.Empty) +
+                           (result.EdgePointsWentInside ? " points for the edge went 0.3 ft inside it;" : string.Empty) +
+                           (result.CornerHeightsLeftAlone ? " the corner heights were not set;" : string.Empty);
+                summary = summary.TrimEnd(';') + ".";
+                foreach (var rejection in result.Rejections)
+                {
+                    summary += $"{Environment.NewLine}  Revit said {rejection}";
+                }
             }
 
             if (result.Clipped > 0)
