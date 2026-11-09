@@ -11,15 +11,6 @@ using TopoAlign.Grading;
 
 namespace TopoAlign.ViewModels;
 
-/// <summary>What the user is being asked to pick while the dialog is hidden.</summary>
-internal enum KerbPickKind
-{
-    None,
-    Kerb,
-    Centre,
-    Target
-}
-
 internal partial class KerbRampViewModel : BaseViewModel
 {
     private static readonly ILogger log = Log.ForContext<KerbRampViewModel>();

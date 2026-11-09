@@ -4,17 +4,6 @@ using TopoAlign.Alignments;
 
 namespace TopoAlign.Grading;
 
-internal sealed class AlignTopoEdgesResult
-{
-    public int AddedToFirst { get; set; }
-    public int AddedToSecond { get; set; }
-
-    /// <summary>Existing points of the first topography that were moved to the height of the second topography's.</summary>
-    public int MovedOnFirst { get; set; }
-
-    public int SharedPoints { get; set; }
-}
-
 /// <summary>Reads two topographies and adds points to them so the edge they share lines up.</summary>
 internal static class TopoEdgeAlignerRevit
 {

@@ -3,66 +3,6 @@ using Serilog;
 
 namespace TopoAlign.Sweep;
 
-internal sealed class KerbOptions
-{
-    /// <summary>Longest distance between sections on a curved edge, in feet.</summary>
-    public double Interval { get; set; } = 3.28084;
-
-    /// <summary>Added to the height of every section point, in feet.</summary>
-    public double VerticalOffset { get; set; }
-
-    /// <summary>The category of the kerb.</summary>
-    public BuiltInCategory Category { get; set; } = BuiltInCategory.OST_GenericModel;
-
-    /// <summary>Name of the profile type, kept with the kerb so it's easy to tell what made it.</summary>
-    public string ProfileName { get; set; } = string.Empty;
-
-    /// <summary>A DirectShape (default) or a loadable family with an instance placed in the model.</summary>
-    public RoadOutput Output { get; set; } = RoadOutput.DirectShape;
-
-    /// <summary>
-    /// Called with the kerb in the model but not yet committed, so the user can see it. Returns what to do with it.
-    /// Null to keep the kerb without asking.
-    /// </summary>
-    public Func<KerbResult, KerbReviewChoice>? Review { get; set; }
-}
-
-/// <summary>What the user decided about a kerb shown for review.</summary>
-internal enum KerbReviewChoice
-{
-    Keep,
-
-    /// <summary>Remove the kerb and build it again on the other side of the edges.</summary>
-    Flip,
-
-    Cancel
-}
-
-internal sealed class KerbResult
-{
-    /// <summary>The DirectShape, or the family instance when the kerb was made as a family.</summary>
-    public ElementId KerbId { get; set; } = ElementId.InvalidElementId;
-
-    /// <summary>The family, when the kerb was made as one.</summary>
-    public ElementId FamilyId { get; set; } = ElementId.InvalidElementId;
-
-    public int RunCount { get; set; }
-    public int SectionCount { get; set; }
-    public int SolidCount { get; set; }
-
-    /// <summary>Spans between two sections that Revit could not build; the kerb has a gap there.</summary>
-    public int SkippedSpans { get; set; }
-
-    /// <summary>True when the profile was flipped to the other side of the edges during review.</summary>
-    public bool Flipped { get; set; }
-
-    /// <summary>True when the user cancelled at review; nothing was added to the model.</summary>
-    public bool Cancelled { get; set; }
-
-    /// <summary>Something the user should know, for example a run that was left out.</summary>
-    public string Notice { get; set; } = string.Empty;
-}
-
 /// <summary>Sweeps a profile along picked edges, keeping the profile vertical, and puts the result in the model.</summary>
 internal static class KerbBuilder
 {

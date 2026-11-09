@@ -11,49 +11,6 @@ using TopoAlign.Preview;
 
 namespace TopoAlign.ViewModels;
 
-/// <summary>Where the alignment's plan geometry comes from.</summary>
-internal enum AlignmentInputSource
-{
-    /// <summary>Model or detail lines and arcs picked in the model.</summary>
-    Lines,
-
-    /// <summary>Points of intersection picked in plan, with a radius and transition spirals at each bend.</summary>
-    Points,
-
-    /// <summary>Lines, arcs and polylines picked on an imported or linked CAD drawing.</summary>
-    Cad
-}
-
-/// <summary>One picked point of intersection in the point list. Radius and spiral length are in display units.</summary>
-internal sealed partial class PiRow : ObservableObject
-{
-    public PiRow(double x, double y, double z, decimal radius, decimal spiralLength)
-    {
-        X = x;
-        Y = y;
-        Z = z;
-        _radius = radius;
-        _spiralLength = spiralLength;
-    }
-
-    /// <summary>Position in feet (internal units).</summary>
-    public double X { get; }
-    public double Y { get; }
-    public double Z { get; }
-
-    [ObservableProperty]
-    private int _number;
-
-    [ObservableProperty]
-    private string _location = string.Empty;
-
-    [ObservableProperty]
-    private decimal _radius;
-
-    [ObservableProperty]
-    private decimal _spiralLength;
-}
-
 internal partial class CreateAlignmentViewModel
 {
     /// <summary>Largest distance (feet) a spiral written as straights may stray from the true curve.</summary>

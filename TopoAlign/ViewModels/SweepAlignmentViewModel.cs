@@ -11,57 +11,6 @@ using TopoAlign.Sweep;
 
 namespace TopoAlign.ViewModels;
 
-/// <summary>What the Sweep Along Alignment dialog hands back to the command.</summary>
-internal sealed class SweepAlignmentRequest
-{
-    public SweepAlignmentRequest(Element alignment, string alignmentName, SectionProfile? profile, RoadOptions options)
-    {
-        Alignment = alignment;
-        AlignmentName = alignmentName;
-        Profile = profile;
-        Options = options;
-    }
-
-    public Element Alignment { get; }
-    public string AlignmentName { get; }
-
-    /// <summary>The cross-section, already mirrored if the user asked for that.</summary>
-    public SectionProfile? Profile { get; }
-
-    public RoadOptions Options { get; }
-
-    /// <summary>The assembly to sweep, or null for a single profile.</summary>
-    public SweepAssembly? Assembly { get; set; }
-
-    /// <summary>The section of each part's profile type, by name, when sweeping an assembly.</summary>
-    public IReadOnlyDictionary<string, SectionProfile> AssemblyProfiles { get; set; } = new Dictionary<string, SectionProfile>();
-
-    /// <summary>The toposolids to grade out from the sides of the assembly; empty to leave the ground alone.</summary>
-    public IReadOnlyList<Element> Topographies { get; set; } = Array.Empty<Element>();
-
-    public bool IsAssembly => Assembly is not null;
-}
-
-/// <summary>What the sweep makes: one profile, or an assembly of profiles.</summary>
-internal enum SweepMode
-{
-    Profile,
-    Assembly
-}
-
-/// <summary>A value with the name the dialog shows for it.</summary>
-internal sealed class RoadChoice<T>
-{
-    public RoadChoice(T value, string name)
-    {
-        Value = value;
-        Name = name;
-    }
-
-    public T Value { get; }
-    public string Name { get; }
-}
-
 internal partial class SweepAlignmentViewModel : BaseViewModel
 {
     private static readonly ILogger log = Log.ForContext<SweepAlignmentViewModel>();

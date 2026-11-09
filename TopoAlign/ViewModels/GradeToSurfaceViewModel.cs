@@ -12,27 +12,6 @@ using TopoAlign.Grading;
 
 namespace TopoAlign.ViewModels;
 
-internal sealed class SlopeModeItem
-{
-    public SlopeModeItem(SlopeMode mode, string label)
-    {
-        Mode = mode;
-        Label = label;
-    }
-
-    public SlopeMode Mode { get; }
-    public string Label { get; }
-}
-
-/// <summary>What the user is being asked to pick while the dialog is hidden.</summary>
-internal enum GradePickKind
-{
-    None,
-    Line,
-    Side,
-    Toposolid
-}
-
 internal partial class GradeToSurfaceViewModel : BaseViewModel
 {
     private static readonly ILogger log = Log.ForContext<GradeToSurfaceViewModel>();

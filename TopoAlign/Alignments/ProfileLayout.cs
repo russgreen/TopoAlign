@@ -1,33 +1,5 @@
 namespace TopoAlign.Alignments;
 
-/// <summary>A straight (constant grade) profile segment between two station/elevation points.</summary>
-internal sealed class ProfileLine
-{
-    public ProfileLine(ProfilePoint start, ProfilePoint end)
-    {
-        Start = start;
-        End = end;
-    }
-
-    public ProfilePoint Start { get; }
-    public ProfilePoint End { get; }
-}
-
-/// <summary>A parabolic vertical curve, defined by its tangent points and the point of vertical intersection.</summary>
-internal sealed class ProfileParabola
-{
-    public ProfileParabola(ProfilePoint start, ProfilePoint pvi, ProfilePoint end)
-    {
-        Start = start;
-        Pvi = pvi;
-        End = end;
-    }
-
-    public ProfilePoint Start { get; }
-    public ProfilePoint Pvi { get; }
-    public ProfilePoint End { get; }
-}
-
 /// <summary>Turns a PVI list into the connected sequence of lines and vertical curves that make up a profile.</summary>
 internal static class ProfileLayout
 {

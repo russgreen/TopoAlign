@@ -570,14 +570,3 @@ internal static class AlignmentApi
         return value is T typed ? typed : default;
     }
 }
-
-internal class AlignmentInfo
-{
-    public ElementId ElementId { get; set; } = ElementId.InvalidElementId;
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public double StartStation { get; set; }
-    public double EndStation { get; set; }
-    public double DisplayedStartStation { get; set; }
-    public double DisplayedEndStation { get; set; }
-}

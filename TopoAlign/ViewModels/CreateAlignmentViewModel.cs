@@ -11,28 +11,6 @@ using TopoAlign.Preview;
 
 namespace TopoAlign.ViewModels;
 
-internal sealed class CreateAlignmentRequest
-{
-    public CreateAlignmentRequest(string name, string json, double planLength, IList<ElementId>? sourceCurveIdsToDelete, string notice = "")
-    {
-        Name = name;
-        Json = json;
-        PlanLength = planLength;
-        SourceCurveIdsToDelete = sourceCurveIdsToDelete;
-        Notice = notice;
-    }
-
-    /// <summary>Extra text for the summary, for example curves that could not take spirals.</summary>
-    public string Notice { get; }
-
-    public string Name { get; }
-    public string Json { get; }
-
-    /// <summary>Alignment length in feet (internal units).</summary>
-    public double PlanLength { get; }
-    public IList<ElementId>? SourceCurveIdsToDelete { get; }
-}
-
 internal partial class CreateAlignmentViewModel : BaseViewModel
 {
     private static readonly ILogger log = Log.ForContext<CreateAlignmentViewModel>();

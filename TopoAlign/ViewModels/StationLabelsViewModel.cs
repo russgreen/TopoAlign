@@ -10,55 +10,6 @@ using TopoAlign.Alignments;
 
 namespace TopoAlign.ViewModels;
 
-/// <summary>An entry in the label type list: an existing type, or "create Autodesk's recommended type".</summary>
-internal sealed class StationLabelTypeItem
-{
-    public StationLabelTypeItem(ElementId id, string name)
-    {
-        Id = id;
-        Name = name;
-    }
-
-    /// <summary><see cref="ElementId.InvalidElementId"/> means the recommended type is created when the labels are.</summary>
-    public ElementId Id { get; }
-    public string Name { get; }
-}
-
-/// <summary>What the Station Labels dialog hands back to the command.</summary>
-internal sealed class StationLabelsRequest
-{
-    public StationLabelsRequest(Element alignment, string alignmentName, View view, ElementId labelTypeId,
-        double? startStation, double? endStation, double? interval, double? offset, bool hasLeader)
-    {
-        Alignment = alignment;
-        AlignmentName = alignmentName;
-        View = view;
-        LabelTypeId = labelTypeId;
-        StartStation = startStation;
-        EndStation = endStation;
-        Interval = interval;
-        Offset = offset;
-        HasLeader = hasLeader;
-    }
-
-    public Element Alignment { get; }
-    public string AlignmentName { get; }
-    public View View { get; }
-    public ElementId LabelTypeId { get; }
-
-    /// <summary>Feet (internal units); null means the alignment's own range.</summary>
-    public double? StartStation { get; }
-    public double? EndStation { get; }
-
-    /// <summary>Feet (internal units); null means Autodesk's default for the document's stationing units.</summary>
-    public double? Interval { get; }
-
-    /// <summary>Paper-space feet, positive to the right of the alignment; null means Autodesk's default.</summary>
-    public double? Offset { get; }
-
-    public bool HasLeader { get; }
-}
-
 internal partial class StationLabelsViewModel : BaseViewModel
 {
     private static readonly ILogger log = Log.ForContext<StationLabelsViewModel>();

@@ -1,40 +1,6 @@
 namespace TopoAlign.Sweep;
 
 /// <summary>
-/// One cross-section of a kerb: where it stands, which way its (vertical) plane faces and how much its width is stretched
-/// so that the kerb keeps its true width through a corner.
-/// </summary>
-internal readonly struct KerbSection
-{
-    public KerbSection(PathPoint centre, double dirX, double dirY, double uScale)
-    {
-        Centre = centre;
-        DirX = dirX;
-        DirY = dirY;
-        UScale = uScale;
-    }
-
-    public PathPoint Centre { get; }
-
-    /// <summary>Horizontal direction the section's plane is across (a unit vector; the section's +u is to its right).</summary>
-    public double DirX { get; }
-
-    public double DirY { get; }
-
-    /// <summary>Factor applied to the section's u values: 1 on a straight run, 1/cos(half the turn) at a mitred corner.</summary>
-    public double UScale { get; }
-}
-
-internal sealed class KerbPlanResult
-{
-    /// <summary>Runs of sections to loft. A run is split where the path turns too sharply to mitre.</summary>
-    public List<List<KerbSection>> Runs { get; } = new();
-
-    /// <summary>Why the path can't be swept, or null.</summary>
-    public string? Error { get; set; }
-}
-
-/// <summary>
 /// Turns a polyline into the sections a kerb is lofted through. Sections always stand vertical; at a corner they follow
 /// the mitre (the bisector of the two directions) and are widened so the profile keeps its width, and a corner that is
 /// too sharp to mitre splits the kerb in two. Pure; no Revit types.

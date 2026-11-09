@@ -5,63 +5,6 @@ using TopoAlign.Comparers;
 
 namespace TopoAlign.Grading;
 
-/// <summary>What the dialog hands back to the command. All lengths are in feet.</summary>
-internal sealed class KerbRampRequest
-{
-    public KerbRampRequest(
-        Toposolid kerbToposolid,
-        XYZ kerbAnchor,
-        Toposolid targetToposolid,
-        XYZ targetAnchor,
-        XYZ centre,
-        double width,
-        double rampRatio,
-        double flareRatio,
-        double maxRampLength,
-        double levelOffset)
-    {
-        KerbToposolid = kerbToposolid;
-        KerbAnchor = kerbAnchor;
-        TargetToposolid = targetToposolid;
-        TargetAnchor = targetAnchor;
-        Centre = centre;
-        Width = width;
-        RampRatio = rampRatio;
-        FlareRatio = flareRatio;
-        MaxRampLength = maxRampLength;
-        LevelOffset = levelOffset;
-    }
-
-    /// <summary>The toposolid the ramp is cut into.</summary>
-    public Toposolid KerbToposolid { get; }
-
-    /// <summary>A point on the edge picked as the kerb.</summary>
-    public XYZ KerbAnchor { get; }
-
-    /// <summary>The toposolid whose edge sets the level the ramp drops to.</summary>
-    public Toposolid TargetToposolid { get; }
-
-    /// <summary>A point on the edge picked as the target.</summary>
-    public XYZ TargetAnchor { get; }
-
-    public XYZ Centre { get; }
-    public double Width { get; }
-    public double RampRatio { get; }
-    public double FlareRatio { get; }
-    public double MaxRampLength { get; }
-    public double LevelOffset { get; }
-}
-
-internal sealed class KerbRampApplyResult
-{
-    public int PointsRemoved { get; set; }
-    public int PointsAdded { get; set; }
-    public double RampLength { get; set; }
-    public double StartFlareLength { get; set; }
-    public double EndFlareLength { get; set; }
-    public List<string> Warnings { get; } = new();
-}
-
 /// <summary>Reads the two toposolids, works out the dropped kerb and rebuilds the footway's points.</summary>
 internal static class KerbRampRevit
 {
