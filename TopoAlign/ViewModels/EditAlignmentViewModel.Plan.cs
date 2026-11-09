@@ -93,9 +93,26 @@ internal partial class EditAlignmentViewModel
     /// <summary>True when the points as they stand can be laid out.</summary>
     public bool PlanIsValid { get; private set; } = true;
 
+    /// <summary>What the plan graph draws; rebuilt whenever a point, radius, spiral or the units change.</summary>
+    [ObservableProperty]
+    private Views.PlanGraphData _graph = Views.PlanGraphData.Empty;
+
+    /// <summary>Position of the selected row among the points, so the graph can highlight it; -1 for none.</summary>
+    [ObservableProperty]
+    private int _selectedPointIndex = -1;
+
+    /// <summary>How far (feet) the graph's curves may stray from the true curve; far below a pixel at any size the dialog can show.</summary>
+    private const double GraphDeviation = 0.05;
+
     private readonly List<PiPoint> _originalPis = new();
+    private List<PlanPoint> _originalLine = new();
     private Transform _internalToShared = Transform.Identity;
     private bool _updatingRows;
+
+    partial void OnSelectedRowChanged(EditPiRow? value)
+    {
+        SelectedPointIndex = value is null ? -1 : PiPoints.IndexOf(value);
+    }
 
     // ---- loading ------------------------------------------------------------------------------------------------
 
@@ -108,6 +125,8 @@ internal partial class EditAlignmentViewModel
 
         PiPoints.Clear();
         _originalPis.Clear();
+        _originalLine = new List<PlanPoint>();
+        Graph = Views.PlanGraphData.Empty;
         SelectedRow = null;
         PlanEditable = false;
         PlanNote = string.Empty;
@@ -136,6 +155,12 @@ internal partial class EditAlignmentViewModel
             {
                 var p = sharedToInternal.OfPoint(new XYZ(pi.X, pi.Y, 0.0));
                 _originalPis.Add(new PiPoint(p.X, p.Y, pi.Radius, pi.SpiralLength));
+            }
+
+            var original = PiGeometry.Create(_originalPis);
+            if (original.IsValid)
+            {
+                _originalLine = PlanPolyline.FromSegments(original.Segments, GraphDeviation);
             }
 
             PlanEditable = true;
@@ -251,7 +276,9 @@ internal partial class EditAlignmentViewModel
         }
 
         PlanChanged = PlanEditable && DiffersFromOriginal();
+        SelectedPointIndex = SelectedRow is null ? -1 : PiPoints.IndexOf(SelectedRow);
 
+        List<PlanPoint>? edited = null;
         if (!PlanEditable || SelectedDisplayUnit is null)
         {
             PlanIsValid = true;
@@ -270,6 +297,7 @@ internal partial class EditAlignmentViewModel
             {
                 var length = UnitUtils.ConvertFromInternalUnits(PlanSegment.TotalLength(layout.Segments), SelectedDisplayUnit.DisplayUnit);
                 PointsStatus = $"{PiPoints.Count} points, {length:N2} {SelectedDisplayUnit.Label}" + (PlanChanged ? " (edited)" : string.Empty);
+                edited = PlanPolyline.FromSegments(layout.Segments, GraphDeviation);
             }
             else
             {
@@ -277,8 +305,32 @@ internal partial class EditAlignmentViewModel
             }
         }
 
+        UpdateGraph(edited);
         RemovePointCommand.NotifyCanExecuteChanged();
         ApplyCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>Rebuilds the plan graph in the dialog's units. <paramref name="edited"/> is null when the points can't be laid out.</summary>
+    private void UpdateGraph(IReadOnlyList<PlanPoint>? edited)
+    {
+        if (!PlanEditable || SelectedDisplayUnit is null || PiPoints.Count == 0)
+        {
+            Graph = Views.PlanGraphData.Empty;
+            return;
+        }
+
+        var unit = SelectedDisplayUnit.DisplayUnit;
+        System.Windows.Point ToDisplay(double x, double y) => new(
+            UnitUtils.ConvertFromInternalUnits(x, unit),
+            UnitUtils.ConvertFromInternalUnits(y, unit));
+
+        var points = PiPoints.Select(row => ToDisplay(row.XFeet, row.YFeet)).ToList();
+        Graph = new Views.PlanGraphData(
+            edited?.Select(p => ToDisplay(p.X, p.Y)).ToList() ?? new List<System.Windows.Point>(),
+            _originalLine.Select(p => ToDisplay(p.X, p.Y)).ToList(),
+            points,
+            points,
+            SelectedDisplayUnit.Label);
     }
 
     private bool DiffersFromOriginal()

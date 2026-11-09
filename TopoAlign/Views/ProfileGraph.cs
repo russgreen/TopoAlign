@@ -213,7 +213,7 @@ internal sealed class ProfileGraph : FrameworkElement
         dc.DrawText(formatted, new Point(x, y));
     }
 
-    private static string Format(double value)
+    internal static string Format(double value)
     {
         return Math.Abs(value) >= 100 ? value.ToString("0", CultureInfo.CurrentCulture) : value.ToString("0.##", CultureInfo.CurrentCulture);
     }

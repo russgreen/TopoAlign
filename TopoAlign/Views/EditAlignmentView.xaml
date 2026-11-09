@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:TopoAlign.ViewModels"
         xmlns:behaviours="clr-namespace:TopoAlign.Behaviours"
+        xmlns:views="clr-namespace:TopoAlign.Views"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance {x:Type viewModels:EditAlignmentViewModel}, IsDesignTimeCreatable=False}"
         Title="{Binding WindowTitle}"
@@ -75,6 +76,11 @@
 
         <StackPanel Grid.Row="6" Grid.ColumnSpan="2"
                     Visibility="{Binding PlanEditable, Converter={StaticResource BoolToVisibility}}">
+            <Border Height="200" Margin="0,0,0,6" BorderThickness="0">
+                <views:PlanGraph Data="{Binding Graph}" SelectedIndex="{Binding SelectedPointIndex}"
+                                 SnapsToDevicePixels="True" UseLayoutRounding="True"
+                                 ToolTip="The alignment as edited (solid), against the alignment in the model (dashed), with its numbered points. The selected point is highlighted."/>
+            </Border>
             <DataGrid ItemsSource="{Binding PiPoints}" SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
                       AutoGenerateColumns="False" Height="140" Margin="0,0,0,6"
                       CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False"

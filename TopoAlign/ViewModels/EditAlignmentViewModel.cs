@@ -122,6 +122,7 @@ internal partial class EditAlignmentViewModel : BaseViewModel
         _originalStartStation = Round(UnitUtils.ConvertFromInternalUnits(_originalStartStationFeet, newValue.DisplayUnit));
         RefreshStatus();
         RefreshRowDisplays();
+        RefreshPlan();
         ApplyCommand.NotifyCanExecuteChanged();
     }
 
