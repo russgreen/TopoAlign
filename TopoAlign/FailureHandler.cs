@@ -4,6 +4,21 @@ namespace TopoAlign;
 
 class FailureHandler : IFailuresPreprocessor
 {
+    private readonly bool _rollBackOnError;
+
+    public FailureHandler()
+    {
+    }
+
+    /// <param name="rollBackOnError">
+    /// True to undo the transaction quietly when Revit reports an error, instead of leaving Revit to show its error box
+    /// (which for a shape edit offers only to reset the toposolid). The message is kept in <see cref="ErrorMessage"/>.
+    /// </param>
+    public FailureHandler(bool rollBackOnError)
+    {
+        _rollBackOnError = rollBackOnError;
+    }
+
     public string ErrorMessage { get; set; } = "";
     public string ErrorSeverity { get; set; } = "";
 
@@ -34,6 +49,11 @@ class FailureHandler : IFailuresPreprocessor
             {
                 var failureSeverity = failureMessageAccessor.GetSeverity();
                 ErrorSeverity = failureSeverity.ToString();
+                if (_rollBackOnError && failureSeverity != FailureSeverity.Warning)
+                {
+                    return FailureProcessingResult.ProceedWithRollBack;
+                }
+
                 if (failureSeverity == FailureSeverity.Warning || failureSeverity == FailureSeverity.Error)
                 {
                     failuresAccessor.DeleteWarning(failureMessageAccessor);

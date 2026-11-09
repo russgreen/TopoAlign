@@ -70,6 +70,7 @@
                 <li>Where the line turns a corner the slope runs along the corner's bisector, so it stays at the slope you set when measured square to each leg.</li>
                 <li>The existing toposolid points inside the graded area are replaced. All other points, including those outside the area, are kept.</li>
                 <li>Toposolid points can only be removed by rebuilding the shape, so on a very large toposolid the tool can take a moment, and any shape edits made by hand with the toposolid's own point tools are rebuilt from the points that remain.</li>
+                <li>If a slope runs off the edge of the toposolid before it meets the ground, it ends there: a point is placed on the toposolid's edge at the height the slope has reached, so the graded area runs right to the edge. A point that falls on a corner of the toposolid sets that corner's height, and a point outside the toposolid is left out. These are reported in the summary.</li>
                 <li>If the slope does not meet the toposolid anywhere along the line, nothing is changed and the tool says so. Check that the side you picked faces the toposolid, and increase the maximum width.</li>
                 <li>Very sharp inside corners can make neighbouring slopes cross each other. Pick the line as separate stretches, or round the corner with an arc, if the result looks wrong.</li>
                 <li>The whole change is one undo step.</li>
