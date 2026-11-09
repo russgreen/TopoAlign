@@ -189,7 +189,7 @@ internal static class TopoEdgeAlignerRevit
     /// Sets the height of the existing vertex at each place. The elevation <c>ModifySubElement</c> takes may be measured from somewhere other than
     /// the model's zero, so the first change is checked against where the vertex ends up and the difference is applied to the rest.
     /// </summary>
-    private static int MoveVertices(Document document, SlabShapeEditor editor, IReadOnlyList<GradePoint> changes)
+    internal static int MoveVertices(Document document, SlabShapeEditor editor, IReadOnlyList<GradePoint> changes)
     {
         var moved = 0;
         var offset = 0.0;
@@ -200,7 +200,20 @@ internal static class TopoEdgeAlignerRevit
             var vertex = NearestVertex(editor, change);
             if (vertex is null)
             {
-                throw new InvalidOperationException("An existing boundary vertex could not be found for alignment.");
+                // The outline has a corner here but the shape editor holds no vertex there (for example a toposolid made from a road,
+                // whose boundary corners aren't shape vertices). Put a point at the right height instead of moving one.
+                try
+                {
+                    editor.AddPoints(new List<XYZ> { new XYZ(change.X, change.Y, change.Z) });
+                    moved++;
+                    continue;
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(
+                        $"An existing boundary vertex could not be found for alignment at {change.X:0.###}, {change.Y:0.###}, " +
+                        $"and a point could not be added there either ({ex.Message}). The toposolid has {editor.SlabShapeVertices.Size} shape vertices.", ex);
+                }
             }
 
             var before = vertex.Position.Z;

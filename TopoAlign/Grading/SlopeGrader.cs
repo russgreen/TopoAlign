@@ -47,6 +47,21 @@ internal static class SlopeUnits
     }
 }
 
+/// <summary>Why a point along the line got no slope.</summary>
+internal enum MissReason
+{
+    None,
+
+    /// <summary>The point on the line isn't over the toposolid.</summary>
+    LineOffSurface,
+
+    /// <summary>The slope did not meet the ground within the maximum width.</summary>
+    NoGroundWithinWidth,
+
+    /// <summary>The slope leaves the toposolid straight away, so there is no width to grade.</summary>
+    LeavesAtOnce
+}
+
 internal readonly struct GradePoint
 {
     public GradePoint(double x, double y, double z)
@@ -87,6 +102,18 @@ internal sealed class GradeStation
 
     public bool Hit { get; set; }
 
+    /// <summary>True when the slope's daylight point is left out because it would bunch up or cross its neighbours.</summary>
+    public bool DaylightSkipped { get; set; }
+
+    /// <summary>Why the station has no slope, when <see cref="Hit"/> is false.</summary>
+    public MissReason Miss { get; set; }
+
+    /// <summary>
+    /// True when the slope ran off the edge of the surface before meeting the ground, so it ends on the edge (at the slope's height)
+    /// rather than at the ground. <see cref="Daylight"/> is that point on the edge.
+    /// </summary>
+    public bool Clipped { get; set; }
+
     /// <summary>True when the ground is above the line, so the slope rises to meet it; false when it falls away.</summary>
     public bool IsCut { get; set; }
 
@@ -104,6 +131,11 @@ internal sealed class GradingResult
     public int MissCount => Stations.Count - HitCount;
     public int CutCount => Stations.Count(station => station.Hit && station.IsCut);
     public int FillCount => Stations.Count(station => station.Hit && !station.IsCut);
+
+    /// <summary>Stations whose slope ends on the edge of the surface instead of meeting the ground (counted in <see cref="HitCount"/> too).</summary>
+    public int MissCountFor(MissReason reason) => Stations.Count(station => !station.Hit && station.Miss == reason);
+
+    public int ClippedCount => Stations.Count(station => station.Clipped);
 
     /// <summary>Points to put in the surface: the line itself, where wanted, and every place the slope meets the ground.</summary>
     public List<GradePoint> NewPoints { get; } = new();
@@ -253,6 +285,22 @@ internal static class SlopeGrader
             }
         }
 
+        // On the inside of a bend the rays from neighbouring points converge and can cross, which leaves daylight points bunched up or
+        // in the wrong order along the line. A daylight point that doesn't advance along the line at least a quarter of the way
+        // that its edge point did is left out, so the surface isn't given crossing or nearly coincident points.
+        GradeStation? previous = null;
+        foreach (var station in result.Stations.Where(station => station.Hit))
+        {
+            if (previous is not null && !Advances(previous, station))
+            {
+                station.DaylightSkipped = true;
+            }
+            else
+            {
+                previous = station;
+            }
+        }
+
         foreach (var station in result.Stations.Where(station => station.Hit))
         {
             if (addEdgePoints)
@@ -260,10 +308,31 @@ internal static class SlopeGrader
                 result.NewPoints.Add(station.Edge);
             }
 
-            result.NewPoints.Add(station.Daylight);
+            if (!station.DaylightSkipped)
+            {
+                result.NewPoints.Add(station.Daylight);
+            }
         }
 
         return result;
+    }
+
+    // how far, as a share of the distance between two edge points, their daylight points must be apart along the line
+    private const double MinimumAdvance = 0.25;
+
+    /// <summary>True if the daylight point of <paramref name="next"/> is far enough past that of <paramref name="previous"/>, measured along the line.</summary>
+    private static bool Advances(GradeStation previous, GradeStation next)
+    {
+        var ex = next.Edge.X - previous.Edge.X;
+        var ey = next.Edge.Y - previous.Edge.Y;
+        var length = Math.Sqrt(ex * ex + ey * ey);
+        if (length < 1e-9)
+        {
+            return true;
+        }
+
+        var progress = ((next.Daylight.X - previous.Daylight.X) * ex + (next.Daylight.Y - previous.Daylight.Y) * ey) / length;
+        return progress >= MinimumAdvance * length;
     }
 
     /// <summary>Unit plan normal (left of travel) of each segment; the last entry belongs to the closing segment of a closed line.</summary>
@@ -388,12 +457,78 @@ internal static class SlopeGrader
         return new GradeStation(path[index], directionX, directionY, factor);
     }
 
+    // a slope that leaves the surface sooner than this (in plan) has no width to grade
+    private const double MinimumClippedDistance = 1e-3;
+
+    private delegate double GapFunction(double distance, out bool onSurface);
+
+    /// <summary>
+    /// The ray left the surface between <paramref name="low"/> (on it) and <paramref name="high"/> (off it). Closes in on the edge
+    /// and ends the slope there, at the height the slope has reached, the way the edge-aligning tools put points on a toposolid's edge.
+    /// </summary>
+    private static void ClipAtEdge(GradeStation station, double low, double high, bool cut, double climb, GapFunction gap)
+    {
+        for (var i = 0; i < 50; i++)
+        {
+            var middle = 0.5 * (low + high);
+            gap(middle, out var onSurface);
+            if (onSurface)
+            {
+                low = middle;
+            }
+            else
+            {
+                high = middle;
+            }
+        }
+
+        // stay on the surface side of the edge so the point is inside the toposolid
+        if (low < MinimumClippedDistance)
+        {
+            station.Miss = MissReason.LeavesAtOnce;
+            return;
+        }
+
+        var edge = station.Edge;
+        station.Hit = true;
+        station.Clipped = true;
+        station.IsCut = cut;
+        station.Daylight = new GradePoint(
+            edge.X + station.DirectionX * low,
+            edge.Y + station.DirectionY * low,
+            edge.Z + climb * low);
+    }
+
+    // a line point this close (in plan) to the surface counts as on it: a picked edge rarely matches a toposolid's outline exactly
+    private const double SurfaceSnap = 0.01;
+
+    private static bool TryGetElevationNear(TriangleSurface surface, double x, double y, out double elevation)
+    {
+        if (surface.TryGetElevation(x, y, out elevation))
+        {
+            return true;
+        }
+
+        for (var i = 0; i < 8; i++)
+        {
+            var angle = i * Math.PI / 4.0;
+            if (surface.TryGetElevation(x + SurfaceSnap * Math.Cos(angle), y + SurfaceSnap * Math.Sin(angle), out elevation))
+            {
+                return true;
+            }
+        }
+
+        elevation = 0.0;
+        return false;
+    }
+
     /// <summary>Walks the ray out from the station until it meets the ground, then closes in on the crossing.</summary>
     private static void Trace(GradeStation station, double riseOverRun, double maxWidth, TriangleSurface surface)
     {
         var edge = station.Edge;
-        if (!surface.TryGetElevation(edge.X, edge.Y, out var groundAtEdge))
+        if (!TryGetElevationNear(surface, edge.X, edge.Y, out var groundAtEdge))
         {
+            station.Miss = MissReason.LineOffSurface;
             return;
         }
 
@@ -430,7 +565,8 @@ internal static class SlopeGrader
             var gap = Gap(high, out var onSurface);
             if (!onSurface)
             {
-                // ran off the edge of the surface
+                // ran off the edge of the surface before meeting the ground: end the slope on the edge
+                ClipAtEdge(station, low, high, cut, climb, Gap);
                 return;
             }
 
@@ -445,6 +581,7 @@ internal static class SlopeGrader
 
         if (!found)
         {
+            station.Miss = MissReason.NoGroundWithinWidth;
             return;
         }
 

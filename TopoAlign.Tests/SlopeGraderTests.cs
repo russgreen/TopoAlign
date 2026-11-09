@@ -102,10 +102,53 @@ public class SlopeGraderTests : TopoAlignTest
     }
 
     [Test]
-    public async Task ARayThatRunsOffTheSurface_IsLeftOut()
+    public async Task ARayThatRunsOffTheSurface_EndsOnTheEdgeAtTheSlopesHeight()
     {
         // line at x = 90, slope 1:3 from 5 feet would need 15 feet but the ground ends at x = 100
         var path = new List<GradePoint> { new(90, -10, 5.0), new(90, 10, 5.0) };
+        var result = SlopeGrader.Grade(path, false, 200, 0, 1.0 / 3.0, 100, Ground(0.0), true);
+
+        await Assert.That(result.HitCount).IsEqualTo(2);
+        await Assert.That(result.ClippedCount).IsEqualTo(2);
+        await Assert.That(result.Corridor.Count).IsEqualTo(1);
+        foreach (var station in result.Stations)
+        {
+            await Assert.That(station.Daylight.X).IsEqualTo(100.0).Within(Tol);
+            await Assert.That(station.Daylight.Z).IsEqualTo(5.0 - 10.0 / 3.0).Within(Tol);
+        }
+    }
+
+    [Test]
+    public async Task ASlopeOnTheInsideOfATightBend_DropsDaylightPointsThatWouldBunchUpOrCross()
+    {
+        // a ring of radius 1 foot graded inwards: the rays all head for the middle and cross
+        var path = new List<GradePoint>();
+        for (var i = 0; i < 16; i++)
+        {
+            var angle = i * 2.0 * Math.PI / 16.0;
+            path.Add(new GradePoint(Math.Cos(angle), Math.Sin(angle), 5.0));
+        }
+
+        var result = SlopeGrader.Grade(path, true, 0, 0, 1.0, 100, Ground(0.0), true);
+
+        await Assert.That(result.Stations.Count(station => station.DaylightSkipped)).IsGreaterThan(0);
+        await Assert.That(result.NewPoints.Count).IsLessThan(2 * result.Stations.Count);
+    }
+
+    [Test]
+    public async Task ASlopeAlongAStraightLine_KeepsEveryDaylightPoint()
+    {
+        var result = SlopeGrader.Grade(LineAlongY(5.0), false, 50, 0, 1.0 / 3.0, 100, Ground(0.0), true);
+
+        await Assert.That(result.Stations.Count(station => station.DaylightSkipped)).IsEqualTo(0);
+        await Assert.That(result.NewPoints.Count).IsEqualTo(2 * result.Stations.Count);
+    }
+
+    [Test]
+    public async Task ALineAlreadyOnTheEdge_WithTheSlopeRunningOffIt_IsLeftOut()
+    {
+        // line on the ground's edge at x = 100, with the side picked beyond it
+        var path = new List<GradePoint> { new(100, -10, 5.0), new(100, 10, 5.0) };
         var result = SlopeGrader.Grade(path, false, 200, 0, 1.0 / 3.0, 100, Ground(0.0), true);
 
         await Assert.That(result.HitCount).IsEqualTo(0);
