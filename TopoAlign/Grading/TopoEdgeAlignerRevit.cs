@@ -217,10 +217,21 @@ internal static class TopoEdgeAlignerRevit
             }
 
             var before = vertex.Position.Z;
+            if (Math.Abs(before - change.Z) <= 1e-6)
+            {
+                // already at the right height
+                moved++;
+                continue;
+            }
+
+            // Until the first move shows how the elevation is measured, assume it is relative to the surface the vertex is on now.
+            // If it is really absolute the vertex only lands a little off (by the surface's height), and the calibration below corrects it,
+            // whereas guessing absolute on a toposolid that sits high would throw the corner far off, which Revit can refuse.
+            var argument = calibrated ? change.Z - offset : change.Z - before;
 
             try
             {
-                editor.ModifySubElement(vertex, change.Z - offset);
+                editor.ModifySubElement(vertex, argument);
                 moved++;
             }
             catch (Exception ex)
@@ -238,13 +249,14 @@ internal static class TopoEdgeAlignerRevit
             var after = NearestVertex(editor, change);
             if (after is null)
             {
-                throw new InvalidOperationException("The moved boundary vertex could not be verified.");
+                throw new InvalidOperationException(
+                    $"The moved boundary vertex at {change.X:0.###}, {change.Y:0.###} could not be verified; {DescribeNearest(editor, change)}.");
             }
 
             var actual = after.Position.Z;
-            if (Math.Abs(actual - before) > 1e-9 && Math.Abs(actual - change.Z) > 1e-6)
+            offset = actual - argument;
+            if (Math.Abs(actual - change.Z) > 1e-6)
             {
-                offset = actual - (change.Z - offset);
                 editor.ModifySubElement(after, change.Z - offset);
             }
         }
@@ -259,6 +271,27 @@ internal static class TopoEdgeAlignerRevit
             }
         }
         return moved;
+    }
+
+    private static string DescribeNearest(SlabShapeEditor editor, GradePoint place)
+    {
+        var best = double.MaxValue;
+        XYZ? at = null;
+        foreach (SlabShapeVertex vertex in editor.SlabShapeVertices)
+        {
+            var dx = vertex.Position.X - place.X;
+            var dy = vertex.Position.Y - place.Y;
+            var distance = Math.Sqrt(dx * dx + dy * dy);
+            if (distance < best)
+            {
+                best = distance;
+                at = vertex.Position;
+            }
+        }
+
+        return at is null
+            ? "the toposolid has no shape vertices"
+            : $"the nearest of {editor.SlabShapeVertices.Size} vertices is {best:0.###} ft away at {at.X:0.###}, {at.Y:0.###}, {at.Z:0.###}";
     }
 
     private static SlabShapeVertex? NearestVertex(SlabShapeEditor editor, GradePoint place)

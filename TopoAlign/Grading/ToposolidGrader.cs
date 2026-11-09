@@ -98,6 +98,9 @@ internal sealed class GradeToSurfaceResult
 
     /// <summary>Of the skipped points, how many were corners or edge points whose height could not be set.</summary>
     public int MovesFailed { get; set; }
+
+    /// <summary>Why the corner heights could not be set, when they could not.</summary>
+    public string MoveFailure { get; set; } = string.Empty;
 }
 
 /// <summary>Revit would not build a shape from the points, and the toposolid was left as it was.</summary>
@@ -123,6 +126,9 @@ internal sealed class ReplacePointsOutcome
 
     /// <summary>Vertex moves that could not be made.</summary>
     public int MovesFailed { get; set; }
+
+    /// <summary>Why the moves failed, when they did.</summary>
+    public string MoveFailure { get; set; } = string.Empty;
 }
 
 /// <summary>Grades a slope from a line into a toposolid by replacing the surface points between the line and where the slope meets the ground.</summary>
@@ -273,6 +279,7 @@ internal static class ToposolidGrader
                 result.PointsInset = outcome.Inset;
                 result.PointsRefused = outcome.Refused;
                 result.MovesFailed = outcome.MovesFailed;
+                result.MoveFailure = outcome.MoveFailure;
                 result.CornersMoved = level < 2 ? Math.Max(0, split.MoveCorner.Count - outcome.MovesFailed) : 0;
                 result.PointsSkipped += outcome.Refused + outcome.MovesFailed;
                 result.PointsDroppedForRetry = (onEdge.Count - levelOnEdge.Count) + (interior.Count - levelInterior.Count);
@@ -337,6 +344,7 @@ internal static class ToposolidGrader
         var failureHandler = new FailureHandler(rollBackOnError: true);
         var failureHandlingOptions = transaction.GetFailureHandlingOptions();
         failureHandlingOptions.SetFailuresPreprocessor(failureHandler);
+        failureHandlingOptions.SetClearAfterRollback(true);
         transaction.SetFailureHandlingOptions(failureHandlingOptions);
 
         try
@@ -366,6 +374,7 @@ internal static class ToposolidGrader
                     }
 
                     outcome.MovesFailed += moves.Count;
+                    outcome.MoveFailure = ex.InnerException is null ? ex.Message : $"{ex.Message} ({ex.InnerException.Message})";
                 }
             }
 

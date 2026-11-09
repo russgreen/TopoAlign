@@ -118,7 +118,11 @@ public class CommandGradeToSurface : IExternalCommand
 
             if (result.MovesFailed > 0)
             {
-                summary += $"{Environment.NewLine}{result.MovesFailed} point(s) on the toposolid's edge could not be set to the graded height.";
+                summary += $"{Environment.NewLine}{result.MovesFailed} corner point(s) on the toposolid's edge could not be set to the graded height.";
+                if (!string.IsNullOrWhiteSpace(result.MoveFailure))
+                {
+                    summary += $"{Environment.NewLine}  Reason: {result.MoveFailure}";
+                }
             }
 
             if (result.Missed > 0)
