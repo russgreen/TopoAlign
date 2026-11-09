@@ -47,6 +47,8 @@ internal sealed class AssemblyStore
                 }
 
                 assembly.Parts ??= new List<AssemblyPart>();
+                assembly.Left ??= new SideGrading();
+                assembly.Right ??= new SideGrading();
                 assemblies.Add(assembly);
             }
             catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or NotSupportedException)

@@ -67,6 +67,29 @@ public class SlopeGraderTests : TopoAlignTest
     }
 
     [Test]
+    public async Task CutAndFillSlopes_AreUsedWhereTheGroundIsAboveAndBelow()
+    {
+        // 1 : 2 where the ground is above the edge, 1 : 4 where it is below
+        var fill = SlopeGrader.Grade(LineAlongY(5.0), false, 50, 0, 0.5, 0.25, 100, Ground(0.0), true);
+        var cut = SlopeGrader.Grade(LineAlongY(-4.0), false, 50, 0, 0.5, 0.25, 100, Ground(0.0), true);
+
+        await Assert.That(fill.FillCount).IsEqualTo(fill.Stations.Count);
+        await Assert.That(fill.Stations[0].Daylight.X).IsEqualTo(20.0).Within(Tol);
+        await Assert.That(cut.CutCount).IsEqualTo(cut.Stations.Count);
+        await Assert.That(cut.Stations[0].Daylight.X).IsEqualTo(8.0).Within(Tol);
+    }
+
+    [Test]
+    public async Task CutAndFillSlopes_BothMustBePositive()
+    {
+        var noCut = Catch(() => SlopeGrader.Grade(LineAlongY(5.0), false, 50, 0, 0.0, 0.25, 100, Ground(0.0), true));
+        var negativeFill = Catch(() => SlopeGrader.Grade(LineAlongY(5.0), false, 50, 0, 0.5, -1.0, 100, Ground(0.0), true));
+
+        await Assert.That(noCut is ArgumentOutOfRangeException).IsTrue();
+        await Assert.That(negativeFill is ArgumentOutOfRangeException).IsTrue();
+    }
+
+    [Test]
     public async Task GroundThatFallsAwayTheWayTheSlopeRuns_TakesLongerToMeet()
     {
         // ground drops 0.1 per foot towards +X: a 1:3 fall from 5 feet up needs d where 5 - d/3 = -0.1 d

@@ -127,6 +127,29 @@ public partial class AssemblyEditorView : Window
             AddText(canvas, outline.Name, Math.Max(2, Math.Min(minX, width - 70)), Math.Max(18, top - 16), new SolidColorBrush(colour));
         }
 
+        // the cut and fill slopes running out from the edge of the assembly; the canvas clips them where they leave the picture
+        var reach = (width + height) / scale;
+        foreach (var slope in preview.Slopes)
+        {
+            var colour = slope.IsCut ? Color.FromRgb(0xB0, 0x5A, 0x00) : Color.FromRgb(0x2E, 0x7D, 0x32);
+            var brush = new SolidColorBrush(colour);
+            var start = Map(slope.U, slope.V);
+            var endU = slope.U + slope.Direction * reach;
+            var end = Map(endU, slope.HeightAt(endU));
+            canvas.Children.Add(new Line
+            {
+                X1 = start.X, Y1 = start.Y, X2 = end.X, Y2 = end.Y,
+                Stroke = brush, StrokeThickness = 1.5, StrokeDashArray = new DoubleCollection { 4, 3 }
+            });
+
+            var labelU = slope.U + slope.Direction * 60.0 / scale;
+            var labelAt = Map(labelU, slope.HeightAt(labelU));
+            AddText(canvas, slope.Label,
+                Math.Max(2, Math.Min(labelAt.X - (slope.Direction < 0 ? 44 : 0), width - 70)),
+                Math.Max(2, Math.Min(labelAt.Y + (slope.IsCut ? -16 : 2), height - 18)),
+                brush);
+        }
+
         // the extent of the assembly across the road
         var unit = _viewModel.SelectedDisplayUnit;
         string Label(double feet) => $"{Autodesk.Revit.DB.UnitUtils.ConvertFromInternalUnits(feet, unit.DisplayUnit):0.###}";

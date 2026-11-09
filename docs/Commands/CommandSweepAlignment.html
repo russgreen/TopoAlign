@@ -88,6 +88,21 @@
             <p>Section spacing, geometry and the vertical offset in the sweep dialog apply to the whole assembly, and the vertical offset is added to each part's own. An assembly is always made as direct shapes. Running the command again for the same alignment replaces everything TopoAlign made for it before, whether that was a single road or an assembly.</p>
             <p>Assemblies are saved as one JSON file each in <code>%AppData%\TopoAlign\Assemblies</code>, with lengths in millimetres, so you can copy a file to share an assembly. Parts refer to profile types by their name (<em>Family : Type</em>), so those types need to be loaded in the project; a part whose profile is missing is flagged and the assembly can't be built until it is fixed.</p>
 
+            <h2 id="grading">Grading the topo to meet the road</h2>
+            <p>With an assembly, TopoAlign can also reshape an existing toposolid so the ground slopes from the edge of the road up or down to meet it (Revit 2024 and later). It uses the same method as <a href="./CommandGradeToSurface.html">Grade to Surface</a>, once for each side of the alignment, and changes the toposolid only; no extra geometry is added.</p>
+            <ol>
+                <li>In the assembly editor, under <strong>Grade the topo out from the sides</strong>, tick <strong>Grade</strong> for the <em>Left</em> and/or <em>Right</em> side and set the slopes. Save the assembly.</li>
+                <li>In the sweep dialog, with the assembly chosen, tick <strong>Grade the topo out from the sides</strong>, click <strong>Pick toposolids</strong> and pick every toposolid to reshape, then choose Finish. There can be a different toposolid either side of the road: each side changes the toposolids its slope reaches and leaves the others alone.</li>
+                <li>Click <strong>Create Road Assembly</strong>. The road is made first, then the toposolid is graded, and the summary reports each side.</li>
+            </ol>
+            <ul>
+                <li><strong>Cut slope</strong> — Used where the ground is <em>above</em> the edge of the road, so the slope climbs to meet it.</li>
+                <li><strong>Fill slope</strong> — Used where the ground is <em>below</em> the edge of the road, so the slope falls away to meet it. Cut and fill are decided separately at every section, so one road can cut in one place and fill in another.</li>
+                <li><strong>Slope as</strong> — How both slopes are entered: a ratio (<em>1 : N</em>, so 1 : 3 is entered as 3), a percentage or an angle in degrees.</li>
+                <li><strong>Max width</strong> — The furthest a slope may run, measured square to the alignment, before giving up on that section.</li>
+            </ul>
+            <p>The slope starts at the <strong>outer edge of the whole assembly</strong> on that side: the outermost point across the road of any part and, at that distance, its highest point. For a road with a kerb and footway this is the outer top edge of the footway. Each side is graded on its own, so turn off a side that doesn't need it. The toposolid's own points under the road are not changed, and the assembly's vertical offset is included.</p>
+
             <h2 id="notes">Notes</h2>
             <ul>
                 <li>The road is one element (a Direct Shape or a family instance). It is tagged with the alignment it follows, so running the command again for the same alignment <strong>replaces</strong> the earlier road, whichever way it was made before.</li>
@@ -95,7 +110,7 @@
                 <li>A family is a snapshot: it doesn't update when the alignment changes. Run the command again to replace it.</li>
                 <li>The section always stands upright, across the horizontal direction of the alignment, so a thickness stays a vertical thickness on a slope.</li>
                 <li>If a curve is tighter than the road is wide, the inside of the road would fold back on itself. Revit cannot build those spans, so they are left as gaps and the summary says how many; use a narrower section or a larger radius.</li>
-                <li>Not included yet: a section that changes along the road, banking (superelevation), junctions, and cutting the road into the topography. To turn a road into a toposolid, use <a href="./CommandSweepToToposolid.html">Sweep to Toposolid</a>.</li>
+                <li>Not included yet: a section that changes along the road, banking (superelevation), junctions, and cutting the road itself into the topography (the sides can be <a href="#grading">graded to the ground</a>, but the ground under the road is left as it is). To turn a road into a toposolid, use <a href="./CommandSweepToToposolid.html">Sweep to Toposolid</a>.</li>
             </ul>
         </article>
         <nav class="pager" aria-label="Previous and next page"></nav>

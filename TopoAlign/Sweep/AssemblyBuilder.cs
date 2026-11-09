@@ -26,6 +26,12 @@ internal sealed class AssemblyResult
 
     /// <summary>True when an earlier road for the same alignment was removed first.</summary>
     public bool ReplacedPrevious { get; set; }
+
+    /// <summary>What grading the topo out from each side did; empty when no topo was given or no side has grading turned on.</summary>
+    public List<SideGradeOutcome> Grading { get; } = new();
+
+    /// <summary>Why the topo was not graded at all, for example the element is not a toposolid.</summary>
+    public string GradingNotice { get; set; } = string.Empty;
 }
 
 /// <summary>Sweeps every part of an assembly along an alignment and makes one DirectShape per part.</summary>
@@ -38,8 +44,13 @@ internal static class AssemblyBuilder
     /// Must be called from within the Revit API context; it opens its own transaction.
     /// </summary>
     /// <param name="profiles">The section of each part's profile type, by <see cref="AssemblyPart.ProfileName"/>.</param>
+    /// <param name="topographies">
+    /// The toposolids to grade out from the sides of the assembly, using the assembly's cut and fill slopes. Each side changes
+    /// the ones its slope reaches, so different toposolids can lie either side of the road. Null or empty leaves the ground alone.
+    /// The road is made first, so a problem grading never loses it.
+    /// </param>
     public static AssemblyResult Create(Document document, Element alignment, SweepAssembly assembly,
-        IReadOnlyDictionary<string, SectionProfile> profiles, RoadOptions options)
+        IReadOnlyDictionary<string, SectionProfile> profiles, RoadOptions options, IReadOnlyList<Element>? topographies = null)
     {
         if (document is null)
         {
@@ -65,6 +76,7 @@ internal static class AssemblyBuilder
         var result = new AssemblyResult { StationCount = stations.Count };
         var notices = new List<string>();
         var built = new List<(string Label, AssemblyPart Part, List<Solid> Solids)>();
+        var placedParts = new List<SectionProfile>();
 
         // everything is built before the model is touched, so a failure leaves the model as it was
         for (var index = 0; index < assembly.Parts.Count; index++)
@@ -95,6 +107,7 @@ internal static class AssemblyBuilder
                 result.SkippedSpans += solids.SkippedSpans;
                 result.SolidCount += solids.Solids.Count;
                 built.Add((label, part, solids.Solids));
+                placedParts.Add(placed);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
@@ -139,6 +152,11 @@ internal static class AssemblyBuilder
 
         transaction.Commit();
 
+        if (topographies is { Count: > 0 } && (assembly.Left.Enabled || assembly.Right.Enabled))
+        {
+            GradeTopography(document, topographies, assembly, placedParts, path, stations, options, result);
+        }
+
         result.Notice = string.Join(" ", notices);
         if (result.SkippedSpans > 0)
         {
@@ -146,6 +164,31 @@ internal static class AssemblyBuilder
         }
 
         return result;
+    }
+
+    private static void GradeTopography(Document document, IReadOnlyList<Element> topographies, SweepAssembly assembly, IReadOnlyList<SectionProfile> placedParts,
+        AlignmentApi.PathReader path, IReadOnlyList<double> stations, RoadOptions options, AssemblyResult result)
+    {
+#if REVIT2024_OR_GREATER
+        var toposolids = topographies.OfType<Toposolid>().Where(t => t.IsValidObject).ToList();
+        if (toposolids.Count == 0)
+        {
+            result.GradingNotice = topographies.Count == 1
+                ? "The ground was not graded: the element picked is not a toposolid."
+                : "The ground was not graded: none of the elements picked is a toposolid.";
+            return;
+        }
+
+        if (toposolids.Count < topographies.Count)
+        {
+            var skipped = topographies.Count - toposolids.Count;
+            result.GradingNotice = $"{skipped} of the elements picked {(skipped == 1 ? "was" : "were")} left alone because {(skipped == 1 ? "it is" : "they are")} not {(skipped == 1 ? "a toposolid" : "toposolids")} or {(skipped == 1 ? "is" : "are")} no longer in the model.";
+        }
+
+        result.Grading.AddRange(AssemblyGrader.Apply(document, toposolids, assembly, placedParts, path, stations, options));
+#else
+        result.GradingNotice = "The ground was not graded: toposolids need Revit 2024 or later.";
+#endif
     }
 
     /// <summary>The part's name, or "Part n" when it has none.</summary>

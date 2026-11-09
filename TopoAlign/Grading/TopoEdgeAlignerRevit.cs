@@ -294,7 +294,7 @@ internal static class TopoEdgeAlignerRevit
             : $"the nearest of {editor.SlabShapeVertices.Size} vertices is {best:0.###} ft away at {at.X:0.###}, {at.Y:0.###}, {at.Z:0.###}";
     }
 
-    private static SlabShapeVertex? NearestVertex(SlabShapeEditor editor, GradePoint place)
+    internal static SlabShapeVertex? NearestVertex(SlabShapeEditor editor, GradePoint place)
     {
         SlabShapeVertex? nearest = null;
         var best = MatchTolerance;

@@ -37,6 +37,9 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
@@ -154,9 +157,21 @@
                   DisplayMemberPath="Name"
                   SelectedItem="{Binding SelectedLevel}"/>
 
-        <TextBlock Grid.Row="16" Grid.ColumnSpan="2" Text="{Binding ExistingRoadNote}" TextWrapping="Wrap"/>
+        <CheckBox Grid.Row="16" Grid.ColumnSpan="2" Content="Grade the topo out from the sides"
+                  IsChecked="{Binding GradeTopo}"
+                  Visibility="{Binding ShowGradeTopo, Converter={StaticResource BoolToVisibility}}"
+                  ToolTip="Runs a cut or fill slope from each side of the assembly to the ground, using the slopes set in the assembly, and reshapes the toposolid to match."/>
 
-        <Button Grid.Row="17" Grid.ColumnSpan="2" Content="{Binding CreateButtonText}" IsDefault="True" Height="30"
+        <Button Grid.Row="17" Grid.ColumnSpan="2" Content="Pick toposolids" Command="{Binding PickToposolidCommand}"
+                ToolTip="Pick every toposolid to grade. Each side of the road changes the toposolids its slope reaches, so there can be a different one either side."
+                Visibility="{Binding ShowGradeTopoPick, Converter={StaticResource BoolToVisibility}}"/>
+
+        <TextBlock Grid.Row="18" Grid.ColumnSpan="2" Text="{Binding GradeTopoStatus}" TextWrapping="Wrap"
+                   Visibility="{Binding ShowGradeTopo, Converter={StaticResource BoolToVisibility}}"/>
+
+        <TextBlock Grid.Row="19" Grid.ColumnSpan="2" Text="{Binding ExistingRoadNote}" TextWrapping="Wrap"/>
+
+        <Button Grid.Row="20" Grid.ColumnSpan="2" Content="{Binding CreateButtonText}" IsDefault="True" Height="30"
                 Command="{Binding CreateCommand}"/>
     </Grid>
 </Window>

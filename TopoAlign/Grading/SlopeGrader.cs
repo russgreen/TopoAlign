@@ -236,6 +236,23 @@ internal static class SlopeGrader
         TriangleSurface surface,
         bool addEdgePoints)
     {
+        return Grade(path, closed, sideX, sideY, riseOverRun, riseOverRun, maxWidth, surface, addEdgePoints);
+    }
+
+    /// <summary>As above, with one slope where the ground is above the line (cut, the slope climbs) and another where it is below (fill, the slope falls).</summary>
+    /// <param name="cutRiseOverRun">The slope where the ground is above the line; always positive.</param>
+    /// <param name="fillRiseOverRun">The slope where the ground is below the line; always positive.</param>
+    public static GradingResult Grade(
+        IReadOnlyList<GradePoint> path,
+        bool closed,
+        double sideX,
+        double sideY,
+        double cutRiseOverRun,
+        double fillRiseOverRun,
+        double maxWidth,
+        TriangleSurface surface,
+        bool addEdgePoints)
+    {
         if (path is null)
         {
             throw new ArgumentNullException(nameof(path));
@@ -251,9 +268,14 @@ internal static class SlopeGrader
             throw new ArgumentException("At least two points are needed to grade from.", nameof(path));
         }
 
-        if (!(riseOverRun > 0.0))
+        if (!(cutRiseOverRun > 0.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(riseOverRun), "The slope must be greater than zero.");
+            throw new ArgumentOutOfRangeException(nameof(cutRiseOverRun), "The slope must be greater than zero.");
+        }
+
+        if (!(fillRiseOverRun > 0.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(fillRiseOverRun), "The slope must be greater than zero.");
         }
 
         if (!(maxWidth > 0.0))
@@ -269,7 +291,7 @@ internal static class SlopeGrader
         for (var i = 0; i < path.Count; i++)
         {
             var station = CreateStation(path, normals, closed, i);
-            Trace(station, riseOverRun, maxWidth, surface);
+            Trace(station, cutRiseOverRun, fillRiseOverRun, maxWidth, surface);
             result.Stations.Add(station);
         }
 
@@ -523,7 +545,7 @@ internal static class SlopeGrader
     }
 
     /// <summary>Walks the ray out from the station until it meets the ground, then closes in on the crossing.</summary>
-    private static void Trace(GradeStation station, double riseOverRun, double maxWidth, TriangleSurface surface)
+    private static void Trace(GradeStation station, double cutRiseOverRun, double fillRiseOverRun, double maxWidth, TriangleSurface surface)
     {
         var edge = station.Edge;
         if (!TryGetElevationNear(surface, edge.X, edge.Y, out var groundAtEdge))
@@ -543,7 +565,7 @@ internal static class SlopeGrader
         }
 
         var cut = initial > 0.0;
-        var climb = (cut ? 1.0 : -1.0) * riseOverRun * station.PerpendicularFactor;
+        var climb = (cut ? cutRiseOverRun : -fillRiseOverRun) * station.PerpendicularFactor;
         var maxDistance = maxWidth / station.PerpendicularFactor;
         var step = Math.Min(1.0, Math.Max(0.05, maxDistance / 500.0));
 

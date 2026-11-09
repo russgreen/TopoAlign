@@ -112,6 +112,27 @@ internal sealed class PointsRejectedException : InvalidOperationException
     }
 }
 
+/// <summary>The slope never reached the toposolid, so nothing was changed. Not a failure when several toposolids are being tried.</summary>
+internal sealed class SlopeMissesToposolidException : InvalidOperationException
+{
+    public SlopeMissesToposolidException(string message)
+        : base(message)
+    {
+    }
+}
+
+/// <summary>
+/// Revit would not set the heights of the toposolid's boundary corners. The edit was rolled back completely, so it can be run again
+/// without them; carrying on with the same shape editor after a refused edit is not safe and can crash Revit.
+/// </summary>
+internal sealed class CornerMovesFailedException : InvalidOperationException
+{
+    public CornerMovesFailedException(string message, Exception inner)
+        : base(message, inner)
+    {
+    }
+}
+
 /// <summary>What <see cref="ToposolidGrader.ReplacePoints"/> could not do.</summary>
 internal sealed class ReplacePointsOutcome
 {
@@ -154,12 +175,40 @@ internal static class ToposolidGrader
             throw new ArgumentNullException(nameof(request));
         }
 
-        var toposolid = request.Toposolid;
-        var surface = TopographyReader.Read(toposolid);
-
         var path = BuildPath(request.Curves, request.Interval, request.VerticalOffset, out var closed);
         var slope = SlopeUnits.ToRiseOverRun(request.SlopeMode, request.SlopeValue);
-        var grading = SlopeGrader.Grade(path, closed, request.SidePoint.X, request.SidePoint.Y, slope, request.MaxWidth, surface, request.AddEdgePoints);
+        return ApplyToPath(document, request.Toposolid, path, closed, request.SidePoint.X, request.SidePoint.Y, slope, slope, request.MaxWidth, request.AddEdgePoints, "Grade to surface");
+    }
+
+    /// <summary>
+    /// Grades a slope from a line given as points (feet), with one slope where the ground is above the line (cut) and another
+    /// where it is below (fill), then rebuilds the toposolid's points in one transaction. Must be called from within the Revit API context.
+    /// </summary>
+    internal static GradeToSurfaceResult ApplyToPath(
+        Document document,
+        Toposolid toposolid,
+        IReadOnlyList<GradePoint> path,
+        bool closed,
+        double sideX,
+        double sideY,
+        double cutRiseOverRun,
+        double fillRiseOverRun,
+        double maxWidth,
+        bool addEdgePoints,
+        string transactionName)
+    {
+        if (document is null)
+        {
+            throw new ArgumentNullException(nameof(document));
+        }
+
+        if (toposolid is null)
+        {
+            throw new ArgumentNullException(nameof(toposolid));
+        }
+
+        var surface = TopographyReader.Read(toposolid);
+        var grading = SlopeGrader.Grade(path, closed, sideX, sideY, cutRiseOverRun, fillRiseOverRun, maxWidth, surface, addEdgePoints);
 
         var result = new GradeToSurfaceResult
         {
@@ -175,7 +224,7 @@ internal static class ToposolidGrader
 
         if (grading.Corridor.Count == 0)
         {
-            throw new InvalidOperationException(
+            throw new SlopeMissesToposolidException(
                 "The slope does not meet the toposolid anywhere along the line. " +
                 "Check that the side you picked is towards the toposolid, and that the maximum width is long enough.");
         }
@@ -263,17 +312,49 @@ internal static class ToposolidGrader
         for (var level = 0; level <= 2; level++)
         {
             var levelInterior = level < 2 ? interior : SafeInterior(interior, outline);
+            var levelOnEdge = level == 0 ? onEdge : new List<GradePoint>();
+            var levelMoves = level < 2 ? moves : new List<GradePoint>();
+
+            // Leaving the edge points out altogether would leave the edge at its old height, so the ground would drop away in a wall
+            // beside the road. They go in as ordinary points a little way inside the edge instead, where Revit has no trouble with them.
+            var stepIn = new List<GradePoint>();
+            if (level >= 1)
+            {
+                var stepIndex = new PlanIndex(SafeSeparation);
+                foreach (var point in level == 1 ? onEdge : onEdge.Concat(moves))
+                {
+                    if (BoundaryPoints.TryInsetFromOutline(point, outline, SafeEdgeClearance, out var inside) && stepIndex.TryAdd(inside.X, inside.Y))
+                    {
+                        stepIn.Add(inside);
+                    }
+                }
+            }
+
             var levelPoints = levelInterior
+                .Concat(stepIn)
                 .Select(point => new XYZ(point.X, point.Y, point.Z))
                 .Concat(kept)
                 .Distinct(new XyzEqualityComparer())
                 .ToList();
-            var levelOnEdge = level == 0 ? onEdge : new List<GradePoint>();
-            var levelMoves = level < 2 ? moves : new List<GradePoint>();
 
             try
             {
-                var outcome = ReplacePoints(document, toposolid, levelPoints, "Grade to surface", levelOnEdge, levelMoves, outline);
+                ReplacePointsOutcome outcome;
+                try
+                {
+                    outcome = ReplacePoints(document, toposolid, levelPoints, transactionName, levelOnEdge, levelMoves, outline);
+                }
+                catch (CornerMovesFailedException ex)
+                {
+                    // the corners can't be moved, so points go at their heights on or just inside the edge instead; everything else goes ahead on a fresh edit
+                    log.Warning("{transaction} is being run again without moving the corner vertices", transactionName);
+                    var cornersAsEdgePoints = levelOnEdge.Concat(levelMoves).ToList();
+                    levelMoves = new List<GradePoint>();
+                    outcome = ReplacePoints(document, toposolid, levelPoints, transactionName, cornersAsEdgePoints, levelMoves, outline);
+                    outcome.MovesFailed += moves.Count;
+                    outcome.MoveFailure = ex.Message;
+                }
+
                 result.FallbackLevel = level;
                 result.PointsAdded = levelPoints.Count - kept.Count + outcome.TrialAdded;
                 result.PointsInset = outcome.Inset;
@@ -356,6 +437,28 @@ internal static class ToposolidGrader
 
             // The toposolid's own corners are set first, while it is still just its boundary, the way Align Edges does it.
             // This is in a sub-transaction so that if Revit objects, only the corner heights are undone and the rest goes ahead.
+            // A corner that holds a shape vertex is moved. One that doesn't (the toposolid's edge is a curve, or it was made from a road)
+            // can't be moved, and a point put exactly on the edge is often refused, so a point is put at its height on or just inside the edge
+            // instead. Without this the edge there keeps its old height and the ground drops away in a wall beside the road.
+            var cornerPoints = new List<GradePoint>();
+            if (moves is { Count: > 0 })
+            {
+                var movable = new List<GradePoint>();
+                foreach (var move in moves)
+                {
+                    if (TopoEdgeAlignerRevit.NearestVertex(editor, move) is null)
+                    {
+                        cornerPoints.Add(move);
+                    }
+                    else
+                    {
+                        movable.Add(move);
+                    }
+                }
+
+                moves = movable;
+            }
+
             if (moves is { Count: > 0 })
             {
                 using var subTransaction = new SubTransaction(document);
@@ -373,8 +476,10 @@ internal static class ToposolidGrader
                         subTransaction.RollBack();
                     }
 
-                    outcome.MovesFailed += moves.Count;
-                    outcome.MoveFailure = ex.InnerException is null ? ex.Message : $"{ex.Message} ({ex.InnerException.Message})";
+                    // Do not go on with this shape editor: after a refused edit its state is unreliable. The whole edit is undone
+                    // (by the handler below) and the caller runs it again from a clean start without the corner heights.
+                    throw new CornerMovesFailedException(
+                        ex.InnerException is null ? ex.Message : $"{ex.Message} ({ex.InnerException.Message})", ex);
                 }
             }
 
@@ -406,6 +511,11 @@ internal static class ToposolidGrader
                 {
                     AddEdgePoint(document, editor, point, outline, outcome);
                 }
+            }
+
+            foreach (var point in cornerPoints)
+            {
+                AddEdgePoint(document, editor, point, outline, outcome);
             }
 
             // The command regenerates manually, so Revit would otherwise only build the new shape after the command has finished,

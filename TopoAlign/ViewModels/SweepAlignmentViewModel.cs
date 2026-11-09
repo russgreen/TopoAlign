@@ -36,6 +36,9 @@ internal sealed class SweepAlignmentRequest
     /// <summary>The section of each part's profile type, by name, when sweeping an assembly.</summary>
     public IReadOnlyDictionary<string, SectionProfile> AssemblyProfiles { get; set; } = new Dictionary<string, SectionProfile>();
 
+    /// <summary>The toposolids to grade out from the sides of the assembly; empty to leave the ground alone.</summary>
+    public IReadOnlyList<Element> Topographies { get; set; } = Array.Empty<Element>();
+
     public bool IsAssembly => Assembly is not null;
 }
 
@@ -127,6 +130,9 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(IsRoadOutput))]
     [NotifyPropertyChangedFor(nameof(CreateButtonText))]
     [NotifyPropertyChangedFor(nameof(ExistingRoadNote))]
+    [NotifyPropertyChangedFor(nameof(ShowGradeTopo))]
+    [NotifyPropertyChangedFor(nameof(ShowGradeTopoPick))]
+    [NotifyPropertyChangedFor(nameof(GradeTopoStatus))]
     [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
     private RoadChoice<SweepMode>? _selectedMode;
 
@@ -141,8 +147,130 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AssemblyStatus))]
+    [NotifyPropertyChangedFor(nameof(GradeTopoStatus))]
     [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
     private SweepAssembly? _selectedAssembly;
+
+    // ---- grading the topo out from the sides of an assembly -----------------------------------------------------
+
+    /// <summary>Grading the ground needs a toposolid, which needs Revit 2024 or later.</summary>
+    public bool CanGradeTopo =>
+#if REVIT2024_OR_GREATER
+        true;
+#else
+        false;
+#endif
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowGradeTopoPick))]
+    [NotifyPropertyChangedFor(nameof(GradeTopoStatus))]
+    [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
+    private bool _gradeTopo;
+
+    public bool ShowGradeTopo => IsAssemblyMode && CanGradeTopo;
+
+    public bool ShowGradeTopoPick => ShowGradeTopo && GradeTopo;
+
+    private readonly List<Element> _topographies = new();
+
+    /// <summary>The toposolids that will be graded.</summary>
+    public IReadOnlyList<Element> Topographies => _topographies;
+
+    /// <summary>What the toposolid choice means for the chosen assembly, or what to do next.</summary>
+    public string GradeTopoStatus
+    {
+        get
+        {
+            if (!ShowGradeTopo || !GradeTopo)
+            {
+                return string.Empty;
+            }
+
+            var text = _topographies.Count switch
+            {
+                0 => "No toposolid picked. Pick every toposolid either side of the road that should be graded.",
+                1 => $"Toposolid: {Describe(_topographies[0])}.",
+                _ => $"Toposolids ({_topographies.Count}): {string.Join(", ", _topographies.Select(Describe))}."
+            };
+            if (SelectedAssembly is { } assembly && !assembly.Left.Enabled && !assembly.Right.Enabled)
+            {
+                text += " This assembly has no side grading turned on: choose Edit assemblies to set cut and fill slopes.";
+            }
+
+            return text;
+        }
+    }
+
+    /// <summary>True when the dialog was hidden to pick a toposolid rather than an alignment (with <see cref="PickRequested"/>).</summary>
+    public bool PickToposolidRequested { get; set; }
+
+    [RelayCommand]
+    private void PickToposolid()
+    {
+        PickRequested = true;
+        PickToposolidRequested = true;
+        HideRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Lets the user click one or more toposolids (Finish to accept) and replaces the earlier choice with them.
+    /// Called by the command while the dialog is hidden.
+    /// </summary>
+    internal void PickToposolidElement()
+    {
+        try
+        {
+            var uidoc = App.CachedUiApp.ActiveUIDocument;
+            var references = uidoc.Selection.PickObjects(ObjectType.Element, new TopoPickFilter(),
+                "Select the toposolids to grade out from the road, then choose Finish");
+            SelectToposolids(references.Select(reference => App.RevitDocument.GetElement(reference)));
+        }
+        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+        {
+            // user cancelled selection
+        }
+        catch (Exception ex)
+        {
+            log.Error(ex, "Failed while selecting a toposolid");
+            TaskDialog.Show("Sweep Along Alignment", ex.Message);
+        }
+    }
+
+    /// <summary>Adds a toposolid to those to grade; one already chosen is not added twice.</summary>
+    internal void SelectToposolid(Element element)
+    {
+        if (element is not null && _topographies.All(t => t.Id != element.Id))
+        {
+            _topographies.Add(element);
+        }
+
+        TopographiesChanged();
+    }
+
+    /// <summary>Makes these the toposolids to grade, in place of any chosen before.</summary>
+    internal void SelectToposolids(IEnumerable<Element?> elements)
+    {
+        _topographies.Clear();
+        foreach (var element in elements)
+        {
+            if (element is not null && _topographies.All(t => t.Id != element.Id))
+            {
+                _topographies.Add(element);
+            }
+        }
+
+        TopographiesChanged();
+    }
+
+    /// <summary>The name of a picked toposolid with its id, since toposolids of one type all share a name.</summary>
+    private static string Describe(Element element) => element.IsValidObject ? $"{element.Name} (Id {element.Id})" : "(removed from the model)";
+
+    private void TopographiesChanged()
+    {
+        OnPropertyChanged(nameof(GradeTopoStatus));
+        OnPropertyChanged(nameof(Topographies));
+        CreateCommand.NotifyCanExecuteChanged();
+    }
 
     /// <summary>What the chosen assembly holds, or what to do if there is none.</summary>
     public string AssemblyStatus
@@ -309,7 +437,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
 
         if (IsAssemblyMode)
         {
-            return SelectedAssembly is { Parts.Count: > 0 };
+            return SelectedAssembly is { Parts.Count: > 0 } && (!ShowGradeTopo || !GradeTopo || _topographies.Count > 0);
         }
 
         return _profile is not null
@@ -582,7 +710,8 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
             Request = new SweepAlignmentRequest(_alignment, _alignmentName, null, options)
             {
                 Assembly = SelectedAssembly,
-                AssemblyProfiles = profiles
+                AssemblyProfiles = profiles,
+                Topographies = ShowGradeTopo && GradeTopo ? _topographies.ToList() : new List<Element>()
             };
             OnClosingRequest();
         }
@@ -605,6 +734,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         Interval = ToDisplay(_settings.SweepInterval);
         VerticalOffset = ToDisplay(_settings.SweepVerticalOffset);
         MirrorProfile = _settings.SweepMirrorProfile;
+        GradeTopo = _settings.SweepGradeTopo;
 
         SelectedCategory = Categories.FirstOrDefault(c => c.Category.ToString() == _settings.SweepCategory) ?? Categories.FirstOrDefault();
         SelectedProfileType = ProfileTypes.FirstOrDefault(t => t.Name == _settings.SweepProfileName) ?? ProfileTypes.FirstOrDefault();
@@ -626,6 +756,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         _settings.SweepInterval = (decimal)ToInternal(Interval);
         _settings.SweepVerticalOffset = (decimal)ToInternal(VerticalOffset);
         _settings.SweepMirrorProfile = MirrorProfile;
+        _settings.SweepGradeTopo = GradeTopo;
         _settings.SweepCategory = SelectedCategory?.Category.ToString() ?? string.Empty;
         _settings.SweepProfileName = SelectedProfileType?.Name ?? string.Empty;
         _settings.SweepGeometryMethod = (SelectedGeometryMethod?.Value ?? RoadGeometryMethod.SegmentedLoft).ToString();

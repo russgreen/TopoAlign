@@ -10,10 +10,11 @@
         Title="Road assemblies"
         FontSize="12" FontFamily="Segoe UI Light"
         WindowStartupLocation="CenterScreen"
-        Width="1040" Height="560" MinWidth="820" MinHeight="420"
+        Width="1040" Height="660" MinWidth="820" MinHeight="520"
         WindowStyle="ToolWindow" ResizeMode="CanResizeWithGrip">
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
         <Style TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
@@ -29,6 +30,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -175,10 +177,70 @@
             </Grid>
         </Grid>
 
-        <TextBlock Grid.Row="3" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="#FF555555"
+        <!-- grading the ground out from the sides -->
+        <GroupBox Grid.Row="3" Header="Grade the topo out from the sides" Margin="0,8,0,0" Padding="6"
+                  Visibility="{Binding CanGradeTopo, Converter={StaticResource BoolToVisibility}}"
+                  ToolTip="When a toposolid is picked in Sweep Along Alignment, a slope runs from the outer edge of the assembly until it meets the ground: the cut slope where the ground is above the edge, the fill slope where it is below.">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="160"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Column="1" Text="Grade" FontWeight="SemiBold"/>
+                <TextBlock Grid.Column="2" Text="Cut slope" FontWeight="SemiBold"
+                           ToolTip="Used where the ground is above the edge. 1 : 2 is entered as 2 in Ratio."/>
+                <TextBlock Grid.Column="3" Text="Fill slope" FontWeight="SemiBold"
+                           ToolTip="Used where the ground is below the edge."/>
+                <TextBlock Grid.Column="4" Text="Max width" FontWeight="SemiBold"
+                           ToolTip="Furthest the slope may run, measured square to the alignment, in the units chosen above."/>
+                <TextBlock Grid.Column="6" Text="Slope as" Margin="0,0,8,0"/>
+                <ComboBox Grid.Column="7" Grid.Row="0" ItemsSource="{Binding SlopeModes}" DisplayMemberPath="Label"
+                          SelectedItem="{Binding SelectedSlopeMode}"/>
+
+                <TextBlock Grid.Row="1" Text="Left" Margin="0,6,0,0"/>
+                <CheckBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Margin="0,6,0,0"
+                          IsChecked="{Binding LeftGrading.Enabled}"/>
+                <TextBox Grid.Row="1" Grid.Column="2" Margin="0,6,6,0" IsEnabled="{Binding LeftGrading.Enabled}"
+                         Text="{Binding LeftGrading.CutValue, UpdateSourceTrigger=PropertyChanged}"
+                         behaviours:TextBoxInput.RegularExpression="^[0-9]*[.]?[0-9]*$"/>
+                <TextBox Grid.Row="1" Grid.Column="3" Margin="0,6,6,0" IsEnabled="{Binding LeftGrading.Enabled}"
+                         Text="{Binding LeftGrading.FillValue, UpdateSourceTrigger=PropertyChanged}"
+                         behaviours:TextBoxInput.RegularExpression="^[0-9]*[.]?[0-9]*$"/>
+                <TextBox Grid.Row="1" Grid.Column="4" Margin="0,6,6,0" IsEnabled="{Binding LeftGrading.Enabled}"
+                         Text="{Binding LeftGrading.MaxWidth, UpdateSourceTrigger=PropertyChanged}"
+                         behaviours:TextBoxInput.RegularExpression="^[0-9]*[.]?[0-9]*$"/>
+
+                <TextBlock Grid.Row="2" Text="Right" Margin="0,6,0,0"/>
+                <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Margin="0,6,0,0"
+                          IsChecked="{Binding RightGrading.Enabled}"/>
+                <TextBox Grid.Row="2" Grid.Column="2" Margin="0,6,6,0" IsEnabled="{Binding RightGrading.Enabled}"
+                         Text="{Binding RightGrading.CutValue, UpdateSourceTrigger=PropertyChanged}"
+                         behaviours:TextBoxInput.RegularExpression="^[0-9]*[.]?[0-9]*$"/>
+                <TextBox Grid.Row="2" Grid.Column="3" Margin="0,6,6,0" IsEnabled="{Binding RightGrading.Enabled}"
+                         Text="{Binding RightGrading.FillValue, UpdateSourceTrigger=PropertyChanged}"
+                         behaviours:TextBoxInput.RegularExpression="^[0-9]*[.]?[0-9]*$"/>
+                <TextBox Grid.Row="2" Grid.Column="4" Margin="0,6,6,0" IsEnabled="{Binding RightGrading.Enabled}"
+                         Text="{Binding RightGrading.MaxWidth, UpdateSourceTrigger=PropertyChanged}"
+                         behaviours:TextBoxInput.RegularExpression="^[0-9]*[.]?[0-9]*$"/>
+            </Grid>
+        </GroupBox>
+
+        <TextBlock Grid.Row="4" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="#FF555555"
                    Text="Offsets are measured from the alignment: lateral is positive to the right of the direction of travel, vertical is up from the finished level. Tick Mirror to flip a profile left to right, for example a kerb drawn for the left of the road used on the right."/>
 
-        <Grid Grid.Row="4" Margin="0,8,0,0">
+        <Grid Grid.Row="5" Margin="0,8,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>

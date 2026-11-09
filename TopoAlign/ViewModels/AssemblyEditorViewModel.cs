@@ -43,6 +43,35 @@ internal sealed partial class AssemblyPartRow : ObservableObject
     }
 }
 
+/// <summary>One side's topo grading as the user types it: slopes in the chosen slope mode, the widest run in display units.</summary>
+internal sealed partial class SideGradingRow : ObservableObject
+{
+    [ObservableProperty]
+    private bool _enabled;
+
+    [ObservableProperty]
+    private decimal _cutValue = 2m;
+
+    [ObservableProperty]
+    private decimal _fillValue = 3m;
+
+    [ObservableProperty]
+    private decimal _maxWidth;
+}
+
+/// <summary>A way of entering a slope, with the name the editor shows for it.</summary>
+internal sealed class SlopeModeOption
+{
+    public SlopeModeOption(TopoAlign.Grading.SlopeMode mode, string label)
+    {
+        Mode = mode;
+        Label = label;
+    }
+
+    public TopoAlign.Grading.SlopeMode Mode { get; }
+    public string Label { get; }
+}
+
 internal partial class AssemblyEditorViewModel : BaseViewModel
 {
     private static readonly ILogger log = Log.ForContext<AssemblyEditorViewModel>();
@@ -74,6 +103,10 @@ internal partial class AssemblyEditorViewModel : BaseViewModel
             OnPartChanged();
         };
 
+        // the dashed slope lines follow the grading values
+        LeftGrading.PropertyChanged += (_, _) => OnPartChanged();
+        RightGrading.PropertyChanged += (_, _) => OnPartChanged();
+
         ReloadNames();
         var existing = assemblyName is not null && AssemblyNames.Contains(assemblyName) ? assemblyName : AssemblyNames.FirstOrDefault();
         if (existing is not null)
@@ -92,6 +125,58 @@ internal partial class AssemblyEditorViewModel : BaseViewModel
 
     public ObservableCollection<string> AssemblyNames { get; } = new();
     public ObservableCollection<AssemblyPartRow> Parts { get; } = new();
+
+    // ---- grading the ground out from the sides ------------------------------------------------------------------
+
+    /// <summary>Grading the toposolid needs Revit 2024 or later; before that the editor hides the settings.</summary>
+    public bool CanGradeTopo =>
+#if REVIT2024_OR_GREATER
+        true;
+#else
+        false;
+#endif
+
+    public SideGradingRow LeftGrading { get; } = new();
+    public SideGradingRow RightGrading { get; } = new();
+
+    public List<SlopeModeOption> SlopeModes { get; } = new()
+    {
+        new SlopeModeOption(TopoAlign.Grading.SlopeMode.Ratio, "Ratio (1 : N)"),
+        new SlopeModeOption(TopoAlign.Grading.SlopeMode.Percent, "Percent (%)"),
+        new SlopeModeOption(TopoAlign.Grading.SlopeMode.Degrees, "Degrees (°)")
+    };
+
+    [ObservableProperty]
+    private SlopeModeOption? _selectedSlopeMode;
+
+    partial void OnSelectedSlopeModeChanged(SlopeModeOption? value) => OnPartChanged();
+
+    private void LoadGrading(SweepAssembly assembly)
+    {
+        var left = assembly.Left ?? new SideGrading();
+        var right = assembly.Right ?? new SideGrading();
+
+        SelectedSlopeMode = SlopeModes.FirstOrDefault(m => m.Mode == (left.Enabled || !right.Enabled ? left.SlopeMode : right.SlopeMode)) ?? SlopeModes[0];
+        FillRow(LeftGrading, left);
+        FillRow(RightGrading, right);
+    }
+
+    private void FillRow(SideGradingRow row, SideGrading grading)
+    {
+        row.Enabled = grading.Enabled;
+        row.CutValue = (decimal)grading.CutValue;
+        row.FillValue = (decimal)grading.FillValue;
+        row.MaxWidth = FromMillimetres(grading.MaxWidthMm);
+    }
+
+    private SideGrading ToGrading(SideGradingRow row) => new()
+    {
+        Enabled = row.Enabled,
+        SlopeMode = (SelectedSlopeMode ?? SlopeModes[0]).Mode,
+        CutValue = (double)row.CutValue,
+        FillValue = (double)row.FillValue,
+        MaxWidthMm = ToMillimetres(row.MaxWidth)
+    };
 
     /// <summary>The name of the assembly last saved, so the sweep dialog can select it. Null until something is saved.</summary>
     public string? SavedName { get; private set; }
@@ -167,6 +252,8 @@ internal partial class AssemblyEditorViewModel : BaseViewModel
             {
                 Parts.Add(ToRow(part));
             }
+
+            LoadGrading(assembly);
         }
         finally
         {
@@ -199,6 +286,9 @@ internal partial class AssemblyEditorViewModel : BaseViewModel
                 row.LateralOffset = Helpers.UnitConversion.Convert(row.LateralOffset, oldValue.DisplayUnit, newValue.DisplayUnit);
                 row.VerticalOffset = Helpers.UnitConversion.Convert(row.VerticalOffset, oldValue.DisplayUnit, newValue.DisplayUnit);
             }
+
+            LeftGrading.MaxWidth = Helpers.UnitConversion.Convert(LeftGrading.MaxWidth, oldValue.DisplayUnit, newValue.DisplayUnit);
+            RightGrading.MaxWidth = Helpers.UnitConversion.Convert(RightGrading.MaxWidth, oldValue.DisplayUnit, newValue.DisplayUnit);
         }
         finally
         {
@@ -232,7 +322,7 @@ internal partial class AssemblyEditorViewModel : BaseViewModel
             }
 
             return profile;
-        });
+        }, CanGradeTopo ? ToGrading(LeftGrading) : null, CanGradeTopo ? ToGrading(RightGrading) : null);
 
         Preview = preview;
         Warning = problems.Count == 0
@@ -288,7 +378,9 @@ internal partial class AssemblyEditorViewModel : BaseViewModel
     internal SweepAssembly ToAssembly() => new()
     {
         Name = AssemblyName.Trim(),
-        Parts = Parts.Select(ToPart).ToList()
+        Parts = Parts.Select(ToPart).ToList(),
+        Left = ToGrading(LeftGrading),
+        Right = ToGrading(RightGrading)
     };
 
     // ---- commands -----------------------------------------------------------------------------------------------
@@ -302,6 +394,7 @@ internal partial class AssemblyEditorViewModel : BaseViewModel
             SelectedAssemblyName = null;
             AssemblyName = string.Empty;
             Parts.Clear();
+            LoadGrading(new SweepAssembly());
         }
         finally
         {
@@ -388,6 +481,35 @@ internal partial class AssemblyEditorViewModel : BaseViewModel
         try
         {
             var assembly = ToAssembly();
+
+            foreach (var (name, grading) in new[] { ("Left", assembly.Left), ("Right", assembly.Right) })
+            {
+                if (!grading.Enabled)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    grading.CutRiseOverRun();
+                    grading.FillRiseOverRun();
+                }
+                catch (ArgumentOutOfRangeException ex)
+                {
+                    // the exception adds the parameter name, on a second line or in brackets, depending on the framework
+                    var reason = ex.Message.Split('\n')[0].Trim();
+                    var bracket = reason.IndexOf(" (Parameter", StringComparison.Ordinal);
+                    Status = $"{name} grading: {(bracket > 0 ? reason.Substring(0, bracket) : reason)}";
+                    return;
+                }
+
+                if (grading.MaxWidthMm <= 0.0)
+                {
+                    Status = $"{name} grading: the maximum width must be greater than zero.";
+                    return;
+                }
+            }
+
             _store.Save(assembly);
             SavedName = assembly.Name;
             Changed = true;

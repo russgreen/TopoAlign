@@ -42,6 +42,9 @@ public class Settings
     /// <summary>Name of the last assembly used.</summary>
     public string SweepAssemblyName { get; set; } = string.Empty;
 
+    /// <summary>Whether sweeping an assembly also grades the picked toposolid out from its sides.</summary>
+    public bool SweepGradeTopo { get; set; }
+
     /// <summary>How the road solid is made: SegmentedLoft or SmoothSurfaces.</summary>
     public string SweepGeometryMethod { get; set; } = "SegmentedLoft";
 
