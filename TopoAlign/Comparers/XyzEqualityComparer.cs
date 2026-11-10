@@ -6,7 +6,7 @@ namespace TopoAlign.Comparers;
 
 internal class XyzEqualityComparer : IEqualityComparer<XYZ>
 {
-    private const double _sixteenthInchInFeet = 1.0d / (16.0d * 12.0d);
+    private const double _sixteenthInchInFeet = TopoAlign.Geometry.Tolerances.SixteenthInchInFeet;
 
     public bool Equals(XYZ? p, XYZ? q)
     {

@@ -15,7 +15,7 @@ internal static class ToposolidGrader
     private static readonly ILogger log = Log.ForContext(typeof(ToposolidGrader));
 
     // a vertex this close (in plan) to the slope's outline counts as part of it
-    private const double PlanTolerance = 1.0 / (16.0 * 12.0);
+    private const double PlanTolerance = TopoAlign.Geometry.Tolerances.SixteenthInchInFeet;
 
     /// <summary>
     /// Works out the slope, then rebuilds the toposolid's points in one transaction. Must be called from within the Revit API context.

@@ -12,7 +12,7 @@ namespace TopoAlign.Grading.Kerb;
 internal static class KerbRampRevit
 {
     // a vertex this close (in plan) to the ramp's or a flare's outline counts as part of it
-    private const double PlanTolerance = 1.0 / (16.0 * 12.0);
+    private const double PlanTolerance = TopoAlign.Geometry.Tolerances.SixteenthInchInFeet;
 
     /// <summary>Must be called from within the Revit API context.</summary>
     public static KerbRampApplyResult Apply(Document document, KerbRampRequest request)
