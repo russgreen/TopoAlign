@@ -12,6 +12,7 @@ using TopoAlign.Sweep.Road;
 using TopoAlign.ViewModels.RoadTools;
 using TopoAlign.Views.RoadTools;
 using TopoAlign.Commands.Shared;
+using TopoAlign.Services;
 
 namespace TopoAlign.Commands;
 
@@ -69,12 +70,26 @@ public class CommandSweepAlignment : IExternalCommand
         // Build after the dialog has closed so the transaction runs in the Revit API context.
         try
         {
-            if (request.Assembly is not null)
+            AssemblyResult? assemblyResult = null;
+            RoadResult? roadResult = null;
+            using (var progress = ProgressService.Start("Sweep along alignment"))
             {
-                return ShowAssemblyResult(request, AssemblyBuilder.Create(App.RevitDocument, request.Alignment, request.Assembly, request.AssemblyProfiles, request.Options, request.Topographies));
+                if (request.Assembly is not null)
+                {
+                    assemblyResult = AssemblyBuilder.Create(App.RevitDocument, request.Alignment, request.Assembly, request.AssemblyProfiles, request.Options, request.Topographies, progress);
+                }
+                else
+                {
+                    roadResult = RoadBuilder.Create(App.RevitDocument, request.Alignment, request.Profile!, request.Options, progress);
+                }
             }
 
-            var result = RoadBuilder.Create(App.RevitDocument, request.Alignment, request.Profile!, request.Options);
+            if (assemblyResult is not null)
+            {
+                return ShowAssemblyResult(request, assemblyResult);
+            }
+
+            var result = roadResult!;
 
             var summary = request.Options.Output == RoadOutput.Toposolid
                 ? $"Toposolid created along '{request.AlignmentName}' from {result.StationCount} sections and {result.ToposolidPointCount} surface points. No road was added to the model."
@@ -103,6 +118,11 @@ public class CommandSweepAlignment : IExternalCommand
 
             TaskDialog.Show("Sweep Along Alignment", summary);
             return Result.Succeeded;
+        }
+        catch (OperationCanceledException)
+        {
+            log.Information("Sweep along alignment cancelled by the user");
+            return Result.Cancelled;
         }
         catch (Exception ex)
         {

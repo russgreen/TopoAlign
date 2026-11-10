@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using g3;
 using TopoAlign.Comparers;
+using TopoAlign.Services;
 using TopoAlign.Views;
 
 namespace TopoAlign.Geometry;
@@ -585,10 +586,12 @@ public static class PointsUtils
 
         // Check each point to see if point is with 2D boundary
         var points1 = new List<XYZ>();
-        using (var pf = new ProgressWindow("Analyzing topo points.", "{0} points of " + points.Count + " processed...", points.Count))
+        using (var pf = ProgressService.Start("Analyzing topo points.", points.Count, "{0} points of " + points.Count + " processed..."))
         {
             foreach (XYZ pt in points)
             {
+                pf.ThrowIfCancelled();
+
                 // If PointInPoly.PolygonContains(poly, Util.Flatten(pt)) = True Then
                 // If PointInPoly.PolygonContains(uvArr, Util.Flatten(pt)) = True Then
                 if (PointInPoly.PointInPolygon(uvArr, PointsUtils.Flatten(pt)) == true)
@@ -692,10 +695,12 @@ public static class PointsUtils
 
         // Check each point to see if point is with 2D boundary
         var points1 = new List<XYZ>();
-        using (var pf = new ProgressWindow("Analyzing topo points.", "{0} points of " + points.Count + " processed...", points.Count))
+        using (var pf = ProgressService.Start("Analyzing topo points.", points.Count, "{0} points of " + points.Count + " processed..."))
         {
             foreach (XYZ pt in points)
             {
+                pf.ThrowIfCancelled();
+
                 // If PointInPoly.PolygonContains(poly, Util.Flatten(pt)) = True Then
                 // If PointInPoly.PolygonContains(uvArr, Util.Flatten(pt)) = True Then
                 if (PointInPoly.PointInPolygon(uvArr, Flatten(pt)) == true)

@@ -9,6 +9,7 @@ using TopoAlign.Alignments.Civil;
 using TopoAlign.Views.AlignmentTools;
 using TopoAlign.ViewModels.AlignmentTools;
 using TopoAlign.Commands.Shared;
+using TopoAlign.Services;
 
 namespace TopoAlign.Commands;
 
@@ -48,7 +49,11 @@ public class CommandEditAlignment : IExternalCommand
         // Update after the dialog has closed so the transaction runs in the Revit API context.
         try
         {
-            AlignmentApi.Update(App.RevitDocument, request.Alignment, request.Json, request.PlanLength, request.Renamed ? request.Name : null);
+            using (var progress = ProgressService.Start("Edit alignment", cancelEnabled: false))
+            {
+                progress.Report("Updating the alignment in Revit...");
+                AlignmentApi.Update(App.RevitDocument, request.Alignment, request.Json, request.PlanLength, request.Renamed ? request.Name : null);
+            }
 
             var changes = new List<string>();
             if (request.Renamed)

@@ -1,19 +1,20 @@
 <Window x:Class="TopoAlign.Views.ProgressWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TopoAlign"
-        mc:Ignorable="d"
-        Title="ProgressWindow" Height="100" Width="445" 
-        WindowStyle="None" 
-        ResizeMode="NoResize" 
-        WindowStartupLocation="CenterScreen">
+        Title="{Binding Title}" Height="130" Width="445"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Topmost="True"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterScreen"
+        BorderBrush="Gray" BorderThickness="1"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
@@ -21,10 +22,14 @@
             <ColumnDefinition Width="90" />
         </Grid.ColumnDefinitions>
 
-        <TextBlock x:Name="CaptionLanel" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Title" FontWeight="Bold"/>
-        <TextBlock x:Name="ProgressLabel" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="Progressing..." FontFamily="Segoe UI Light" />
-        <ProgressBar x:Name="Progress" Grid.Row="2" Grid.Column="0" Value="0" Maximum="100" />
-        <Button x:Name="AbortButton" Grid.Row="2" Grid.Column="1" Content="Cancel" Margin="5,0,0,0" Click="ButtonCancel_Click" FontFamily="Segoe UI Light" />
-
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding Title}" FontWeight="Bold"/>
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Message}" FontFamily="Segoe UI Light" Margin="0,4,0,0" />
+        <ProgressBar Grid.Row="2" Grid.Column="0" Height="18" VerticalAlignment="Center"
+                     Value="{Binding Value, Mode=OneWay}" Maximum="{Binding Maximum}"
+                     IsIndeterminate="{Binding IsIndeterminate}" />
+        <Button Grid.Row="2" Grid.Column="1" Content="Cancel" Margin="5,0,0,0" VerticalAlignment="Center"
+                Command="{Binding CancelCommand}" IsEnabled="{Binding CancelEnabled}"
+                FontFamily="Segoe UI Light" />
+        <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Text="{Binding TimeMessage}" FontFamily="Segoe UI Light" FontSize="11" Foreground="Gray" />
     </Grid>
 </Window>

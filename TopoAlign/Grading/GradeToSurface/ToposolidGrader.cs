@@ -5,6 +5,7 @@ using TopoAlign.Alignments;
 using TopoAlign.Comparers;
 using TopoAlign.Geometry.Topography;
 using TopoAlign.Grading.Slope;
+using TopoAlign.Services;
 using TopoAlign.Grading.TopoEdge;
 
 namespace TopoAlign.Grading.GradeToSurface;
@@ -20,7 +21,7 @@ internal static class ToposolidGrader
     /// <summary>
     /// Works out the slope, then rebuilds the toposolid's points in one transaction. Must be called from within the Revit API context.
     /// </summary>
-    public static GradeToSurfaceResult Apply(Document document, GradeToSurfaceRequest request)
+    public static GradeToSurfaceResult Apply(Document document, GradeToSurfaceRequest request, ProgressService? progress = null)
     {
         if (document is null)
         {
@@ -34,7 +35,7 @@ internal static class ToposolidGrader
 
         var path = BuildPath(request.Curves, request.Interval, request.VerticalOffset, out var closed);
         var slope = SlopeUnits.ToRiseOverRun(request.SlopeMode, request.SlopeValue);
-        return ApplyToPath(document, request.Toposolid, path, closed, request.SidePoint.X, request.SidePoint.Y, slope, slope, request.MaxWidth, request.AddEdgePoints, "Grade to surface");
+        return ApplyToPath(document, request.Toposolid, path, closed, request.SidePoint.X, request.SidePoint.Y, slope, slope, request.MaxWidth, request.AddEdgePoints, "Grade to surface", progress);
     }
 
     /// <summary>
@@ -52,7 +53,8 @@ internal static class ToposolidGrader
         double fillRiseOverRun,
         double maxWidth,
         bool addEdgePoints,
-        string transactionName)
+        string transactionName,
+        ProgressService? progress = null)
     {
         if (document is null)
         {
@@ -64,8 +66,17 @@ internal static class ToposolidGrader
             throw new ArgumentNullException(nameof(toposolid));
         }
 
+        progress?.SetIndeterminate("Reading the toposolid...");
         var surface = TopographyReader.Read(toposolid);
-        var grading = SlopeGrader.Grade(path, closed, sideX, sideY, cutRiseOverRun, fillRiseOverRun, maxWidth, surface, addEdgePoints);
+
+        progress?.Restart(path.Count, "Working out the slope...");
+        var grading = SlopeGrader.Grade(path, closed, sideX, sideY, cutRiseOverRun, fillRiseOverRun, maxWidth, surface, addEdgePoints,
+            progress is null ? null : (done, _) =>
+            {
+                progress.ThrowIfCancelled();
+                progress.SetValue(done);
+            });
+        progress?.SetIndeterminate("Preparing the points...");
 
         var result = new GradeToSurfaceResult
         {
@@ -190,6 +201,9 @@ internal static class ToposolidGrader
         PointsRejectedException? rejected = null;
         for (var level = 0; level <= 4; level++)
         {
+            progress?.ThrowIfCancelled();
+            progress?.SetIndeterminate(level == 0 ? "Updating the toposolid..." : $"Revit refused the points; trying again ({level} of 4)...");
+
             var thin = level is 1 or 3 or 4;
             var edgeOnEdge = level < 2;
             var keepMoves = level < 4;
@@ -224,7 +238,7 @@ internal static class ToposolidGrader
                 ReplacePointsOutcome outcome;
                 try
                 {
-                    outcome = ReplacePoints(document, toposolid, levelPoints, transactionName, levelOnEdge, levelMoves, outline, keepMoves ? path : null, closed);
+                    outcome = ReplacePoints(document, toposolid, levelPoints, transactionName, levelOnEdge, levelMoves, outline, keepMoves ? path : null, closed, progress);
                 }
                 catch (CornerMovesFailedException ex)
                 {
@@ -232,7 +246,7 @@ internal static class ToposolidGrader
                     log.Warning("{transaction} is being run again without moving the corner vertices", transactionName);
                     var cornersAsEdgePoints = levelOnEdge.Concat(levelMoves).ToList();
                     levelMoves = new List<GradePoint>();
-                    outcome = ReplacePoints(document, toposolid, levelPoints, transactionName, cornersAsEdgePoints, levelMoves, outline);
+                    outcome = ReplacePoints(document, toposolid, levelPoints, transactionName, cornersAsEdgePoints, levelMoves, outline, progress: progress);
                     outcome.MovesFailed += moves.Count;
                     outcome.MoveFailure = ex.Message;
                 }
@@ -340,7 +354,8 @@ internal static class ToposolidGrader
         IReadOnlyList<GradePoint>? moves = null,
         IReadOnlyList<EdgeSegment>? outline = null,
         IReadOnlyList<GradePoint>? edgePath = null,
-        bool edgePathClosed = false)
+        bool edgePathClosed = false,
+        ProgressService? progress = null)
     {
         var outcome = new ReplacePointsOutcome();
 
@@ -442,8 +457,14 @@ internal static class ToposolidGrader
                 // one point Revit doesn't like fails the whole batch, so find which ones it does take
                 log.Warning("{transaction} could not add all points together; adding them one at a time", transactionName);
                 var refused = 0;
+                progress?.Restart(points.Count, "Adding points one at a time...");
+                var added = 0;
                 foreach (var point in points)
                 {
+                    // outside Attempt, which swallows exceptions; the catch below rolls the whole transaction back
+                    progress?.ThrowIfCancelled();
+                    progress?.SetValue(added++);
+
                     if (!TryAdd(document, editor, point))
                     {
                         refused++;
@@ -461,6 +482,7 @@ internal static class ToposolidGrader
             {
                 foreach (var point in tryPoints)
                 {
+                    progress?.ThrowIfCancelled();
                     AddEdgePoint(document, editor, point, outline, outcome);
                 }
             }

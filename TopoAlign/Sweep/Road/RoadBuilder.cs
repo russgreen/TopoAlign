@@ -2,6 +2,7 @@ using Autodesk.Revit.DB;
 using Serilog;
 using TopoAlign.Alignments;
 using TopoAlign.Alignments.Civil;
+using TopoAlign.Services;
 using TopoAlign.Sweep.Profiles;
 
 namespace TopoAlign.Sweep.Road;
@@ -88,11 +89,12 @@ internal static class RoadBuilder
     /// and otherwise as segmented lofts. Nothing is added to the model.
     /// </summary>
     internal static (SolidResult Solids, string Notice) BuildSolids(
-        PathReader path, List<double> stations, SectionProfile profile, RoadOptions options, string alignmentId)
+        PathReader path, List<double> stations, SectionProfile profile, RoadOptions options, string alignmentId, ProgressService? progress = null)
     {
         var notice = string.Empty;
         if (options.GeometryMethod == RoadGeometryMethod.SmoothSurfaces)
         {
+            progress?.SetIndeterminate("Building smooth road surfaces...");
             if (SmoothRoadBuilder.TryBuild(path, stations, profile, options, out var smoothSolids, out var problem))
             {
                 var smooth = new SolidResult();
@@ -104,7 +106,16 @@ internal static class RoadBuilder
             notice = $"The smooth surfaces could not be made ({problem}), so the road was made from segments instead.";
         }
 
-        return (RoadSolidBuilder.Build(CreateLoops(path, stations, profile, options, out _)), notice);
+        progress?.SetIndeterminate("Working out the sections along the alignment...");
+        var loops = CreateLoops(path, stations, profile, options, out _);
+
+        progress?.Restart(loops.Count, "Building the road geometry...");
+        var built = RoadSolidBuilder.Build(loops, 2, progress is null ? null : (done, _) =>
+        {
+            progress.ThrowIfCancelled();
+            progress.SetValue(done);
+        });
+        return (built, notice);
     }
 
     /// <summary>Adds a DirectShape of the solids, tagged as this add-in's road for the alignment. Call it inside a transaction.</summary>
@@ -130,7 +141,7 @@ internal static class RoadBuilder
     /// Builds the road and puts it in the model, replacing an earlier road for the same alignment. Must be called from within
     /// the Revit API context; it opens its own transaction.
     /// </summary>
-    public static RoadResult Create(Document document, Element alignment, SectionProfile profile, RoadOptions options)
+    public static RoadResult Create(Document document, Element alignment, SectionProfile profile, RoadOptions options, ProgressService? progress = null)
     {
         if (document is null)
         {
@@ -149,10 +160,13 @@ internal static class RoadBuilder
 
         options ??= new RoadOptions();
 
+        progress?.SetIndeterminate("Reading the alignment...");
         var path = new PathReader(alignment);
         var stations = PlanStations(path, options);
 
-        var (solids, notice) = BuildSolids(path, stations, profile, options, alignment.UniqueId);
+        var (solids, notice) = BuildSolids(path, stations, profile, options, alignment.UniqueId, progress);
+        progress?.ThrowIfCancelled();
+        progress?.SetIndeterminate("Adding the road to the model...");
 
         if (solids.Solids.Count == 0)
         {

@@ -12,7 +12,8 @@ internal static class RoadSolidBuilder
     /// share a loop so the surface is continuous); if a group can't be built it falls back to one span at a time, and a span
     /// that still fails is skipped and counted, so one bad section doesn't lose the whole road.
     /// </summary>
-    public static SolidResult Build(IReadOnlyList<CurveLoop> loops, int groupSize = 2)
+    /// <param name="onProgress">Called before each group with (loops done, total loops); it may throw to stop the build.</param>
+    public static SolidResult Build(IReadOnlyList<CurveLoop> loops, int groupSize = 2, Action<int, int>? onProgress = null)
     {
         var result = new SolidResult();
         if (loops is null || loops.Count < 2)
@@ -23,6 +24,7 @@ internal static class RoadSolidBuilder
         var size = Math.Max(2, groupSize);
         for (var start = 0; start < loops.Count - 1; start += size - 1)
         {
+            onProgress?.Invoke(start, loops.Count);
             var count = Math.Min(size, loops.Count - start);
             var group = loops.Skip(start).Take(count).ToList();
 

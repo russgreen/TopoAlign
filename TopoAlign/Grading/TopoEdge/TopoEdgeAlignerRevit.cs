@@ -2,6 +2,7 @@ using Autodesk.Revit.DB;
 using Serilog;
 using TopoAlign.Alignments;
 using TopoAlign.Geometry.Topography;
+using TopoAlign.Services;
 
 namespace TopoAlign.Grading.TopoEdge;
 
@@ -11,7 +12,7 @@ internal static class TopoEdgeAlignerRevit
     private static readonly ILogger log = Log.ForContext(typeof(TopoEdgeAlignerRevit));
 
     /// <summary>Must be called from within the Revit API context.</summary>
-    public static AlignTopoEdgesResult Apply(Document document, Element first, Element second, bool both)
+    public static AlignTopoEdgesResult Apply(Document document, Element first, Element second, bool both, ProgressService? progress = null)
     {
         if (document is null)
         {
@@ -33,16 +34,24 @@ internal static class TopoEdgeAlignerRevit
             throw new InvalidOperationException("Pick two different topographies.");
         }
 
+        var steps = both ? 3 : 2;
+        progress?.Restart(steps, "Step 1 of " + steps + ": reading the edges...");
         var alignment = TopoEdgeAligner.Align(ReadOutline(first), ReadOutline(second), both, firstPoints: ReadExistingPoints(first));
+        progress?.SetValue(1);
 
         var result = new AlignTopoEdgesResult
         {
             SharedPoints = alignment.SharedPoints
         };
 
+        progress?.ThrowIfCancelled();
+        progress?.Report("Step 2 of " + steps + ": updating the first topography...");
         (result.MovedOnFirst, result.AddedToFirst) = EditPoints(document, first, alignment.AddToFirst, alignment.ChangeOnFirst);
+        progress?.SetValue(2);
         if (both)
         {
+            // no cancel check here: the first topography is already changed, and stopping now would leave only half the job done
+            progress?.Report("Step 3 of " + steps + ": updating the second topography...");
             result.AddedToSecond = EditPoints(document, second, alignment.AddToSecond, Array.Empty<GradePoint>()).Added;
         }
 
