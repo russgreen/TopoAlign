@@ -11,6 +11,7 @@ using TopoAlign.Sweep.Assemblies;
 using TopoAlign.Sweep.Road;
 using TopoAlign.ViewModels.RoadTools;
 using TopoAlign.Views.RoadTools;
+using TopoAlign.Commands.Shared;
 
 namespace TopoAlign.Commands;
 
@@ -24,41 +25,31 @@ public class CommandSweepAlignment : IExternalCommand
     {
         log.Information("{command}", nameof(CommandSweepAlignment));
 
-        App.CachedUiApp = commandData.Application;
-        App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
+        CommandFlow.Initialise(commandData);
 
-        if (!AlignmentApi.Supports(AlignmentFeature.Read, out var problem))
+        if (!CommandFlow.AlignmentFeaturesSupported(AlignmentFeature.Read, "Sweep Along Alignment"))
         {
-            TaskDialog.Show("Sweep Along Alignment", problem);
             return Result.Cancelled;
         }
 
         var viewModel = new SweepAlignmentViewModel();
 
         // an alignment that is already selected is used without asking
-        var uidoc = commandData.Application.ActiveUIDocument;
-        var filter = new AlignmentPickFilter();
-        foreach (var id in uidoc.Selection.GetElementIds())
-        {
-            var element = App.RevitDocument.GetElement(id);
-            if (filter.AllowElement(element) && viewModel.SelectAlignment(element))
-            {
-                break;
-            }
-        }
+        CommandFlow.UseSelectedElement(commandData.Application.ActiveUIDocument, new AlignmentPickFilter(), viewModel.SelectAlignment);
 
         var view = new SweepAlignmentView(viewModel);
 
         // The dialog hides itself to let the user pick an alignment; the pick runs here in the API context,
         // then the same dialog is shown again.
-        bool? dialogResult;
-        do
-        {
-            viewModel.PickRequested = false;
-            viewModel.PickToposolidRequested = false;
-            dialogResult = view.ShowDialog();
-
-            if (viewModel.PickRequested)
+        var dialogResult = CommandFlow.ShowDialogWithPicks(
+            view,
+            () =>
+            {
+                viewModel.PickRequested = false;
+                viewModel.PickToposolidRequested = false;
+            },
+            () => viewModel.PickRequested,
+            () =>
             {
                 if (viewModel.PickToposolidRequested)
                 {
@@ -68,9 +59,7 @@ public class CommandSweepAlignment : IExternalCommand
                 {
                     viewModel.PickAlignmentElement();
                 }
-            }
-        }
-        while (viewModel.PickRequested);
+            });
 
         if (dialogResult != true || viewModel.Request is not { } request)
         {
