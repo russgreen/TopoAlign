@@ -66,9 +66,6 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
 
     public string WindowTitle { get; }
 
-    /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler? HideRequested;
-
     /// <summary>What the command should ask the user to pick before showing the dialog again.</summary>
     public GradePickKind PickRequested { get; set; }
 
@@ -128,7 +125,7 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
         // Hiding a ShowDialog window ends ShowDialog, so the command does the pick (inside the
         // Revit API context) and then shows this same window again.
         PickRequested = kind;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     /// <summary>Runs the pick the dialog asked for. Called by the command while the dialog is hidden.</summary>

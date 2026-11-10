@@ -67,9 +67,6 @@ internal partial class KerbViewModel : BaseViewModel
 
     public string WindowTitle { get; }
 
-    /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler? HideRequested;
-
     /// <summary>What to pick while the dialog is hidden; <see cref="KerbSweepPickKind.None"/> when it was closed instead.</summary>
     public KerbSweepPickKind PickRequested { get; set; }
 
@@ -135,7 +132,7 @@ internal partial class KerbViewModel : BaseViewModel
         // Hiding a ShowDialog window ends ShowDialog, so the command does the pick (inside the
         // Revit API context) and then shows this same window again.
         PickRequested = kind;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     [RelayCommand]

@@ -53,9 +53,6 @@ internal partial class StationLabelsViewModel : BaseViewModel
 
     public string WindowTitle { get; }
 
-    /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler? HideRequested;
-
     /// <summary>True when the dialog was hidden to pick an alignment; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
 
@@ -162,27 +159,13 @@ internal partial class StationLabelsViewModel : BaseViewModel
         // Hiding a ShowDialog window ends ShowDialog, so the command does the pick (inside the
         // Revit API context) and then shows this same window again.
         PickRequested = true;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     /// <summary>Lets the user click an alignment. Called by the command while the dialog is hidden.</summary>
     internal void PickAlignmentElement()
     {
-        try
-        {
-            var uidoc = App.CachedUiApp.ActiveUIDocument;
-            var reference = uidoc.Selection.PickObject(ObjectType.Element, new AlignmentPickFilter(), "Select the alignment to label");
-            SelectAlignment(App.RevitDocument.GetElement(reference));
-        }
-        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-        {
-            // user cancelled selection
-        }
-        catch (Exception ex)
-        {
-            log.Error(ex, "Failed while selecting an alignment");
-            TaskDialog.Show("Station Labels", ex.Message);
-        }
+        AlignmentPicker.PickAndSelect("Select the alignment to label", "Station Labels", element => SelectAlignment(element), log);
     }
 
     partial void OnSelectedDisplayUnitChanged(Models.DisplayUnitModel? oldValue, Models.DisplayUnitModel newValue)

@@ -41,9 +41,6 @@ internal partial class EditAlignmentViewModel : BaseViewModel
 
     public string WindowTitle { get; }
 
-    /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler? HideRequested;
-
     /// <summary>True when the dialog was hidden to pick an alignment; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
 
@@ -134,27 +131,13 @@ internal partial class EditAlignmentViewModel : BaseViewModel
         // Revit API context) and then shows this same window again.
         PendingPick = EditAlignmentPick.Alignment;
         PickRequested = true;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     /// <summary>Lets the user click an alignment. Called by the command while the dialog is hidden.</summary>
     internal void PickAlignmentElement()
     {
-        try
-        {
-            var uidoc = App.CachedUiApp.ActiveUIDocument;
-            var reference = uidoc.Selection.PickObject(ObjectType.Element, new AlignmentPickFilter(), "Select the alignment to edit");
-            SelectAlignment(App.RevitDocument.GetElement(reference));
-        }
-        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-        {
-            // user cancelled selection
-        }
-        catch (Exception ex)
-        {
-            log.Error(ex, "Failed while selecting an alignment");
-            TaskDialog.Show("Edit Alignment", ex.Message);
-        }
+        AlignmentPicker.PickAndSelect("Select the alignment to edit", "Edit Alignment", element => SelectAlignment(element), log);
     }
 
     /// <summary>Reads an alignment's name, start station and length into the dialog. False, with the reason in the status, if it can't be edited.</summary>

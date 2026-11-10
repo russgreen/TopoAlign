@@ -40,9 +40,6 @@ internal partial class SweepToToposolidViewModel : BaseViewModel
 
     public string WindowTitle { get; }
 
-    /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler? HideRequested;
-
     /// <summary>True when the dialog was hidden to pick a road; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
 
@@ -87,7 +84,7 @@ internal partial class SweepToToposolidViewModel : BaseViewModel
         // Hiding a ShowDialog window ends ShowDialog, so the command does the pick (inside the
         // Revit API context) and then shows this same window again.
         PickRequested = true;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     /// <summary>Lets the user click a road. Called by the command while the dialog is hidden.</summary>

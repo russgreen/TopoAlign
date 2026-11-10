@@ -118,7 +118,7 @@ internal partial class CreateAlignmentViewModel
         ResetPickKind();
         PickRequested = true;
         PickPointsRequested = true;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     [RelayCommand]
@@ -127,7 +127,7 @@ internal partial class CreateAlignmentViewModel
         ResetPickKind();
         PickRequested = true;
         PickCadRequested = true;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     [RelayCommand]

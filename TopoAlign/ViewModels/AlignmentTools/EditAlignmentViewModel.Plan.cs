@@ -326,7 +326,7 @@ internal partial class EditAlignmentViewModel
     {
         PendingPick = EditAlignmentPick.MovePoint;
         PickRequested = true;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     [RelayCommand]
@@ -334,7 +334,7 @@ internal partial class EditAlignmentViewModel
     {
         PendingPick = EditAlignmentPick.AddPoint;
         PickRequested = true;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     [RelayCommand(CanExecute = nameof(CanRemovePoint))]

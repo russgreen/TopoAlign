@@ -74,9 +74,6 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
 
     public string WindowTitle { get; }
 
-    /// <summary>Raised when the dialog should hide itself so the command can run an interactive pick.</summary>
-    public event EventHandler? HideRequested;
-
     /// <summary>True when the dialog was hidden to pick lines; the command picks, then shows the dialog again.</summary>
     public bool PickRequested { get; set; }
 
@@ -160,7 +157,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         // Revit API context) and then shows this same window again.
         ResetPickKind();
         PickRequested = true;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     [RelayCommand]
@@ -169,7 +166,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
         ResetPickKind();
         PickRequested = true;
         PickToposolidRequested = true;
-        HideRequested?.Invoke(this, EventArgs.Empty);
+        OnHideRequested();
     }
 
     /// <summary>Runs whichever pick the dialog asked for. Called by the command while the dialog is hidden.</summary>
@@ -385,7 +382,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
             PickRequested = true;
             PreviewLayoutRequested = true;
             _previewSegments = layout.Segments;
-            HideRequested?.Invoke(this, EventArgs.Empty);
+            OnHideRequested();
         }
         catch (Exception ex)
         {
