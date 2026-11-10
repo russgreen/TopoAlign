@@ -12,6 +12,8 @@ using TopoAlign.Alignments.Plan;
 using TopoAlign.Alignments.Profile;
 using TopoAlign.Geometry.Topography;
 using TopoAlign.PickFilters;
+using TopoAlign.ViewModels.AlignmentTools;
+using TopoAlign.Views.AlignmentTools;
 using Settings = TopoAlign.Services.Settings;
 
 namespace TopoAlign.Tests;

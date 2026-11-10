@@ -6,6 +6,8 @@ using TopoAlign.Alignments;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
 using TopoAlign.Alignments.Civil;
+using TopoAlign.Views.AlignmentTools;
+using TopoAlign.ViewModels.AlignmentTools;
 
 namespace TopoAlign.Commands;
 

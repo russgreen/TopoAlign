@@ -7,6 +7,8 @@ using TopoAlign.Grading;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
 using TopoAlign.Grading.Kerb;
+using TopoAlign.ViewModels.GradingTools;
+using TopoAlign.Views.GradingTools;
 
 namespace TopoAlign.Commands;
 

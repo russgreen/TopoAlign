@@ -6,6 +6,8 @@ using Settings = TopoAlign.Services.Settings;
 using Visibility = System.Windows.Visibility;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Views.AlignmentTools;
+using TopoAlign.ViewModels.AlignmentTools;
 
 namespace TopoAlign.Tests;
 

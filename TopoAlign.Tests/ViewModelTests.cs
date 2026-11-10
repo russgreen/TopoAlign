@@ -8,6 +8,8 @@ using System.Text.Json.Nodes;
 using TopoAlign.Models;
 using TopoAlign.ViewModels;
 using TopoAlign.Services;
+using TopoAlign.ViewModels.TopoTools;
+using TopoAlign.ViewModels.AlignmentTools;
 
 namespace TopoAlign.Tests;
 

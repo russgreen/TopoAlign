@@ -9,6 +9,8 @@ using Serilog;
 using TopoAlign.Geometry;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.ViewModels.TopoTools;
+using TopoAlign.Views.TopoTools;
 
 namespace TopoAlign.Commands;
 

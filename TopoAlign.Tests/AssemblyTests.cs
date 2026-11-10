@@ -11,6 +11,8 @@ using TopoAlign.Grading.Slope;
 using TopoAlign.Sweep.Assemblies;
 using TopoAlign.Sweep.Profiles;
 using TopoAlign.Sweep.Road;
+using TopoAlign.ViewModels.RoadTools;
+using TopoAlign.Views.RoadTools;
 using Settings = TopoAlign.Services.Settings;
 
 namespace TopoAlign.Tests;
@@ -1118,8 +1120,8 @@ public class AssemblyViewModelTests : TopoAlignUiTest
 
             RunOnStaThread(() =>
             {
-                sweepContext = new TopoAlign.Views.SweepAlignmentView(viewModel).DataContext;
-                editorContext = new TopoAlign.Views.AssemblyEditorView(editor).DataContext;
+                sweepContext = new TopoAlign.Views.RoadTools.SweepAlignmentView(viewModel).DataContext;
+                editorContext = new TopoAlign.Views.RoadTools.AssemblyEditorView(editor).DataContext;
             });
 
             await Assert.That(sweepContext).IsEqualTo(viewModel);

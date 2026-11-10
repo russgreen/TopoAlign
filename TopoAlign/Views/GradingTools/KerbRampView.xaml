@@ -1,0 +1,99 @@
+<Window x:Class="TopoAlign.Views.GradingTools.KerbRampView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vmGradingTools="clr-namespace:TopoAlign.ViewModels.GradingTools"
+        xmlns:behaviours="clr-namespace:TopoAlign.Behaviours"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance {x:Type vmGradingTools:KerbRampViewModel}, IsDesignTimeCreatable=False}"
+        Title="{Binding WindowTitle}"
+        FontSize="12" FontFamily="Segoe UI Light"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Height" Width="420"
+        WindowStyle="ToolWindow" ResizeMode="NoResize">
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="150"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <Style TargetType="TextBlock">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="ComboBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+            <Style TargetType="TextBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="HorizontalContentAlignment" Value="Right"/>
+                <Setter Property="MaxLength" Value="20"/>
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="Height" Value="25"/>
+            </Style>
+        </Grid.Resources>
+
+        <Button Grid.Row="0" Grid.ColumnSpan="2" Content="Pick kerb edge" Command="{Binding PickKerbCommand}"
+                ToolTip="Pick an edge of the footway toposolid along the kerb."/>
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding KerbStatus}" TextWrapping="Wrap"/>
+        
+         <Button Grid.Row="2" Grid.ColumnSpan="2" Content="Pick target edge" Command="{Binding PickTargetCommand}"
+                ToolTip="Pick the edge whose level the dropped kerb should come down to, usually the edge of the road toposolid."/>
+        <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Text="{Binding TargetStatus}" TextWrapping="Wrap"/>       
+
+        <Button Grid.Row="4" Grid.ColumnSpan="2" Content="Pick centre of drop" Command="{Binding PickCentreCommand}"
+                ToolTip="Click where the middle of the dropped kerb should be, along the kerb edge. In a 3D view, click on the footway toposolid."/>
+        <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Text="{Binding CentreStatus}" TextWrapping="Wrap"/>
+
+        <TextBlock Grid.Row="6" Text="Units used"/>
+        <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{Binding DisplayUnits}" DisplayMemberPath="Label"
+                  SelectedItem="{Binding SelectedDisplayUnit}"/>
+
+        <TextBlock Grid.Row="7" Text="Width of drop"/>
+        <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding Width}"
+                 behaviours:TextBoxInput.RegularExpression="^[0-9]*\.?[0-9]*$"
+                 ToolTip="The width of the ramp along the kerb, centred on the point picked. The flares are added to each side of this."/>
+
+        <TextBlock Grid.Row="8" Text="Ramp gradient 1 :"/>
+        <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding RampGradient}"
+                 behaviours:TextBoxInput.RegularExpression="^[0-9]*\.?[0-9]*$"
+                 ToolTip="1 : 12 is entered as 12. The ramp climbs from the kerb at this gradient until it meets the footway."/>
+
+        <TextBlock Grid.Row="9" Text="Flare gradient 1 :"/>
+        <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding FlareGradient}"
+                 behaviours:TextBoxInput.RegularExpression="^[0-9]*\.?[0-9]*$"
+                 ToolTip="1 : 12 is entered as 12. Each flare climbs along the kerb at this gradient until the kerb is back at its own level."/>
+
+        <TextBlock Grid.Row="10" Text="Maximum ramp length"/>
+        <TextBox Grid.Row="10" Grid.Column="1" Text="{Binding MaxRampLength}"
+                 behaviours:TextBoxInput.RegularExpression="^[0-9]*\.?[0-9]*$"
+                 ToolTip="The furthest the ramp may run from the kerb. A ramp that has not met the footway by then is refused."/>
+
+        <TextBlock Grid.Row="11" Text="Offset above road edge"/>
+        <TextBox Grid.Row="11" Grid.Column="1" Text="{Binding LevelOffset}"
+                 behaviours:TextBoxInput.RegularExpression="^-?[0-9]*\.?[0-9]*$"
+                 ToolTip="Optional. Raises the bottom of the dropped kerb this far above the picked target edge (a negative value lowers it). Leave at 0 to finish level with the edge."/>
+
+        <Button Grid.Row="12" Grid.ColumnSpan="2" Content="Create" IsDefault="True" Height="30"
+                Command="{Binding CreateCommand}"/>
+    </Grid>
+</Window>

@@ -4,6 +4,8 @@ using Autodesk.Revit.UI;
 using Serilog;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Views.AlignmentTools;
+using TopoAlign.ViewModels.AlignmentTools;
 
 namespace TopoAlign.Commands;
 

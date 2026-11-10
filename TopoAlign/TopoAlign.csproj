@@ -114,12 +114,12 @@
 
    <!-- Toposolids arrived in Revit 2024, so the Sweep to Toposolid dialog is only built from there. -->
    <ItemGroup Condition="$(RevitVersion) &lt; 2024">
-     <Page Remove="Views\SweepToToposolidView.xaml" />
-     <Compile Remove="Views\SweepToToposolidView.xaml.cs" />
-     <Page Remove="Views\GradeToSurfaceView.xaml" />
-     <Compile Remove="Views\GradeToSurfaceView.xaml.cs" />
-     <Page Remove="Views\KerbRampView.xaml" />
-     <Compile Remove="Views\KerbRampView.xaml.cs" />
+     <Page Remove="Views\RoadTools\SweepToToposolidView.xaml" />
+     <Compile Remove="Views\RoadTools\SweepToToposolidView.xaml.cs" />
+     <Page Remove="Views\GradingTools\GradeToSurfaceView.xaml" />
+     <Compile Remove="Views\GradingTools\GradeToSurfaceView.xaml.cs" />
+     <Page Remove="Views\GradingTools\KerbRampView.xaml" />
+     <Compile Remove="Views\GradingTools\KerbRampView.xaml.cs" />
    </ItemGroup>
   
    <ItemGroup>
