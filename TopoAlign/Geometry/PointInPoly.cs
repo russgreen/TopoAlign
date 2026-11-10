@@ -5,7 +5,7 @@ using TopoAlign.Extensions;
 
 namespace TopoAlign.Geometry;
 
-public class PointInPoly
+public static class PointInPoly
 {
     /// <summary>
     /// Determine the quadrant of a polygon vertex

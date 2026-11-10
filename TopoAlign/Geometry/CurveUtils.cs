@@ -10,7 +10,7 @@ namespace TopoAlign.Geometry;
 /// orientation of curves to form a contiguous
 /// closed loop.
 /// </summary>
-internal class CurveUtils
+internal static class CurveUtils
 {
     private const double _inch = 1.0d / 12.0d;
     private const double _sixteenth = _inch / 16.0d;

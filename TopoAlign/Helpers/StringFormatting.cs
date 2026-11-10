@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace TopoAlign.Helpers;
 
-public class StringFormatting
+public static class StringFormatting
 {
 
     /// <summary>

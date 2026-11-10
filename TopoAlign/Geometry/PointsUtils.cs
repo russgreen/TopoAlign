@@ -7,7 +7,7 @@ using TopoAlign.Views;
 
 namespace TopoAlign.Geometry;
 
-public class PointsUtils
+public static class PointsUtils
 {
     private static View3D? _v3d;
 
