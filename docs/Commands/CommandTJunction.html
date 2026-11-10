@@ -1,0 +1,69 @@
+<!-- docs/Commands/CommandTJunction.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – T-Junction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=Fragment+Mono&amp;display=swap">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="../index.html">
+      <span class="brand-wordmark">russ green</span>
+      <span class="brand-product">TopoAlign</span>
+    </a>
+    <nav class="side-nav" aria-label="Documentation"></nav>
+  </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">T-Junction</li>
+          </ol>
+        </nav>
+        <article>
+            <h1 id="overview">T-Junction</h1>
+            <p>Joins a side road alignment to a main road alignment. The side road is trimmed (or extended) to the centreline of the main road, and two new alignments are created for the kerb returns, one on each side of the side road.</p>
+
+            <h2 id="usage">Usage / Steps</h2>
+            <ol>
+                <li>Select the main road alignment and then the side road alignment in the model first, or launch <strong>T-Junction</strong> and use <strong>Pick main road alignment</strong> and <strong>Pick side road alignment</strong>.</li>
+                <li>Enter the <strong>Kerb radius</strong> and the half-width of each road (the distance from its centreline to its kerb).</li>
+                <li>A preview of the trimmed side road and the kerb returns is drawn in the active plan view. Click <strong>Create T-Junction</strong>.</li>
+            </ol>
+
+            <h2 id="options">Options / Parameters</h2>
+            <ul>
+                <li><strong>Units</strong> — The units used to enter lengths.</li>
+                <li><strong>Kerb radius</strong> — The radius of the kerb returns.</li>
+                <li><strong>Side road half-width</strong> — Distance from the side road centreline to its kerb. Use 0 to fillet between the centrelines.</li>
+                <li><strong>Main road half-width</strong> — Distance from the main road centreline to its kerb. Use 0 to fillet between the centrelines.</li>
+                <li><strong>Create road surface at the junction</strong> — Also makes the road surface where the roads meet as a separate piece of geometry (a thin solid in Roads, Hardscape or Generic Models). Its top follows the side road's elevation at the side road end, the main road's elevation along the main road kerb, and changes evenly round the kerb returns. <strong>Surface thickness</strong> is measured down from the top.</li>
+                <li><strong>Use the other end of the side road</strong> — When both ends of the side road reach the main road, the nearer end is used. Tick this to use the other.</li>
+            </ul>
+
+            <h2 id="notes">Notes</h2>
+            <ul>
+                <li>The main road is not changed.</li>
+                <li>The side road must end in a straight where it meets a straight of the main road. Its profile is kept, with the last grade extended or trimmed to the new length.</li>
+                <li>The kerb returns are new alignments named after the side road, for example "Side kerb L" and "Side kerb R" (left and right when travelling towards the main road). Each runs from the side road kerb to the main road kerb. Its profile runs from the side road's elevation at its start to the main road's elevation at its end, so the kerb returns line up vertically with the roads.</li>
+                <li>The command refuses when the kerb return would be longer than the side road or run off the end of the main road straight; use a smaller radius.</li>
+            </ul>
+      </article>
+        <nav class="pager" aria-label="Previous and next page"></nav>
+    </div>
+  </main>
+
+<footer><div class="wrap">TopoAlign • Documentation</div></footer>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

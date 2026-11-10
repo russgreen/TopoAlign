@@ -165,6 +165,15 @@ class App : IExternalApplication
         pbEditAlignment.LargeImage = PngImageSource("TopoAlign.Images.EditAlignment32.png");
         pbEditAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandEditAlignment.html"));
 
+        PushButton pbTJunction = (PushButton)panel.AddItem(new PushButtonData(
+            nameof(Commands.CommandTJunction),
+            $"T-Junction",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandTJunction)}"));
+        pbTJunction.ToolTip = "Join a side road alignment to a main road alignment with kerb return alignments of a given radius.";
+        pbTJunction.LargeImage = PngImageSource("TopoAlign.Images.TJunction32.png");
+        pbTJunction.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandTJunction.html"));
+
         PushButton pbEditProfile = (PushButton)panel.AddItem(new PushButtonData(
             nameof(Commands.CommandEditProfile),
             $"Edit{Environment.NewLine}Profile",

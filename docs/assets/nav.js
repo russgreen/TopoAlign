@@ -31,6 +31,7 @@
         { title: 'Create Alignment', href: 'Commands/CommandCreateAlignment.html' },
         { title: 'Edit Alignment', href: 'Commands/CommandEditAlignment.html' },
         { title: 'Edit Profile', href: 'Commands/CommandEditProfile.html' },
+        { title: 'T-Junction', href: 'Commands/CommandTJunction.html' },
         { title: 'Station Labels', href: 'Commands/CommandStationLabels.html' },
         { title: 'Sweep Along Alignment', href: 'Commands/CommandSweepAlignment.html' },
         { title: 'Sweep Kerb', href: 'Commands/CommandKerb.html' },
