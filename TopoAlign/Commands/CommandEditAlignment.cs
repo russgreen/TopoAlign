@@ -5,6 +5,7 @@ using Serilog;
 using TopoAlign.Alignments;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Alignments.Civil;
 
 namespace TopoAlign.Commands;
 

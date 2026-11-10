@@ -9,6 +9,9 @@ using Serilog;
 using System.Reflection;
 using TopoAlign.Alignments;
 using TopoAlign.Grading;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.Grading.GradeToSurface;
+using TopoAlign.Grading.Slope;
 
 namespace TopoAlign.ViewModels;
 
@@ -72,7 +75,7 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
     public GradeToSurfaceRequest? Request { get; private set; }
 
-    private readonly Models.Settings _settings = new();
+    private readonly Services.Settings _settings = new();
     private readonly ForgeTypeId _documentUnit;
     private IReadOnlyList<Curve>? _curves;
     private XYZ? _sidePoint;

@@ -8,6 +8,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using TopoAlign.Alignments;
 using TopoAlign.Preview;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.PickFilters;
 
 namespace TopoAlign.ViewModels;
 

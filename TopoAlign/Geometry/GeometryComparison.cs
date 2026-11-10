@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using System.Diagnostics;
 using TopoAlign.Extensions;
 

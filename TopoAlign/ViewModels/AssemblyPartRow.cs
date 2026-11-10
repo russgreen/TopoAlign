@@ -4,6 +4,8 @@ using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using System.Collections.ObjectModel;
 using TopoAlign.Sweep;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
 
 namespace TopoAlign.ViewModels;
 

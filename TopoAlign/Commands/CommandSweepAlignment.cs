@@ -6,6 +6,9 @@ using TopoAlign.Alignments;
 using TopoAlign.Sweep;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Sweep.Assemblies;
+using TopoAlign.Sweep.Road;
 
 namespace TopoAlign.Commands;
 

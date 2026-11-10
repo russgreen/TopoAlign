@@ -2,6 +2,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.DirectContext3D;
 using Autodesk.Revit.DB.ExternalService;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Plan;
 
 namespace TopoAlign.Preview;
 

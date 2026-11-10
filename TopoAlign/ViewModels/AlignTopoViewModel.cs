@@ -1,4 +1,4 @@
-﻿using Nice3point.Revit.Extensions;
+using Nice3point.Revit.Extensions;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
@@ -52,7 +52,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
     private ForgeTypeId _docDisplayUnits = null!;
 #endif
 
-    Models.Settings _settings = new();
+    Services.Settings _settings = new();
 
     private Element? _element;
     //private Edge _edge;

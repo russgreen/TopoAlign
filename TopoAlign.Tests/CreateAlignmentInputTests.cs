@@ -6,7 +6,13 @@ using System.Windows;
 using TopoAlign.Alignments;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
-using Settings = TopoAlign.Models.Settings;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.Alignments.Profile;
+using TopoAlign.Geometry.Topography;
+using TopoAlign.PickFilters;
+using Settings = TopoAlign.Services.Settings;
 
 namespace TopoAlign.Tests;
 

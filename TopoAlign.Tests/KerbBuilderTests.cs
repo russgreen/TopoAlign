@@ -1,5 +1,8 @@
 using Autodesk.Revit.DB;
 using TopoAlign.Sweep;
+using TopoAlign.Sweep.Kerb;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
 
 namespace TopoAlign.Tests;
 
@@ -176,12 +179,12 @@ public class KerbBuilderTests : TopoAlignTest
     /// <summary>A 6 ft wide, 6 inch thick slab hanging down from the edge towards +u only.</summary>
     private static SectionProfile OneSided()
     {
-        var segments = new List<TopoAlign.Alignments.PlanSegment>
+        var segments = new List<TopoAlign.Alignments.Plan.PlanSegment>
         {
-            new TopoAlign.Alignments.PlanLine(new TopoAlign.Alignments.PlanPoint(0, 0), new TopoAlign.Alignments.PlanPoint(6, 0)),
-            new TopoAlign.Alignments.PlanLine(new TopoAlign.Alignments.PlanPoint(6, 0), new TopoAlign.Alignments.PlanPoint(6, -0.5)),
-            new TopoAlign.Alignments.PlanLine(new TopoAlign.Alignments.PlanPoint(6, -0.5), new TopoAlign.Alignments.PlanPoint(0, -0.5)),
-            new TopoAlign.Alignments.PlanLine(new TopoAlign.Alignments.PlanPoint(0, -0.5), new TopoAlign.Alignments.PlanPoint(0, 0))
+            new TopoAlign.Alignments.Plan.PlanLine(new TopoAlign.Alignments.Plan.PlanPoint(0, 0), new TopoAlign.Alignments.Plan.PlanPoint(6, 0)),
+            new TopoAlign.Alignments.Plan.PlanLine(new TopoAlign.Alignments.Plan.PlanPoint(6, 0), new TopoAlign.Alignments.Plan.PlanPoint(6, -0.5)),
+            new TopoAlign.Alignments.Plan.PlanLine(new TopoAlign.Alignments.Plan.PlanPoint(6, -0.5), new TopoAlign.Alignments.Plan.PlanPoint(0, -0.5)),
+            new TopoAlign.Alignments.Plan.PlanLine(new TopoAlign.Alignments.Plan.PlanPoint(0, -0.5), new TopoAlign.Alignments.Plan.PlanPoint(0, 0))
         };
         SectionProfile.TryCreate(segments, out var profile, out var error);
         return profile ?? throw new InvalidOperationException(error);

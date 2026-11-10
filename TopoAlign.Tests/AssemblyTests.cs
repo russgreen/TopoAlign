@@ -5,7 +5,13 @@ using TopoAlign.Alignments;
 using TopoAlign.Grading;
 using TopoAlign.Sweep;
 using TopoAlign.ViewModels;
-using Settings = TopoAlign.Models.Settings;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.Geometry.Topography;
+using TopoAlign.Grading.Slope;
+using TopoAlign.Sweep.Assemblies;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
+using Settings = TopoAlign.Services.Settings;
 
 namespace TopoAlign.Tests;
 
@@ -173,7 +179,7 @@ public class AssemblyPreviewTests : TopoAlignTest
     {
         var assembly = AssemblyFixtures.RoadAndKerbs();
         var profiles = AssemblyFixtures.Profiles();
-        var left = new SideGrading { Enabled = true, SlopeMode = TopoAlign.Grading.SlopeMode.Percent, CutValue = 50, FillValue = 25 };
+        var left = new SideGrading { Enabled = true, SlopeMode = TopoAlign.Grading.Slope.SlopeMode.Percent, CutValue = 50, FillValue = 25 };
 
         var preview = AssemblyPreview.Build(assembly.Parts, name => profiles[name], left, null);
 
@@ -307,14 +313,14 @@ public class AssemblyStoreTests : TopoAlignTest
         {
             var store = new AssemblyStore(folder);
             var assembly = AssemblyFixtures.RoadAndKerbs();
-            assembly.Left = new SideGrading { Enabled = true, SlopeMode = TopoAlign.Grading.SlopeMode.Percent, CutValue = 40, FillValue = 25, MaxWidthMm = 12000 };
+            assembly.Left = new SideGrading { Enabled = true, SlopeMode = TopoAlign.Grading.Slope.SlopeMode.Percent, CutValue = 40, FillValue = 25, MaxWidthMm = 12000 };
 
             store.Save(assembly);
             var loaded = store.LoadAll()[0];
 
             await Assert.That(File.ReadAllText(store.PathFor(assembly.Name))).Contains("\"Percent\"");
             await Assert.That(loaded.Left.Enabled).IsTrue();
-            await Assert.That(loaded.Left.SlopeMode).IsEqualTo(TopoAlign.Grading.SlopeMode.Percent);
+            await Assert.That(loaded.Left.SlopeMode).IsEqualTo(TopoAlign.Grading.Slope.SlopeMode.Percent);
             await Assert.That(loaded.Left.CutValue).IsEqualTo(40.0).Within(1e-9);
             await Assert.That(loaded.Left.FillValue).IsEqualTo(25.0).Within(1e-9);
             await Assert.That(loaded.Left.MaxWidthMm).IsEqualTo(12000.0).Within(1e-9);
@@ -571,7 +577,7 @@ public class AssemblyGraderTests : TopoAlignTest
     [Test]
     public async Task SideGrading_ReadsItsSlopesInTheModeChosen()
     {
-        var percent = new SideGrading { SlopeMode = TopoAlign.Grading.SlopeMode.Percent, CutValue = 50, FillValue = 25 };
+        var percent = new SideGrading { SlopeMode = TopoAlign.Grading.Slope.SlopeMode.Percent, CutValue = 50, FillValue = 25 };
         var ratio = new SideGrading { CutValue = 2, FillValue = 3 };
 
         await Assert.That(percent.CutRiseOverRun()).IsEqualTo(0.5).Within(Tol);

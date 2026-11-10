@@ -2,7 +2,7 @@ using static TopoAlign.Tests.TestKit;
 using Autodesk.Revit.DB;
 using System.Reflection;
 using System.Windows;
-using Settings = TopoAlign.Models.Settings;
+using Settings = TopoAlign.Services.Settings;
 using Visibility = System.Windows.Visibility;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;

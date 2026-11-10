@@ -1,3 +1,5 @@
+using TopoAlign.Grading.TopoEdge;
+
 namespace TopoAlign.Grading;
 
 /// <summary>Sorts points against a toposolid's plan outline. Works on plain coordinates, so it needs no Revit geometry.</summary>

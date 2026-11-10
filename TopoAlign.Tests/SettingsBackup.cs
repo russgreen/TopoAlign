@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text.Json.Nodes;
 using Microsoft.Win32;
-using Settings = TopoAlign.Models.Settings;
+using Settings = TopoAlign.Services.Settings;
 
 namespace TopoAlign.Tests;
 

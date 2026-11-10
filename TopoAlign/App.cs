@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Windows.Media.Imaging;
 using TopoAlign.Helpers;
+using TopoAlign.Services;
 
 namespace TopoAlign;
 

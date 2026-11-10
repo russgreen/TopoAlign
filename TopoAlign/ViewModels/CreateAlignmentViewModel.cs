@@ -8,6 +8,11 @@ using Serilog;
 using System.Reflection;
 using TopoAlign.Alignments;
 using TopoAlign.Preview;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.Alignments.Profile;
+using TopoAlign.Geometry.Topography;
 
 namespace TopoAlign.ViewModels;
 
@@ -81,7 +86,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
     public CreateAlignmentRequest? Request { get; private set; }
 
-    private readonly Models.Settings _settings = new();
+    private readonly Services.Settings _settings = new();
     private readonly List<ElementId> _selectedCurveIds = new();
     private List<Curve> _orderedCurves = new();
     private Element? _topography;

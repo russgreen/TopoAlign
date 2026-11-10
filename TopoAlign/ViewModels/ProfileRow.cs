@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reflection;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Profile;
 
 namespace TopoAlign.ViewModels;
 

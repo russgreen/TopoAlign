@@ -9,6 +9,7 @@ using Serilog;
 using System.Reflection;
 using TopoAlign.Alignments;
 using TopoAlign.Grading;
+using TopoAlign.Grading.Slope;
 
 namespace TopoAlign.ViewModels;
 

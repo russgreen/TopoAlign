@@ -2,6 +2,8 @@ using Autodesk.Revit.DB;
 using System.Globalization;
 using System.Text.Json.Nodes;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Civil;
 
 namespace TopoAlign.Tests;
 

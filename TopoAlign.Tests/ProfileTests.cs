@@ -1,4 +1,6 @@
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Profile;
+using TopoAlign.Geometry.Topography;
 
 namespace TopoAlign.Tests;
 

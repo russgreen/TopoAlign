@@ -4,6 +4,9 @@ using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using System.Collections.ObjectModel;
 using TopoAlign.Sweep;
+using TopoAlign.Sweep.Assemblies;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
 
 namespace TopoAlign.ViewModels;
 
@@ -76,9 +79,9 @@ internal partial class AssemblyEditorViewModel : BaseViewModel
 
     public List<SlopeModeOption> SlopeModes { get; } = new()
     {
-        new SlopeModeOption(TopoAlign.Grading.SlopeMode.Ratio, "Ratio (1 : N)"),
-        new SlopeModeOption(TopoAlign.Grading.SlopeMode.Percent, "Percent (%)"),
-        new SlopeModeOption(TopoAlign.Grading.SlopeMode.Degrees, "Degrees (°)")
+        new SlopeModeOption(TopoAlign.Grading.Slope.SlopeMode.Ratio, "Ratio (1 : N)"),
+        new SlopeModeOption(TopoAlign.Grading.Slope.SlopeMode.Percent, "Percent (%)"),
+        new SlopeModeOption(TopoAlign.Grading.Slope.SlopeMode.Degrees, "Degrees (°)")
     };
 
     [ObservableProperty]

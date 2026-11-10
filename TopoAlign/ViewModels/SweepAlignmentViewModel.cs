@@ -8,6 +8,10 @@ using Serilog;
 using System.Reflection;
 using TopoAlign.Alignments;
 using TopoAlign.Sweep;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Sweep.Assemblies;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
 
 namespace TopoAlign.ViewModels;
 
@@ -329,7 +333,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
     public SweepAlignmentRequest? Request { get; private set; }
 
-    private readonly Models.Settings _settings = new();
+    private readonly Services.Settings _settings = new();
     private readonly ProfileLibrary _library;
     private readonly AssemblyStore _assemblyStore;
     private readonly Dictionary<long, (SectionProfile? Profile, string? Error)> _profileCache = new();

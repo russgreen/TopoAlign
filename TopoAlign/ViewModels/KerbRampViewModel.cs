@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using System.Reflection;
 using TopoAlign.Grading;
+using TopoAlign.Grading.Kerb;
 
 namespace TopoAlign.ViewModels;
 
@@ -60,7 +61,7 @@ internal partial class KerbRampViewModel : BaseViewModel
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
     public KerbRampRequest? Request { get; private set; }
 
-    private readonly Models.Settings _settings = new();
+    private readonly Services.Settings _settings = new();
     private readonly ForgeTypeId _documentUnit;
     private Toposolid? _kerbToposolid;
     private XYZ? _kerbAnchor;

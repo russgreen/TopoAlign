@@ -20,7 +20,7 @@ public class CommandCreateAlignment : IExternalCommand
         App.CachedUiApp = commandData.Application;
         App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
 
-        if (!Alignments.AlignmentApi.Supports(Alignments.AlignmentFeature.Read | Alignments.AlignmentFeature.Create, out var problem))
+        if (!Alignments.Civil.AlignmentApi.Supports(Alignments.Civil.AlignmentFeature.Read | Alignments.Civil.AlignmentFeature.Create, out var problem))
         {
             TaskDialog.Show("Create Alignment", problem);
             return Result.Cancelled;
@@ -52,7 +52,7 @@ public class CommandCreateAlignment : IExternalCommand
         // Create after the dialog has closed so the transaction runs in the Revit API context.
         try
         {
-            var createdId = Alignments.AlignmentApi.Create(
+            var createdId = Alignments.Civil.AlignmentApi.Create(
                 App.RevitDocument,
                 request.Name,
                 request.Json,

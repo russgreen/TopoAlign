@@ -9,6 +9,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reflection;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Alignments.Profile;
 
 namespace TopoAlign.ViewModels;
 
@@ -60,7 +63,7 @@ internal partial class EditProfileViewModel : BaseViewModel
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
     public EditProfileRequest? Request { get; private set; }
 
-    private readonly Models.Settings _settings = new();
+    private readonly Services.Settings _settings = new();
     private Element? _alignment;
     private string? _originalJson;
     private string _alignmentName = string.Empty;

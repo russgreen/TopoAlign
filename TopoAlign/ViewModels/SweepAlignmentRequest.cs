@@ -8,6 +8,9 @@ using Serilog;
 using System.Reflection;
 using TopoAlign.Alignments;
 using TopoAlign.Sweep;
+using TopoAlign.Sweep.Assemblies;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
 
 namespace TopoAlign.ViewModels;
 

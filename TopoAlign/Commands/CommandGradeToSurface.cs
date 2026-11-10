@@ -6,6 +6,7 @@ using Serilog;
 using TopoAlign.Grading;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Grading.GradeToSurface;
 
 namespace TopoAlign.Commands;
 

@@ -1,5 +1,8 @@
 using TopoAlign.Alignments;
 using TopoAlign.Grading;
+using TopoAlign.Geometry.Topography;
+using TopoAlign.Grading.Kerb;
+using TopoAlign.Grading.TopoEdge;
 using static TopoAlign.Tests.TestKit;
 
 namespace TopoAlign.Tests;

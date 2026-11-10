@@ -1,4 +1,5 @@
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Profile;
 
 namespace TopoAlign.ViewModels;
 

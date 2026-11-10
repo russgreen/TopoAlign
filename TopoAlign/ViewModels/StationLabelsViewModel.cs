@@ -7,6 +7,7 @@ using Serilog;
 using System.Globalization;
 using System.Reflection;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Civil;
 
 namespace TopoAlign.ViewModels;
 

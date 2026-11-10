@@ -7,6 +7,9 @@ using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using System.Reflection;
 using TopoAlign.Sweep;
+using TopoAlign.Sweep.Kerb;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
 
 namespace TopoAlign.ViewModels;
 
@@ -73,7 +76,7 @@ internal partial class KerbViewModel : BaseViewModel
     /// <summary>Set when the user confirms; consumed by the command after the dialog closes.</summary>
     public KerbRequest? Request { get; private set; }
 
-    private readonly Models.Settings _settings = new();
+    private readonly Services.Settings _settings = new();
     private readonly Dictionary<long, (SectionProfile? Profile, string? Error)> _profileCache = new();
     private readonly List<Curve> _curves = new();
     private SectionProfile? _profile;

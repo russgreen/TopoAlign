@@ -7,6 +7,8 @@ using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using System.Reflection;
 using TopoAlign.Sweep;
+using TopoAlign.Sweep.Kerb;
+using TopoAlign.Sweep.Profiles;
 
 namespace TopoAlign.ViewModels;
 

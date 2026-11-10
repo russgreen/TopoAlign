@@ -1,6 +1,9 @@
 using static TopoAlign.Tests.TestKit;
 using System.Globalization;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.Alignments.Profile;
 
 namespace TopoAlign.Tests;
 

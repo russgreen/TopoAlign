@@ -2,6 +2,7 @@ using static TopoAlign.Tests.TestKit;
 using System.Globalization;
 using System.Text.Json.Nodes;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.AlignmentJson;
 
 namespace TopoAlign.Tests;
 

@@ -1,4 +1,5 @@
 using TopoAlign.Grading;
+using TopoAlign.Grading.TopoEdge;
 
 namespace TopoAlign.Tests;
 

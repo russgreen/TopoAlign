@@ -1,6 +1,7 @@
 using static TopoAlign.Tests.TestKit;
 using Autodesk.Revit.DB;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Civil;
 
 namespace TopoAlign.Tests;
 

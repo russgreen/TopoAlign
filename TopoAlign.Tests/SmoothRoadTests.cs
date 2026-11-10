@@ -3,7 +3,13 @@ using Autodesk.Revit.DB;
 using TopoAlign.Alignments;
 using TopoAlign.Sweep;
 using TopoAlign.ViewModels;
-using Settings = TopoAlign.Models.Settings;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.Alignments.Profile;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
+using Settings = TopoAlign.Services.Settings;
 
 namespace TopoAlign.Tests;
 

@@ -6,6 +6,8 @@ using CommunityToolkit.Mvvm.Input;
 using Serilog;
 using System.Reflection;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Civil;
 
 namespace TopoAlign.ViewModels;
 

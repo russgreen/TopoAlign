@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Linq;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Civil;
 
 namespace TopoAlign.Commands;
 
