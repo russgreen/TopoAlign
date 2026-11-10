@@ -39,6 +39,7 @@ internal static class SlopeGrader
     /// <summary>As above, with one slope where the ground is above the line (cut, the slope climbs) and another where it is below (fill, the slope falls).</summary>
     /// <param name="cutRiseOverRun">The slope where the ground is above the line; always positive.</param>
     /// <param name="fillRiseOverRun">The slope where the ground is below the line; always positive.</param>
+    /// <param name="onStation">Called after each station is traced with (stations done, total); it may throw to stop the grading.</param>
     public static GradingResult Grade(
         IReadOnlyList<GradePoint> path,
         bool closed,
@@ -48,7 +49,8 @@ internal static class SlopeGrader
         double fillRiseOverRun,
         double maxWidth,
         TriangleSurface surface,
-        bool addEdgePoints)
+        bool addEdgePoints,
+        Action<int, int>? onStation = null)
     {
         if (path is null)
         {
@@ -90,6 +92,7 @@ internal static class SlopeGrader
             var station = CreateStation(path, normals, closed, i);
             Trace(station, cutRiseOverRun, fillRiseOverRun, maxWidth, surface);
             result.Stations.Add(station);
+            onStation?.Invoke(i + 1, path.Count);
         }
 
         var count = path.Count;

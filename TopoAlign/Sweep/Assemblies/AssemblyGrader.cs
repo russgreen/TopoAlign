@@ -8,6 +8,7 @@ using TopoAlign.Grading.GradeToSurface;
 #endif
 using TopoAlign.Sweep.Profiles;
 using TopoAlign.Sweep.Road;
+using TopoAlign.Services;
 #if REVIT2024_OR_GREATER
 using Autodesk.Revit.DB;
 #endif
@@ -138,7 +139,8 @@ internal static class AssemblyGrader
         IReadOnlyList<SectionProfile> placedParts,
         PathReader path,
         IReadOnlyList<double> stations,
-        RoadOptions options)
+        RoadOptions options,
+        ProgressService? progress = null)
     {
         var outcomes = new List<SideGradeOutcome>();
 
@@ -154,6 +156,7 @@ internal static class AssemblyGrader
             }
 
             var sideName = side == AssemblySide.Left ? "Left" : "Right";
+            progress?.ThrowIfCancelled();
             if (!TryFindShoulder(placedParts, side, out var u, out var v))
             {
                 outcomes.Add(new SideGradeOutcome(side) { Error = "The assembly has no geometry to grade from." });
@@ -209,6 +212,8 @@ internal static class AssemblyGrader
                         continue;
                     }
 
+                    progress?.ThrowIfCancelled();
+                    progress?.SetIndeterminate($"Grading the ground on the {sideName.ToLowerInvariant()} side ({label})...");
                     var result = ToposolidGrader.ApplyToPath(
                         document,
                         toposolid,
@@ -220,7 +225,8 @@ internal static class AssemblyGrader
                         fill,
                         grading.MaxWidthFeet,
                         true,
-                        $"Grade topo ({sideName.ToLowerInvariant()} of road assembly)");
+                        $"Grade topo ({sideName.ToLowerInvariant()} of road assembly)",
+                        progress);
 
                     outcome.Cut = result.Cut;
                     outcome.Fill = result.Fill;
@@ -244,7 +250,7 @@ internal static class AssemblyGrader
                 {
                     missMessage = ex.Message;
                 }
-                catch (Exception ex) when (ex is not OutOfMemoryException)
+                catch (Exception ex) when (ex is not OutOfMemoryException and not OperationCanceledException)
                 {
                     log.Warning(ex, "Grading the {side} of assembly {assembly} on toposolid {toposolid} failed", side, assembly.Name, id);
                     outcome.Error = ex.Message;

@@ -8,6 +8,7 @@ using TopoAlign.Views.AlignmentTools;
 using TopoAlign.ViewModels.AlignmentTools;
 using TopoAlign.Alignments.Civil;
 using TopoAlign.Commands.Shared;
+using TopoAlign.Services;
 
 namespace TopoAlign.Commands;
 
@@ -43,12 +44,17 @@ public class CommandCreateAlignment : IExternalCommand
         // Create after the dialog has closed so the transaction runs in the Revit API context.
         try
         {
-            var createdId = Alignments.Civil.AlignmentApi.Create(
-                App.RevitDocument,
-                request.Name,
-                request.Json,
-                request.PlanLength,
-                request.SourceCurveIdsToDelete);
+            ElementId? createdId;
+            using (var progress = ProgressService.Start("Create alignment", cancelEnabled: false))
+            {
+                progress.Report("Creating the alignment in Revit...");
+                createdId = Alignments.Civil.AlignmentApi.Create(
+                    App.RevitDocument,
+                    request.Name,
+                    request.Json,
+                    request.PlanLength,
+                    request.SourceCurveIdsToDelete);
+            }
 
             if (createdId is null || createdId == ElementId.InvalidElementId)
             {

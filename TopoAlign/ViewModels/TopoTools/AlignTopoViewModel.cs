@@ -10,6 +10,7 @@ using TopoAlign;
 using TopoAlign.Comparers;
 using TopoAlign.Extensions;
 using TopoAlign.Geometry;
+using TopoAlign.Services;
 using TopoAlign.Views;
 
 namespace TopoAlign.ViewModels.TopoTools;
@@ -117,7 +118,14 @@ internal partial class AlignTopoViewModel : BaseViewModel
         Divide = Convert.ToDecimal(((double)Divide).FromUnit(SelectedDisplayUnit.DisplayUnit));
         Offset = Convert.ToDecimal(((double)Offset).FromUnit(SelectedDisplayUnit.DisplayUnit)); ;
 
-        AlignTopoSurface();
+        try
+        {
+            AlignTopoSurface();
+        }
+        catch (OperationCanceledException)
+        {
+            // The user cancelled from the progress window; any open transaction has been rolled back.
+        }
 
         SaveSettings();
 
@@ -586,10 +594,12 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
         // Check each point against all loops: boundary-inclusive even-odd rule
         var pointsInPolygon = new List<XYZ>();
-        using (var pf = new ProgressWindow("Analyzing topo points.", "{0} points of " + topoPointsInBoundingBox.Count + " processed...", topoPointsInBoundingBox.Count))
+        using (var pf = ProgressService.Start("Analyzing topo points.", topoPointsInBoundingBox.Count, "{0} points of " + topoPointsInBoundingBox.Count + " processed..."))
         {
             foreach (XYZ pt in topoPointsInBoundingBox)
             {
+                pf.ThrowIfCancelled();
+
                 //Debug.WriteLine($"point to check : {pt}");
 
                 var pUV = PointsUtils.Flatten(pt);

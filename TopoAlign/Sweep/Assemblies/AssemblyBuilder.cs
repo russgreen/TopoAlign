@@ -2,6 +2,7 @@ using Autodesk.Revit.DB;
 using Serilog;
 using TopoAlign.Alignments;
 using TopoAlign.Alignments.Civil;
+using TopoAlign.Services;
 using TopoAlign.Sweep.Profiles;
 using TopoAlign.Sweep.Road;
 
@@ -23,7 +24,7 @@ internal static class AssemblyBuilder
     /// The road is made first, so a problem grading never loses it.
     /// </param>
     public static AssemblyResult Create(Document document, Element alignment, SweepAssembly assembly,
-        IReadOnlyDictionary<string, SectionProfile> profiles, RoadOptions options, IReadOnlyList<Element>? topographies = null)
+        IReadOnlyDictionary<string, SectionProfile> profiles, RoadOptions options, IReadOnlyList<Element>? topographies = null, ProgressService? progress = null)
     {
         if (document is null)
         {
@@ -42,6 +43,7 @@ internal static class AssemblyBuilder
 
         options ??= new RoadOptions();
 
+        progress?.SetIndeterminate("Reading the alignment...");
         var path = new PathReader(alignment);
         var stations = RoadBuilder.PlanStations(path, options);
         var alignmentName = AlignmentApi.GetInfo(alignment)?.Name;
@@ -54,8 +56,10 @@ internal static class AssemblyBuilder
         // everything is built before the model is touched, so a failure leaves the model as it was
         for (var index = 0; index < assembly.Parts.Count; index++)
         {
+            progress?.ThrowIfCancelled();
             var part = assembly.Parts[index];
             var label = DisplayName(part, index + 1);
+            progress?.Report($"Building {label} (part {index + 1} of {assembly.Parts.Count})...");
             if (!profiles.TryGetValue(part.ProfileName, out var profile))
             {
                 result.SkippedParts.Add($"{label}: its profile '{part.ProfileName}' was not found.");
@@ -65,7 +69,7 @@ internal static class AssemblyBuilder
             try
             {
                 var placed = part.Place(profile);
-                var (solids, notice) = RoadBuilder.BuildSolids(path, stations, placed, options, alignment.UniqueId);
+                var (solids, notice) = RoadBuilder.BuildSolids(path, stations, placed, options, alignment.UniqueId, progress);
                 if (!string.IsNullOrEmpty(notice))
                 {
                     notices.Add($"{label}: {notice}");
@@ -82,7 +86,7 @@ internal static class AssemblyBuilder
                 built.Add((label, part, solids.Solids));
                 placedParts.Add(placed);
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException)
+            catch (Exception ex) when (ex is not OutOfMemoryException and not OperationCanceledException)
             {
                 log.Warning(ex, "Part {part} of assembly {assembly} could not be built", label, assembly.Name);
                 result.SkippedParts.Add($"{label}: {ex.Message}");
@@ -95,6 +99,8 @@ internal static class AssemblyBuilder
                 "Revit could not build any geometry for the assembly. " + string.Join(" ", result.SkippedParts));
         }
 
+        progress?.ThrowIfCancelled();
+        progress?.SetIndeterminate("Adding the road to the model...");
         using var transaction = new Transaction(document, "Create road assembly");
         transaction.Start();
 
@@ -127,7 +133,15 @@ internal static class AssemblyBuilder
 
         if (topographies is { Count: > 0 } && (assembly.Left.Enabled || assembly.Right.Enabled))
         {
-            GradeTopography(document, topographies, assembly, placedParts, path, stations, options, result);
+            try
+            {
+                GradeTopography(document, topographies, assembly, placedParts, path, stations, options, result, progress);
+            }
+            catch (OperationCanceledException)
+            {
+                // the road is already in the model; only the grading is stopped
+                result.GradingNotice = "Grading was cancelled, so the ground was not fully graded. The road itself was made.";
+            }
         }
 
         result.Notice = string.Join(" ", notices);
@@ -140,7 +154,7 @@ internal static class AssemblyBuilder
     }
 
     private static void GradeTopography(Document document, IReadOnlyList<Element> topographies, SweepAssembly assembly, IReadOnlyList<SectionProfile> placedParts,
-        PathReader path, IReadOnlyList<double> stations, RoadOptions options, AssemblyResult result)
+        PathReader path, IReadOnlyList<double> stations, RoadOptions options, AssemblyResult result, ProgressService? progress)
     {
 #if REVIT2024_OR_GREATER
         var toposolids = topographies.OfType<Toposolid>().Where(t => t.IsValidObject).ToList();
@@ -158,7 +172,7 @@ internal static class AssemblyBuilder
             result.GradingNotice = $"{skipped} of the elements picked {(skipped == 1 ? "was" : "were")} left alone because {(skipped == 1 ? "it is" : "they are")} not {(skipped == 1 ? "a toposolid" : "toposolids")} or {(skipped == 1 ? "is" : "are")} no longer in the model.";
         }
 
-        result.Grading.AddRange(AssemblyGrader.Apply(document, toposolids, assembly, placedParts, path, stations, options));
+        result.Grading.AddRange(AssemblyGrader.Apply(document, toposolids, assembly, placedParts, path, stations, options, progress));
 #else
         result.GradingNotice = "The ground was not graded: toposolids need Revit 2024 or later.";
 #endif

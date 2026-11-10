@@ -4,6 +4,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Serilog;
 using TopoAlign.Grading;
+using TopoAlign.Services;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
 using TopoAlign.Grading.GradeToSurface;
@@ -73,7 +74,11 @@ public class CommandGradeToSurface : IExternalCommand
         // Edit after the dialog has closed so the transaction runs in the Revit API context.
         try
         {
-            var result = ToposolidGrader.Apply(App.RevitDocument, request);
+            GradeToSurfaceResult result;
+            using (var progress = ProgressService.Start("Grade to surface"))
+            {
+                result = ToposolidGrader.Apply(App.RevitDocument, request, progress);
+            }
 
             var summary = $"Graded {result.Cut + result.Fill} of {result.Stations} points along the line " +
                           $"({result.Fill} fill, {result.Cut} cut).{Environment.NewLine}" +
@@ -152,6 +157,11 @@ public class CommandGradeToSurface : IExternalCommand
 
             TaskDialog.Show("Grade to Surface", summary);
             return Result.Succeeded;
+        }
+        catch (OperationCanceledException)
+        {
+            log.Information("Grade to surface cancelled by the user");
+            return Result.Cancelled;
         }
         catch (Exception ex)
         {

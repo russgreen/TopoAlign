@@ -1,68 +1,26 @@
 using System.Windows;
+using System.Windows.Input;
+using TopoAlign.ViewModels;
 
 namespace TopoAlign.Views;
+
 /// <summary>
-/// Interaction logic for ProgressWindow.xaml
+/// Modeless progress window. It is created and shown by <see cref="Services.ProgressService"/> on its own
+/// UI thread so it keeps repainting while Revit is busy.
 /// </summary>
-public partial class ProgressWindow : Window, IDisposable
+public partial class ProgressWindow : Window
 {
-    private string? _format;
-    private bool _abortFlag = false;
-
-    public ProgressWindow()
+    internal ProgressWindow(ProgressViewModel viewModel)
     {
         InitializeComponent();
+        DataContext = viewModel;
     }
 
-    public ProgressWindow(string caption, string format, int max)
+    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        InitializeComponent();
-        _format = format;
-
-        this.CaptionLanel.Text = caption;
-        this.ProgressLabel.Text = format is null ? String.Empty : string.Format(format, 0); ;
-
-        this.Progress.Minimum = 0;
-        this.Progress.Maximum = max;
-        this.Progress.Value = 0;
-
-        Show();
-
-        //System.Windows.Forms.Application.DoEvents();
-    }
-
-    public void Increment()
-    {
-        this.Progress.Value++;
-
-        if (_format is not null)
+        if (e.ButtonState == MouseButtonState.Pressed && e.OriginalSource is not System.Windows.Controls.Primitives.ButtonBase)
         {
-            this.ProgressLabel.Text = string.Format(_format, this.Progress.Value);
+            DragMove();
         }
-
-        //System.Windows.Forms.Application.DoEvents();
-    }
-
-    public void SetCaption(string caption)
-    {
-        this.CaptionLanel.Text = caption;
-
-        //System.Windows.Forms.Application.DoEvents();
-    }
-
-    public bool GetAbortFlag()
-    {
-        return _abortFlag;
-    }
-
-    private void ButtonCancel_Click(object sender, RoutedEventArgs e)
-    {
-        this.AbortButton.Content = "Cancelling...";
-        _abortFlag = true;
-    }
-
-    public void Dispose()
-    {
-        this.Close();
     }
 }

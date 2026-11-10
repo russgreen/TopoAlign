@@ -5,6 +5,7 @@ using Autodesk.Revit.UI.Selection;
 using Serilog;
 using TopoAlign.Grading;
 using TopoAlign.Grading.TopoEdge;
+using TopoAlign.Services;
 
 namespace TopoAlign.Commands;
 
@@ -67,7 +68,11 @@ public class CommandAlignTopoEdges : IExternalCommand
 
         try
         {
-            var result = TopoEdgeAlignerRevit.Apply(document, first, second, choice == TaskDialogResult.CommandLink2);
+            AlignTopoEdgesResult result;
+            using (var progress = ProgressService.Start(Title, 1))
+            {
+                result = TopoEdgeAlignerRevit.Apply(document, first, second, choice == TaskDialogResult.CommandLink2, progress);
+            }
 
             if (result.SharedPoints == 0 && result.AddedToFirst == 0 && result.AddedToSecond == 0 && result.MovedOnFirst == 0)
             {
@@ -96,6 +101,11 @@ public class CommandAlignTopoEdges : IExternalCommand
 
             TaskDialog.Show(Title, summary);
             return Result.Succeeded;
+        }
+        catch (OperationCanceledException)
+        {
+            log.Information("Align topo edges cancelled by the user");
+            return Result.Cancelled;
         }
         catch (Exception ex)
         {
