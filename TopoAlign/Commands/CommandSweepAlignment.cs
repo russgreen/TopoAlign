@@ -163,31 +163,34 @@ public class CommandSweepAlignment : IExternalCommand
                 lines.Add($"  Revit said, about the corners: {side.CornerFailure}");
             }
 
-            if (side.FallbackLevel > 0)
-            {
-                lines.Add("  Revit would not build the shape from all the points, so a simpler edit was made:" +
-                          (side.PointsWereThinnedOut ? " only well-spaced points clear of the toposolid's edge were used;" : string.Empty) +
-                          (side.EdgePointsWentInside ? " points for the edge went 0.3 ft inside it;" : string.Empty) +
-                          (side.CornerHeightsLeftAlone ? " the corner heights were not set;" : string.Empty));
-                lines[lines.Count - 1] = lines[lines.Count - 1].TrimEnd(';') + ".";
-                foreach (var rejection in side.Rejections)
-                {
-                    lines.Add($"    Revit said {rejection}");
-                }
-            }
-            else if (side.EdgeStepsIn > 0)
-            {
-                lines.Add($"  {side.EdgeStepsIn} point{(side.EdgeStepsIn == 1 ? string.Empty : "s")} on the toposolid's edge went just inside it, as Revit would not take them on the edge.");
-            }
+            //more verbose information about what Revit did with the toposolid is available in the log,
+            //but it is not shown here because it is too long and technical for most users.
 
-            if (side.EdgePointsRefused > 0)
-            {
-                lines.Add($"  {side.EdgePointsRefused} point{(side.EdgePointsRefused == 1 ? string.Empty : "s")} on the toposolid's edge could not be added, so the edge there keeps its old height.");
-            }
-            else if (side.CornersNotMoved > 0)
-            {
-                lines.Add($"  {side.CornersNotMoved} corner point{(side.CornersNotMoved == 1 ? string.Empty : "s")} on the toposolid's edge could not be moved, so points were put beside {(side.CornersNotMoved == 1 ? "it" : "them")} at the graded height instead.");
-            }
+            //if (side.FallbackLevel > 0)
+            //{
+            //    lines.Add("  Revit would not build the shape from all the points, so a simpler edit was made:" +
+            //              (side.PointsWereThinnedOut ? " only well-spaced points clear of the toposolid's edge were used;" : string.Empty) +
+            //              (side.EdgePointsWentInside ? " points for the edge went 0.3 ft inside it;" : string.Empty) +
+            //              (side.CornerHeightsLeftAlone ? " the corner heights were not set;" : string.Empty));
+            //    lines[lines.Count - 1] = lines[lines.Count - 1].TrimEnd(';') + ".";
+            //    foreach (var rejection in side.Rejections)
+            //    {
+            //        lines.Add($"    Revit said {rejection}");
+            //    }
+            //}
+            //else if (side.EdgeStepsIn > 0)
+            //{
+            //    lines.Add($"  {side.EdgeStepsIn} point{(side.EdgeStepsIn == 1 ? string.Empty : "s")} on the toposolid's edge went just inside it, as Revit would not take them on the edge.");
+            //}
+
+            //if (side.EdgePointsRefused > 0)
+            //{
+            //    lines.Add($"  {side.EdgePointsRefused} point{(side.EdgePointsRefused == 1 ? string.Empty : "s")} on the toposolid's edge could not be added, so the edge there keeps its old height.");
+            //}
+            //else if (side.CornersNotMoved > 0)
+            //{
+            //    lines.Add($"  {side.CornersNotMoved} corner point{(side.CornersNotMoved == 1 ? string.Empty : "s")} on the toposolid's edge could not be moved, so points were put beside {(side.CornersNotMoved == 1 ? "it" : "them")} at the graded height instead.");
+            //}
         }
 
         return lines.Count == 0
