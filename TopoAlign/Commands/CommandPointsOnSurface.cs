@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
@@ -12,6 +12,8 @@ using TopoAlign.Comparers;
 using TopoAlign.Geometry;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.ViewModels.TopoTools;
+using TopoAlign.Views.TopoTools;
 
 namespace TopoAlign.Commands;
 
@@ -38,13 +40,13 @@ public class CommandPointsOnSurface : IExternalCommand
     private Autodesk.Revit.DB.Architecture.TopographySurface? _topoSurface;
 #endif
 
-    public Models.Settings cSettings = null!;
+    public Services.Settings cSettings = null!;
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         log.Information("{command}", nameof(CommandPointsOnSurface));
 
-        cSettings = new Models.Settings();
+        cSettings = new Services.Settings();
         cSettings.LoadSettings();
         _uiapp = commandData.Application;
         _uidoc = _uiapp.ActiveUIDocument;

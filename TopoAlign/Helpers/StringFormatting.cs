@@ -1,10 +1,10 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using System.Diagnostics;
 using System.Reflection;
 
 namespace TopoAlign.Helpers;
 
-public class StringFormatting
+public static class StringFormatting
 {
 
     /// <summary>

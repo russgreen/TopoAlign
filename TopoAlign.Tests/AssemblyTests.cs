@@ -2,9 +2,18 @@ using static TopoAlign.Tests.TestKit;
 using Autodesk.Revit.DB;
 using System.IO;
 using TopoAlign.Alignments;
+using TopoAlign.Grading;
 using TopoAlign.Sweep;
 using TopoAlign.ViewModels;
-using Settings = TopoAlign.Models.Settings;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.Geometry.Topography;
+using TopoAlign.Grading.Slope;
+using TopoAlign.Sweep.Assemblies;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
+using TopoAlign.ViewModels.RoadTools;
+using TopoAlign.Views.RoadTools;
+using Settings = TopoAlign.Services.Settings;
 
 namespace TopoAlign.Tests;
 
@@ -144,6 +153,60 @@ public class AssemblyPreviewTests : TopoAlignTest
     }
 
     [Test]
+    public async Task Build_GradedSidesGetACutAndAFillLineFromTheShoulder()
+    {
+        var assembly = AssemblyFixtures.RoadAndKerbs();
+        var profiles = AssemblyFixtures.Profiles();
+        var right = new SideGrading { Enabled = true, CutValue = 2, FillValue = 4 };
+
+        var preview = AssemblyPreview.Build(assembly.Parts, name => profiles[name], new SideGrading(), right);
+
+        // only the right side is on
+        await Assert.That(preview.Slopes.Count).IsEqualTo(2);
+        var cut = preview.Slopes.Single(s => s.IsCut);
+        var fill = preview.Slopes.Single(s => !s.IsCut);
+        await Assert.That(cut.Side).IsEqualTo(AssemblySide.Right);
+        await Assert.That(cut.U).IsEqualTo(6.75).Within(1e-9);
+        await Assert.That(cut.V).IsEqualTo(0.5).Within(1e-9);
+        await Assert.That(cut.Label).IsEqualTo("cut 1:2");
+        await Assert.That(fill.Label).IsEqualTo("fill 1:4");
+
+        // 1 : 2 climbs half a foot for each foot out; 1 : 4 falls a quarter
+        await Assert.That(cut.HeightAt(8.75)).IsEqualTo(1.5).Within(1e-9);
+        await Assert.That(fill.HeightAt(10.75)).IsEqualTo(-0.5).Within(1e-9);
+    }
+
+    [Test]
+    public async Task Build_ASlopeOnTheLeftRunsTowardsNegativeU()
+    {
+        var assembly = AssemblyFixtures.RoadAndKerbs();
+        var profiles = AssemblyFixtures.Profiles();
+        var left = new SideGrading { Enabled = true, SlopeMode = TopoAlign.Grading.Slope.SlopeMode.Percent, CutValue = 50, FillValue = 25 };
+
+        var preview = AssemblyPreview.Build(assembly.Parts, name => profiles[name], left, null);
+
+        var cut = preview.Slopes.Single(s => s.IsCut);
+        await Assert.That(cut.Side).IsEqualTo(AssemblySide.Left);
+        await Assert.That(cut.U).IsEqualTo(-6.75).Within(1e-9);
+        await Assert.That(cut.Label).IsEqualTo("cut 50%");
+        await Assert.That(cut.HeightAt(-8.75)).IsEqualTo(1.5).Within(1e-9);
+        await Assert.That(preview.Slopes.Single(s => !s.IsCut).HeightAt(-10.75)).IsEqualTo(-0.5).Within(1e-9);
+    }
+
+    [Test]
+    public async Task Build_NoGrading_OrAnUnusableSlope_DrawsNoSlopes()
+    {
+        var assembly = AssemblyFixtures.RoadAndKerbs();
+        var profiles = AssemblyFixtures.Profiles();
+
+        var off = AssemblyPreview.Build(assembly.Parts, name => profiles[name], new SideGrading { Enabled = false }, null);
+        var zero = AssemblyPreview.Build(assembly.Parts, name => profiles[name], new SideGrading { Enabled = true, CutValue = 0 }, null);
+
+        await Assert.That(off.Slopes.Count).IsEqualTo(0);
+        await Assert.That(zero.Slopes.Count).IsEqualTo(0);
+    }
+
+    [Test]
     public async Task Build_RightHandPartsAreAtPositiveU()
     {
         var assembly = AssemblyFixtures.RoadAndKerbs();
@@ -234,6 +297,61 @@ public class AssemblyStoreTests : TopoAlignTest
             await Assert.That(loaded[0].Parts[2].LateralOffsetMm).IsEqualTo(assembly.Parts[2].LateralOffsetMm).Within(1e-9);
             await Assert.That(loaded[0].Parts[1].LateralOffsetMm).IsEqualTo(assembly.Parts[1].LateralOffsetMm).Within(1e-9);
             await Assert.That(loaded[0].Parts[0].Category).IsEqualTo("OST_GenericModel");
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+    }
+
+    [Test]
+    public async Task SaveThenLoad_RoundTripsTheSideGrading()
+    {
+        var folder = NewFolder();
+        try
+        {
+            var store = new AssemblyStore(folder);
+            var assembly = AssemblyFixtures.RoadAndKerbs();
+            assembly.Left = new SideGrading { Enabled = true, SlopeMode = TopoAlign.Grading.Slope.SlopeMode.Percent, CutValue = 40, FillValue = 25, MaxWidthMm = 12000 };
+
+            store.Save(assembly);
+            var loaded = store.LoadAll()[0];
+
+            await Assert.That(File.ReadAllText(store.PathFor(assembly.Name))).Contains("\"Percent\"");
+            await Assert.That(loaded.Left.Enabled).IsTrue();
+            await Assert.That(loaded.Left.SlopeMode).IsEqualTo(TopoAlign.Grading.Slope.SlopeMode.Percent);
+            await Assert.That(loaded.Left.CutValue).IsEqualTo(40.0).Within(1e-9);
+            await Assert.That(loaded.Left.FillValue).IsEqualTo(25.0).Within(1e-9);
+            await Assert.That(loaded.Left.MaxWidthMm).IsEqualTo(12000.0).Within(1e-9);
+            await Assert.That(loaded.Right.Enabled).IsFalse();
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+    }
+
+    [Test]
+    public async Task LoadAll_AnAssemblyFromBeforeGradingExisted_HasGradingOff()
+    {
+        var folder = NewFolder();
+        try
+        {
+            Directory.CreateDirectory(folder);
+            File.WriteAllText(Path.Combine(folder, "old.json"), "{ \"Name\": \"Old\", \"Parts\": [], \"Left\": null }");
+
+            var loaded = new AssemblyStore(folder).LoadAll();
+
+            await Assert.That(loaded.Count).IsEqualTo(1);
+            await Assert.That(loaded[0].Left.Enabled).IsFalse();
+            await Assert.That(loaded[0].Right.Enabled).IsFalse();
+            await Assert.That(loaded[0].Right.CutValue).IsEqualTo(2.0).Within(1e-9);
         }
         finally
         {
@@ -360,6 +478,118 @@ public class AssemblyStoreTests : TopoAlignTest
     }
 }
 
+/// <summary>Finding where an assembly's slope leaves it, and the line the slope starts from. No Revit geometry involved.</summary>
+public class AssemblyGraderTests : TopoAlignTest
+{
+    private const double Tol = 1e-6;
+
+    [Test]
+    public async Task Shoulder_IsTheOutermostPointOfTheWholeAssembly_AtItsHighestHeight()
+    {
+        // a road from u -6 to 6, a kerb outside each side (0.5 wide, 0.5 high) and a footway beyond the right kerb
+        var parts = new List<SectionProfile>
+        {
+            AssemblyFixtures.Box(-6, -0.5, 6, 0),
+            AssemblyFixtures.Box(-6.5, 0, -6, 0.5),
+            AssemblyFixtures.Box(6, 0, 6.5, 0.5),
+            AssemblyFixtures.Box(6.5, 0, 9.5, 0.1)
+        };
+
+        await Assert.That(AssemblyGrader.TryFindShoulder(parts, AssemblySide.Left, out var leftU, out var leftV)).IsTrue();
+        await Assert.That(AssemblyGrader.TryFindShoulder(parts, AssemblySide.Right, out var rightU, out var rightV)).IsTrue();
+
+        await Assert.That(leftU).IsEqualTo(-6.5).Within(Tol);
+        await Assert.That(leftV).IsEqualTo(0.5).Within(Tol);
+        await Assert.That(rightU).IsEqualTo(9.5).Within(Tol);
+        await Assert.That(rightV).IsEqualTo(0.1).Within(Tol);
+    }
+
+    [Test]
+    public async Task Shoulder_WithNoParts_IsNotFound()
+    {
+        await Assert.That(AssemblyGrader.TryFindShoulder(new List<SectionProfile>(), AssemblySide.Left, out _, out _)).IsFalse();
+    }
+
+    [Test]
+    public async Task EdgePath_FollowsTheAlignmentAtTheShoulderOffsetAndHeight()
+    {
+        // an alignment running along +X at height 10; the right of travel is -Y
+        var stations = new List<double> { 0.0, 10.0, 20.0 };
+
+        var path = AssemblyGrader.BuildEdgePath(
+            stations,
+            station => new PathPoint(station, 0.0, 10.0),
+            _ => (1.0, 0.0),
+            6.5,
+            0.5,
+            0.25,
+            AssemblySide.Right,
+            out var sideX,
+            out var sideY);
+
+        await Assert.That(path.Count).IsEqualTo(3);
+        await Assert.That(path[1].X).IsEqualTo(10.0).Within(Tol);
+        await Assert.That(path[1].Y).IsEqualTo(-6.5).Within(Tol);
+        await Assert.That(path[1].Z).IsEqualTo(10.75).Within(Tol);
+
+        // the side point is beyond the edge, away from the alignment
+        await Assert.That(sideX).IsEqualTo(0.0).Within(Tol);
+        await Assert.That(sideY).IsEqualTo(-7.5).Within(Tol);
+    }
+
+    [Test]
+    public async Task EdgePath_OnTheLeft_IsTheOtherSideOfTheAlignment()
+    {
+        var stations = new List<double> { 0.0, 10.0 };
+
+        var path = AssemblyGrader.BuildEdgePath(
+            stations,
+            station => new PathPoint(station, 0.0, 0.0),
+            _ => (1.0, 0.0),
+            -6.5,
+            0.0,
+            0.0,
+            AssemblySide.Left,
+            out _,
+            out var sideY);
+
+        await Assert.That(path[0].Y).IsEqualTo(6.5).Within(Tol);
+        await Assert.That(sideY).IsEqualTo(7.5).Within(Tol);
+    }
+
+    [Test]
+    public async Task GradedFromTheEdgePath_CutAndFillUseTheirOwnSlopes()
+    {
+        // ground at height 0 east of the road; one stretch of the edge sits above it (fill), the other below (cut)
+        var ground = new TriangleSurface();
+        ground.AddTriangle(-100, -100, 0, 100, -100, 0, 100, 100, 0);
+        ground.AddTriangle(-100, -100, 0, 100, 100, 0, -100, 100, 0);
+
+        var edge = new List<GradePoint> { new(0, 0, 5), new(0, 10, 5), new(0, 20, -4), new(0, 30, -4) };
+        var grading = new SideGrading { CutValue = 2, FillValue = 4 };
+
+        var result = SlopeGrader.Grade(edge, false, 50, 0, grading.CutRiseOverRun(), grading.FillRiseOverRun(), 100, ground, true);
+
+        await Assert.That(result.Stations[0].IsCut).IsFalse();
+        await Assert.That(result.Stations[0].Daylight.X).IsEqualTo(20.0).Within(1e-3);
+        await Assert.That(result.Stations[3].IsCut).IsTrue();
+        await Assert.That(result.Stations[3].Daylight.X).IsEqualTo(8.0).Within(1e-3);
+    }
+
+    [Test]
+    public async Task SideGrading_ReadsItsSlopesInTheModeChosen()
+    {
+        var percent = new SideGrading { SlopeMode = TopoAlign.Grading.Slope.SlopeMode.Percent, CutValue = 50, FillValue = 25 };
+        var ratio = new SideGrading { CutValue = 2, FillValue = 3 };
+
+        await Assert.That(percent.CutRiseOverRun()).IsEqualTo(0.5).Within(Tol);
+        await Assert.That(percent.FillRiseOverRun()).IsEqualTo(0.25).Within(Tol);
+        await Assert.That(ratio.CutRiseOverRun()).IsEqualTo(0.5).Within(Tol);
+        await Assert.That(ratio.FillRiseOverRun()).IsEqualTo(1.0 / 3.0).Within(Tol);
+        await Assert.That(new SideGrading { MaxWidthMm = 3048 }.MaxWidthFeet).IsEqualTo(10.0).Within(Tol);
+    }
+}
+
 public class AssemblyBuilderTests : TopoAlignTest
 {
     private static readonly Options FineOptions = new() { DetailLevel = ViewDetailLevel.Fine };
@@ -392,6 +622,168 @@ public class AssemblyBuilderTests : TopoAlignTest
 
         var comment = Named(document, alignment, "Kerb (right)").get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsString();
         await Assert.That(comment.Contains("Road with kerbs")).IsTrue();
+    }
+
+    /// <summary>A flat toposolid at the given height, with a spread of points so it has a surface to read. By default it covers the curved alignment.</summary>
+    private static Toposolid FlatTopo(Document document, double z, double minX = -100, double minY = -100, double maxX = 500, double maxY = 400)
+    {
+        using var transaction = new Transaction(document, "Make topo");
+        transaction.Start();
+
+        var level = new FilteredElementCollector(document).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).First();
+        var type = new FilteredElementCollector(document).OfClass(typeof(ToposolidType)).Cast<ToposolidType>().First();
+
+        var loop = new CurveLoop();
+        var corners = new[] { new XYZ(minX, minY, z), new XYZ(maxX, minY, z), new XYZ(maxX, maxY, z), new XYZ(minX, maxY, z) };
+        for (var i = 0; i < corners.Length; i++)
+        {
+            loop.Append(Line.CreateBound(corners[i], corners[(i + 1) % corners.Length]));
+        }
+
+        // a grid well inside the boundary
+        var points = new List<XYZ>();
+        for (var x = minX + 25; x < maxX; x += 50)
+        {
+            for (var y = minY + 25; y < maxY; y += 50)
+            {
+                points.Add(new XYZ(x, y, z));
+            }
+        }
+
+        var topo = Toposolid.Create(document, new List<CurveLoop> { loop }, points, type.Id, level.Id);
+        transaction.Commit();
+        return topo;
+    }
+
+    [Test]
+    public async Task Create_WithATopoAndGradingOn_GradesBothSidesAndKeepsTheRoad()
+    {
+        var document = NewDocument();
+        var alignment = RoadFixtures.CurvedAlignment(document);
+        var topo = FlatTopo(document, -3.0);
+        var before = topo.GetSlabShapeEditor().SlabShapeVertices.Size;
+
+        var assembly = AssemblyFixtures.RoadAndKerbs();
+        assembly.Left = new SideGrading { Enabled = true, CutValue = 2, FillValue = 3 };
+        assembly.Right = new SideGrading { Enabled = true, CutValue = 2, FillValue = 3 };
+
+        var result = AssemblyBuilder.Create(document, alignment, assembly, AssemblyFixtures.Profiles(), new RoadOptions { Interval = 20.0 }, new Element[] { topo });
+
+        await Assert.That(result.ShapeIds.Count).IsEqualTo(3);
+        await Assert.That(result.Grading.Count).IsEqualTo(2);
+        foreach (var side in result.Grading)
+        {
+            await Assert.That(side.Succeeded).IsTrue();
+            // the kerbs stand about 0.5 ft above the road, which is above the ground at -3, so the slopes fall
+            await Assert.That(side.Fill).IsGreaterThan(0);
+            await Assert.That(side.Cut).IsEqualTo(0);
+        }
+
+        await Assert.That(topo.GetSlabShapeEditor().SlabShapeVertices.Size).IsGreaterThan(before);
+    }
+
+    [Test]
+    public async Task Create_WithADifferentTopoEitherSide_GradesEachSideOnTheTopoItReaches()
+    {
+        var document = NewDocument();
+        var alignment = RoadFixtures.CurvedAlignment(document);
+
+        // the alignment runs east along y = 0 first: the left of travel is north of it and the right is south
+        var south = FlatTopo(document, -3.0, -100, -100, 200, -2);
+        var north = FlatTopo(document, -6.0, -100, 2, 200, 100);
+        var southBefore = south.GetSlabShapeEditor().SlabShapeVertices.Size;
+        var northBefore = north.GetSlabShapeEditor().SlabShapeVertices.Size;
+
+        var assembly = AssemblyFixtures.RoadAndKerbs();
+        assembly.Left = new SideGrading { Enabled = true, CutValue = 2, FillValue = 3 };
+        assembly.Right = new SideGrading { Enabled = true, CutValue = 2, FillValue = 3 };
+
+        // the order they are picked in doesn't matter
+        var result = AssemblyBuilder.Create(document, alignment, assembly, AssemblyFixtures.Profiles(), new RoadOptions { Interval = 20.0 }, new Element[] { north, south });
+
+        await Assert.That(result.ShapeIds.Count).IsEqualTo(3);
+        await Assert.That(result.Grading.All(g => g.Succeeded)).IsTrue();
+
+        var left = result.Grading.Where(g => g.Side == AssemblySide.Left).ToList();
+        var right = result.Grading.Where(g => g.Side == AssemblySide.Right).ToList();
+        await Assert.That(left.Count).IsEqualTo(1);
+        await Assert.That(left[0].ToposolidName).Contains($"[{north.Id}]");
+        await Assert.That(right.Count).IsEqualTo(1);
+        await Assert.That(right[0].ToposolidName).Contains($"[{south.Id}]");
+
+        await Assert.That(north.GetSlabShapeEditor().SlabShapeVertices.Size).IsGreaterThan(northBefore);
+        await Assert.That(south.GetSlabShapeEditor().SlabShapeVertices.Size).IsGreaterThan(southBefore);
+    }
+
+    [Test]
+    public async Task Create_WhenAPickedToposolidIsReplacedByAnother_StillGradesTheOthers()
+    {
+        var document = NewDocument();
+        var alignment = RoadFixtures.CurvedAlignment(document);
+
+        // making a toposolid inside another can make Revit replace one of them, which leaves a stale element in the pick
+        var big = FlatTopo(document, -3.0);
+        var inner = FlatTopo(document, -3.0, -20, -20, 220, 20);
+
+        var assembly = AssemblyFixtures.RoadAndKerbs();
+        assembly.Left = new SideGrading { Enabled = true };
+        assembly.Right = new SideGrading { Enabled = true };
+
+        var result = AssemblyBuilder.Create(document, alignment, assembly, AssemblyFixtures.Profiles(), new RoadOptions { Interval = 20.0 }, new Element[] { big, inner });
+
+        await Assert.That(result.ShapeIds.Count).IsEqualTo(3);
+        await Assert.That(result.Grading.Any(g => g.Succeeded)).IsTrue();
+    }
+
+    [Test]
+    public async Task Create_WhenASideReachesNoneOfTheToposolids_ReportsThatSideAsNotGraded()
+    {
+        var document = NewDocument();
+        var alignment = RoadFixtures.CurvedAlignment(document);
+
+        // only the south side of the road has any ground
+        var south = FlatTopo(document, -3.0, -100, -100, 200, -2);
+
+        var assembly = AssemblyFixtures.RoadAndKerbs();
+        assembly.Left = new SideGrading { Enabled = true };
+        assembly.Right = new SideGrading { Enabled = true };
+
+        var result = AssemblyBuilder.Create(document, alignment, assembly, AssemblyFixtures.Profiles(), new RoadOptions { Interval = 20.0 }, new Element[] { south });
+
+        var left = result.Grading.Single(g => g.Side == AssemblySide.Left);
+        var right = result.Grading.Single(g => g.Side == AssemblySide.Right);
+        await Assert.That(right.Succeeded).IsTrue();
+        await Assert.That(left.Succeeded).IsFalse();
+        await Assert.That(left.Error).Contains("does not meet");
+    }
+
+    [Test]
+    public async Task Create_WithATopoButNoSideGradingOn_LeavesTheGroundAlone()
+    {
+        var document = NewDocument();
+        var alignment = RoadFixtures.CurvedAlignment(document);
+        var topo = FlatTopo(document, -3.0);
+        var before = topo.GetSlabShapeEditor().SlabShapeVertices.Size;
+
+        var result = AssemblyBuilder.Create(document, alignment, AssemblyFixtures.RoadAndKerbs(), AssemblyFixtures.Profiles(), new RoadOptions { Interval = 20.0 }, new Element[] { topo });
+
+        await Assert.That(result.Grading.Count).IsEqualTo(0);
+        await Assert.That(topo.GetSlabShapeEditor().SlabShapeVertices.Size).IsEqualTo(before);
+    }
+
+    [Test]
+    public async Task Create_WithGradingOnButNotAToposolid_SaysSoAndStillMakesTheRoad()
+    {
+        var document = NewDocument();
+        var alignment = RoadFixtures.CurvedAlignment(document);
+        var assembly = AssemblyFixtures.RoadAndKerbs();
+        assembly.Left = new SideGrading { Enabled = true };
+
+        var result = AssemblyBuilder.Create(document, alignment, assembly, AssemblyFixtures.Profiles(), new RoadOptions { Interval = 20.0 }, new Element[] { alignment });
+
+        await Assert.That(result.ShapeIds.Count).IsEqualTo(3);
+        await Assert.That(result.Grading.Count).IsEqualTo(0);
+        await Assert.That(result.GradingNotice).Contains("not a toposolid");
     }
 
     [Test]
@@ -702,6 +1094,189 @@ public class AssemblyViewModelTests : TopoAlignUiTest
             await Assert.That(saved.Parts[2].ProfileName).IsEqualTo("Kerb");
             await Assert.That(editor.Changed).IsTrue();
             await Assert.That(editor.SavedName).IsEqualTo("Road with kerbs");
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+    }
+
+    [Test]
+    public async Task Views_LoadWithTheGradingControls()
+    {
+        using var backup = new SettingsBackup();
+        var folder = NewFolder();
+        try
+        {
+            var store = new AssemblyStore(folder);
+            store.Save(AssemblyFixtures.RoadAndKerbs());
+            var editor = NewEditor(store, "Road with kerbs");
+            var viewModel = new SweepAlignmentViewModel(store);
+            object sweepContext = null;
+            object editorContext = null;
+
+            RunOnStaThread(() =>
+            {
+                sweepContext = new TopoAlign.Views.RoadTools.SweepAlignmentView(viewModel).DataContext;
+                editorContext = new TopoAlign.Views.RoadTools.AssemblyEditorView(editor).DataContext;
+            });
+
+            await Assert.That(sweepContext).IsEqualTo(viewModel);
+            await Assert.That(editorContext).IsEqualTo(editor);
+            await Assert.That(editor.CanGradeTopo).IsTrue();
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+    }
+
+    [Test]
+    public async Task SweepDialog_GradingTheTopoNeedsAToposolidPicked()
+    {
+        using var backup = new SettingsBackup();
+        var folder = NewFolder();
+        try
+        {
+            var document = NewDocument();
+            App.RevitDocument = document;
+            var alignment = RoadFixtures.CurvedAlignment(document, "Road 1");
+            var store = new AssemblyStore(folder);
+            store.Save(AssemblyFixtures.RoadAndKerbs());
+
+            var viewModel = new SweepAlignmentViewModel(store);
+            viewModel.SelectAlignment(alignment);
+
+            // single-profile mode never shows the grading controls
+            await Assert.That(viewModel.ShowGradeTopo).IsFalse();
+
+            viewModel.SelectedMode = viewModel.Modes.First(m => m.Value == SweepMode.Assembly);
+            await Assert.That(viewModel.ShowGradeTopo).IsTrue();
+            await Assert.That(viewModel.ShowGradeTopoPick).IsFalse();
+            await Assert.That(viewModel.CreateCommand.CanExecute(null)).IsTrue();
+
+            viewModel.GradeTopo = true;
+            await Assert.That(viewModel.ShowGradeTopoPick).IsTrue();
+            await Assert.That(viewModel.GradeTopoStatus).Contains("No toposolid picked");
+            await Assert.That(viewModel.CreateCommand.CanExecute(null)).IsFalse();
+
+            var first = FlatTopoFor(document);
+            viewModel.SelectToposolid(first);
+            await Assert.That(viewModel.CreateCommand.CanExecute(null)).IsTrue();
+            await Assert.That(viewModel.Topographies.Count).IsEqualTo(1);
+
+            // several can be picked, but the same one isn't added twice
+            viewModel.SelectToposolid(first);
+            viewModel.SelectToposolid(FlatTopoFor(document));
+            await Assert.That(viewModel.Topographies.Count).IsEqualTo(2);
+            await Assert.That(viewModel.GradeTopoStatus).Contains("Toposolids (2)");
+
+            // picking again replaces the choice
+            viewModel.SelectToposolids(new Element[] { first });
+            await Assert.That(viewModel.Topographies.Count).IsEqualTo(1);
+            await Assert.That(viewModel.GradeTopoStatus).Contains("Toposolid:");
+            // the assembly has no side grading turned on, which the status says
+            await Assert.That(viewModel.GradeTopoStatus).Contains("no side grading");
+
+            // unticking it puts the dialog back to how it was, whatever was picked
+            viewModel.GradeTopo = false;
+            await Assert.That(viewModel.GradeTopoStatus).IsEqualTo(string.Empty);
+            await Assert.That(viewModel.CreateCommand.CanExecute(null)).IsTrue();
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+    }
+
+    private static Toposolid FlatTopoFor(Document document)
+    {
+        using var transaction = new Transaction(document, "Make topo");
+        transaction.Start();
+
+        var level = new FilteredElementCollector(document).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).First();
+        var type = new FilteredElementCollector(document).OfClass(typeof(ToposolidType)).Cast<ToposolidType>().First();
+        var loop = new CurveLoop();
+        var corners = new[] { new XYZ(0, 0, 0), new XYZ(10, 0, 0), new XYZ(10, 10, 0), new XYZ(0, 10, 0) };
+        for (var i = 0; i < corners.Length; i++)
+        {
+            loop.Append(Line.CreateBound(corners[i], corners[(i + 1) % corners.Length]));
+        }
+
+        var topo = Toposolid.Create(document, new List<CurveLoop> { loop }, new List<XYZ> { new XYZ(5, 5, 0) }, type.Id, level.Id);
+        transaction.Commit();
+        return topo;
+    }
+
+    [Test]
+    public async Task Editor_SavesTheSideGrading_AndShowsItAgain()
+    {
+        using var backup = new SettingsBackup();
+        var folder = NewFolder();
+        try
+        {
+            var store = new AssemblyStore(folder);
+            var assembly = AssemblyFixtures.RoadAndKerbs();
+            assembly.Right = new SideGrading { Enabled = true, CutValue = 2, FillValue = 4, MaxWidthMm = 10 * AssemblyPart.MillimetresPerFoot };
+            store.Save(assembly);
+
+            var editor = NewEditor(store, "Road with kerbs");
+
+            await Assert.That(editor.RightGrading.Enabled).IsTrue();
+            await Assert.That(editor.RightGrading.FillValue).IsEqualTo(4m);
+            await Assert.That(editor.RightGrading.MaxWidth).IsEqualTo(10m);
+            await Assert.That(editor.LeftGrading.Enabled).IsFalse();
+
+            // the picture follows the grading as it is edited (the fixture's profile types aren't loaded, so there is no outline to start from yet)
+            var changes = 0;
+            editor.PreviewChanged += (_, _) => changes++;
+            editor.RightGrading.CutValue = 3m;
+            await Assert.That(changes).IsGreaterThan(0);
+
+            editor.LeftGrading.Enabled = true;
+            editor.LeftGrading.CutValue = 1.5m;
+            editor.SaveCommand.Execute(null);
+
+            var saved = store.LoadAll().Single();
+            await Assert.That(saved.Left.Enabled).IsTrue();
+            await Assert.That(saved.Left.CutValue).IsEqualTo(1.5).Within(1e-9);
+            await Assert.That(saved.Right.MaxWidthMm).IsEqualTo(10 * AssemblyPart.MillimetresPerFoot).Within(0.01);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+    }
+
+    [Test]
+    public async Task Editor_RefusesToSaveAGradingSlopeOfZero()
+    {
+        using var backup = new SettingsBackup();
+        var folder = NewFolder();
+        try
+        {
+            var store = new AssemblyStore(folder);
+            store.Save(AssemblyFixtures.RoadAndKerbs());
+            var editor = NewEditor(store, "Road with kerbs");
+
+            editor.LeftGrading.Enabled = true;
+            editor.LeftGrading.FillValue = 0m;
+            editor.SaveCommand.Execute(null);
+
+            await Assert.That(editor.Status).Contains("Left grading");
+            await Assert.That(store.LoadAll().Single().Left.Enabled).IsFalse();
         }
         finally
         {

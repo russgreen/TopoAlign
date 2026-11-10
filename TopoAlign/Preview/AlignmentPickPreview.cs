@@ -3,6 +3,7 @@ using Autodesk.Revit.DB.ExternalService;
 using Autodesk.Revit.UI;
 using Serilog;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Plan;
 
 namespace TopoAlign.Preview;
 

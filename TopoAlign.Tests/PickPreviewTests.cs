@@ -1,5 +1,6 @@
 using TopoAlign.Alignments;
 using TopoAlign.Preview;
+using TopoAlign.Alignments.Plan;
 
 namespace TopoAlign.Tests;
 

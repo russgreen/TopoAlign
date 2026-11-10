@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Windows.Media.Imaging;
 using TopoAlign.Helpers;
+using TopoAlign.Services;
 
 namespace TopoAlign;
 
@@ -160,7 +161,7 @@ class App : IExternalApplication
             $"Edit{Environment.NewLine}Alignment",
             Assembly.GetExecutingAssembly().Location,
             $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandEditAlignment)}"));
-        pbEditAlignment.ToolTip = "Rename an alignment, change its start station or reverse its direction.";
+        pbEditAlignment.ToolTip = "Rename an alignment, change its start station, reverse its direction, or move its points and edit its curve radii and spiral lengths.";
         pbEditAlignment.LargeImage = PngImageSource("TopoAlign.Images.EditAlignment32.png");
         pbEditAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandEditAlignment.html"));
 

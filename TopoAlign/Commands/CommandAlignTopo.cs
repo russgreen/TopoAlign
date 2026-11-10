@@ -1,9 +1,10 @@
-﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Serilog;
 using Serilog.Context;
 using Serilog.Core;
+using TopoAlign.Views.TopoTools;
 
 namespace TopoAlign.Commands;
 
@@ -25,7 +26,7 @@ public class CommandAlignTopo : IExternalCommand
         //    return Result.Cancelled;
         //}
 
-        var newView = new Views.AlignTopoView();
+        var newView = new Views.TopoTools.AlignTopoView();
         newView.ShowDialog();
 
         //TODO use messaging to get the values back from the view

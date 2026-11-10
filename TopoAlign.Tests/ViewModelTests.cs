@@ -1,5 +1,5 @@
 using static TopoAlign.Tests.TestKit;
-using Settings = TopoAlign.Models.Settings;
+using Settings = TopoAlign.Services.Settings;
 using Autodesk.Revit.DB;
 using System.IO;
 using System.ComponentModel;
@@ -7,6 +7,9 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using TopoAlign.Models;
 using TopoAlign.ViewModels;
+using TopoAlign.Services;
+using TopoAlign.ViewModels.TopoTools;
+using TopoAlign.ViewModels.AlignmentTools;
 
 namespace TopoAlign.Tests;
 
@@ -370,8 +373,8 @@ public class CreateAlignmentViewModelTests : TopoAlignUiTest
         using var backup = new SettingsBackup();
         var document = NewDocument();
         var internalToShared = document.ActiveProjectLocation.GetTotalTransform().Inverse;
-        var json = TopoAlign.Alignments.AlignmentJsonBuilder.Build("Alignment 1", TwoLines, internalToShared, 0.0, out var length);
-        TopoAlign.Alignments.AlignmentApi.Create(document, "Alignment 1", json, length);
+        var json = TopoAlign.Alignments.AlignmentJson.AlignmentJsonBuilder.Build("Alignment 1", TwoLines, internalToShared, 0.0, out var length);
+        TopoAlign.Alignments.Civil.AlignmentApi.Create(document, "Alignment 1", json, length);
 
         var viewModel = NewViewModel(document);
 

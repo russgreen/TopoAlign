@@ -1,6 +1,8 @@
 using static TopoAlign.Tests.TestKit;
 using TopoAlign.Alignments;
 using TopoAlign.Sweep;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.Sweep.Profiles;
 
 namespace TopoAlign.Tests;
 

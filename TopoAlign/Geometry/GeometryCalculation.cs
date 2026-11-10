@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using TopoAlign.Extensions;
 
 namespace TopoAlign.Geometry;

@@ -3,6 +3,11 @@ using Autodesk.Revit.DB;
 using TopoAlign.Alignments;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Alignments.Profile;
+using TopoAlign.ViewModels.AlignmentTools;
+using TopoAlign.Views.AlignmentTools;
 
 namespace TopoAlign.Tests;
 

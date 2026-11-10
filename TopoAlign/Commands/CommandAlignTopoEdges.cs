@@ -4,6 +4,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using Serilog;
 using TopoAlign.Grading;
+using TopoAlign.Grading.TopoEdge;
 
 namespace TopoAlign.Commands;
 

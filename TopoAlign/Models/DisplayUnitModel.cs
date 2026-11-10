@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 
 namespace TopoAlign.Models;
 internal class DisplayUnitModel

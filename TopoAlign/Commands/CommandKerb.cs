@@ -5,6 +5,10 @@ using Serilog;
 using TopoAlign.Sweep;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Sweep.Kerb;
+using TopoAlign.Sweep.Road;
+using TopoAlign.ViewModels.RoadTools;
+using TopoAlign.Views.RoadTools;
 
 namespace TopoAlign.Commands;
 
@@ -80,7 +84,7 @@ public class CommandKerb : IExternalCommand
             if (result.Flipped)
             {
                 // remember the side the user ended up choosing
-                var settings = new Models.Settings();
+                var settings = new Services.Settings();
                 settings.LoadSettings();
                 settings.KerbSweepFlip = request.Flipped != result.Flipped;
                 settings.SaveSettings();

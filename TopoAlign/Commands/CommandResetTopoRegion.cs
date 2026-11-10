@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
@@ -9,6 +9,8 @@ using TopoAlign.Comparers;
 using TopoAlign.Extensions;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.ViewModels.TopoTools;
+using TopoAlign.Views.TopoTools;
 
 namespace TopoAlign.Commands;
 

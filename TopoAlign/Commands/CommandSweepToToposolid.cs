@@ -6,6 +6,10 @@ using Serilog;
 using TopoAlign.Sweep;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Sweep.Road;
+using TopoAlign.ViewModels.RoadTools;
+using TopoAlign.Views.RoadTools;
+using TopoAlign.Commands.Shared;
 
 namespace TopoAlign.Commands;
 
@@ -19,39 +23,18 @@ public class CommandSweepToToposolid : IExternalCommand
     {
         log.Information("{command}", nameof(CommandSweepToToposolid));
 
-        App.CachedUiApp = commandData.Application;
-        App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
+        CommandFlow.Initialise(commandData);
 
         var viewModel = new SweepToToposolidViewModel();
 
         // a road that is already selected is used without asking
-        var uidoc = commandData.Application.ActiveUIDocument;
-        var filter = new RoadPickFilter();
-        foreach (var id in uidoc.Selection.GetElementIds())
-        {
-            var element = App.RevitDocument.GetElement(id);
-            if (filter.AllowElement(element) && viewModel.SelectRoad(element))
-            {
-                break;
-            }
-        }
+        CommandFlow.UseSelectedElement(commandData.Application.ActiveUIDocument, new RoadPickFilter(), viewModel.SelectRoad);
 
         var view = new SweepToToposolidView(viewModel);
 
         // The dialog hides itself to let the user pick a road; the pick runs here in the API context,
         // then the same dialog is shown again.
-        bool? dialogResult;
-        do
-        {
-            viewModel.PickRequested = false;
-            dialogResult = view.ShowDialog();
-
-            if (viewModel.PickRequested)
-            {
-                viewModel.PickRoadElement();
-            }
-        }
-        while (viewModel.PickRequested);
+        var dialogResult = CommandFlow.ShowDialogWithPicks(view, () => viewModel.PickRequested = false, () => viewModel.PickRequested, viewModel.PickRoadElement);
 
         if (dialogResult != true || viewModel.Request is not { } request)
         {

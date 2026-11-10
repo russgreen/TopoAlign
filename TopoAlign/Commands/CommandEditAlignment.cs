@@ -5,6 +5,10 @@ using Serilog;
 using TopoAlign.Alignments;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Views.AlignmentTools;
+using TopoAlign.ViewModels.AlignmentTools;
+using TopoAlign.Commands.Shared;
 
 namespace TopoAlign.Commands;
 
@@ -18,45 +22,23 @@ public class CommandEditAlignment : IExternalCommand
     {
         log.Information("{command}", nameof(CommandEditAlignment));
 
-        App.CachedUiApp = commandData.Application;
-        App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
+        CommandFlow.Initialise(commandData);
 
-        if (!AlignmentApi.Supports(AlignmentApi.AlignmentFeature.Read | AlignmentApi.AlignmentFeature.Update, out var problem))
+        if (!CommandFlow.AlignmentFeaturesSupported(AlignmentFeature.Read | AlignmentFeature.Update, "Edit Alignment"))
         {
-            TaskDialog.Show("Edit Alignment", problem);
             return Result.Cancelled;
         }
 
         var viewModel = new EditAlignmentViewModel();
 
         // an alignment that is already selected is used without asking
-        var uidoc = commandData.Application.ActiveUIDocument;
-        var filter = new AlignmentPickFilter();
-        foreach (var id in uidoc.Selection.GetElementIds())
-        {
-            var element = App.RevitDocument.GetElement(id);
-            if (filter.AllowElement(element) && viewModel.SelectAlignment(element))
-            {
-                break;
-            }
-        }
+        CommandFlow.UseSelectedElement(commandData.Application.ActiveUIDocument, new AlignmentPickFilter(), viewModel.SelectAlignment);
 
         var view = new EditAlignmentView(viewModel);
 
         // The dialog hides itself to let the user pick an alignment; the pick runs here in the API context,
         // then the same dialog is shown again.
-        bool? dialogResult;
-        do
-        {
-            viewModel.PickRequested = false;
-            dialogResult = view.ShowDialog();
-
-            if (viewModel.PickRequested)
-            {
-                viewModel.PickAlignmentElement();
-            }
-        }
-        while (viewModel.PickRequested);
+        var dialogResult = CommandFlow.ShowDialogWithPicks(view, () => viewModel.PickRequested = false, () => viewModel.PickRequested, viewModel.RunPendingPick);
 
         if (dialogResult != true || viewModel.Request is not { } request)
         {
@@ -77,6 +59,11 @@ public class CommandEditAlignment : IExternalCommand
             if (request.StartStationChanged)
             {
                 changes.Add("start station changed");
+            }
+
+            if (request.PlanChanged)
+            {
+                changes.Add("points, radii or spirals edited");
             }
 
             if (request.Reversed)

@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
@@ -11,6 +11,8 @@ using TopoAlign.Comparers;
 using TopoAlign.Geometry;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.ViewModels.TopoTools;
+using TopoAlign.Views.TopoTools;
 
 namespace TopoAlign.Commands;
 
@@ -34,13 +36,13 @@ public class CommndAlignFloor : IExternalCommand
     private Autodesk.Revit.DB.Architecture.TopographySurface _topoSurface = null!;
 #endif
 
-    public Models.Settings cSettings = null!;
+    public Services.Settings cSettings = null!;
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         log.Information("{command}", nameof(CommndAlignFloor));
 
-        cSettings = new Models.Settings();
+        cSettings = new Services.Settings();
         cSettings.LoadSettings();
 
         _uiapp = commandData.Application;

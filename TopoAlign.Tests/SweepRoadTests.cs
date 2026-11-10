@@ -6,7 +6,15 @@ using TopoAlign.Alignments;
 using TopoAlign.Sweep;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
-using Settings = TopoAlign.Models.Settings;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Alignments.Plan;
+using TopoAlign.Alignments.Profile;
+using TopoAlign.Sweep.Profiles;
+using TopoAlign.Sweep.Road;
+using TopoAlign.ViewModels.RoadTools;
+using TopoAlign.Views.RoadTools;
+using Settings = TopoAlign.Services.Settings;
 
 namespace TopoAlign.Tests;
 
@@ -494,7 +502,7 @@ public class RoadBuilderTests : TopoAlignTest
     {
         var document = NewDocument();
         var alignment = RoadFixtures.CurvedAlignment(document);
-        var path = new AlignmentApi.PathReader(alignment);
+        var path = new PathReader(alignment);
 
         var loops = RoadBuilder.CreateLoops(path, RoadFixtures.Slab(), new RoadOptions { Interval = 10.0 }, out var stations);
 
@@ -512,7 +520,7 @@ public class RoadBuilderTests : TopoAlignTest
     {
         var document = NewDocument();
         var alignment = RoadFixtures.CurvedAlignment(document);
-        var path = new AlignmentApi.PathReader(alignment);
+        var path = new PathReader(alignment);
 
         RoadBuilder.CreateLoops(path, RoadFixtures.Slab(), new RoadOptions { Interval = 40.0 }, out var stations);
 

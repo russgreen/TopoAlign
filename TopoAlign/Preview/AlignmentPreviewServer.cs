@@ -5,25 +5,6 @@ using TopoAlign.Alignments;
 
 namespace TopoAlign.Preview;
 
-/// <summary>One line of the pick preview in plan, with its colour (0-255 per channel).</summary>
-internal readonly struct PreviewLine
-{
-    public PreviewLine(PlanPoint from, PlanPoint to, byte red, byte green, byte blue)
-    {
-        From = from;
-        To = to;
-        Red = red;
-        Green = green;
-        Blue = blue;
-    }
-
-    public PlanPoint From { get; }
-    public PlanPoint To { get; }
-    public byte Red { get; }
-    public byte Green { get; }
-    public byte Blue { get; }
-}
-
 /// <summary>
 /// Draws the temporary lines of the pick preview in one plan view. Nothing is added to the model: the lines exist only while the
 /// server is registered, which <see cref="AlignmentPickPreview"/> does for the length of a pick.

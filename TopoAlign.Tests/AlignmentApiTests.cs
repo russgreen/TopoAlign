@@ -1,6 +1,7 @@
 using static TopoAlign.Tests.TestKit;
 using Autodesk.Revit.DB;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Civil;
 
 namespace TopoAlign.Tests;
 
@@ -249,7 +250,7 @@ public class AlignmentApiSelfCheckTests : TopoAlignTest
     [Test]
     public async Task Supports_EverythingTopoAlignUses_IsPresentInThisRevit()
     {
-        var supported = AlignmentApi.Supports(AlignmentApi.AlignmentFeature.All, out var problem);
+        var supported = AlignmentApi.Supports(AlignmentFeature.All, out var problem);
 
         await Assert.That(supported).IsTrue();
         await Assert.That(problem).IsNull();
@@ -258,7 +259,7 @@ public class AlignmentApiSelfCheckTests : TopoAlignTest
     [Test]
     public async Task Supports_EachFeatureOnItsOwn_IsPresent()
     {
-        foreach (var feature in new[] { AlignmentApi.AlignmentFeature.Read, AlignmentApi.AlignmentFeature.Create, AlignmentApi.AlignmentFeature.Update, AlignmentApi.AlignmentFeature.StationLabels })
+        foreach (var feature in new[] { AlignmentFeature.Read, AlignmentFeature.Create, AlignmentFeature.Update, AlignmentFeature.StationLabels })
         {
             await Assert.That(AlignmentApi.Supports(feature, out _)).IsTrue();
         }

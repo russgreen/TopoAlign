@@ -1,9 +1,10 @@
 using static TopoAlign.Tests.TestKit;
 using System.IO;
-using Settings = TopoAlign.Models.Settings;
+using Settings = TopoAlign.Services.Settings;
 using Autodesk.Revit.DB;
 using TopoAlign.Helpers;
 using TopoAlign.Models;
+using TopoAlign.Services;
 
 namespace TopoAlign.Tests;
 

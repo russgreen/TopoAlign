@@ -1,0 +1,148 @@
+<Window x:Class="TopoAlign.Views.AlignmentTools.EditAlignmentView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vmAlignmentTools="clr-namespace:TopoAlign.ViewModels.AlignmentTools"
+        xmlns:behaviours="clr-namespace:TopoAlign.Behaviours"
+        xmlns:views="clr-namespace:TopoAlign.Views.Controls"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance {x:Type vmAlignmentTools:EditAlignmentViewModel}, IsDesignTimeCreatable=False}"
+        Title="{Binding WindowTitle}"
+        FontSize="12" FontFamily="Segoe UI Light"
+        WindowStartupLocation="CenterScreen"
+        SizeToContent="Height" Width="440"
+        WindowStyle="ToolWindow" ResizeMode="NoResize">
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="140"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+            <Style TargetType="TextBlock">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="TextBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="Height" Value="20"/>
+            </Style>
+            <Style TargetType="ComboBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+            <Style TargetType="CheckBox">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="Height" Value="25"/>
+            </Style>
+        </Grid.Resources>
+
+        <Button Grid.Row="0" Grid.ColumnSpan="2" Content="Pick alignment" Command="{Binding PickAlignmentCommand}"/>
+
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding AlignmentStatus}" TextWrapping="Wrap"/>
+
+        <TextBlock Grid.Row="2" Text="Alignment name"/>
+        <TextBox Grid.Row="2" Grid.Column="1" IsEnabled="{Binding HasAlignment}"
+                 Text="{Binding AlignmentName, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Grid.Row="3" Text="Units"/>
+        <ComboBox Grid.Row="3" Grid.Column="1"
+                  ItemsSource="{Binding DisplayUnits}"
+                  DisplayMemberPath="Label"
+                  SelectedValue="{Binding SelectedDisplayUnit, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Grid.Row="4" Text="Start station"/>
+        <TextBox Grid.Row="4" Grid.Column="1" HorizontalContentAlignment="Right" IsEnabled="{Binding HasAlignment}"
+                 Text="{Binding StartStation, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
+                 MaxLength="20" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"/>
+
+        <CheckBox Grid.Row="5" Grid.ColumnSpan="2" Content="Reverse direction"
+                  IsEnabled="{Binding CanReverse}"
+                  IsChecked="{Binding ReverseDirection}"/>
+
+        <StackPanel Grid.Row="6" Grid.ColumnSpan="2"
+                    Visibility="{Binding PlanEditable, Converter={StaticResource BoolToVisibility}}">
+            <Border Height="200" Margin="0,0,0,6" BorderThickness="0">
+                <views:PlanGraph Data="{Binding Graph}" SelectedIndex="{Binding SelectedPointIndex}"
+                                 SnapsToDevicePixels="True" UseLayoutRounding="True"
+                                 ToolTip="The alignment as edited (solid), against the alignment in the model (dashed), with its numbered points. The selected point is highlighted."/>
+            </Border>
+            <DataGrid ItemsSource="{Binding PiPoints}" SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                      AutoGenerateColumns="False" Height="140" Margin="0,0,0,6"
+                      CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal" SelectionMode="Single">
+                <DataGrid.Resources>
+                    <Style TargetType="TextBox">
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="Height" Value="Auto"/>
+                    </Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Margin" Value="0"/>
+                    </Style>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="#" Binding="{Binding Number}" IsReadOnly="True" Width="30"/>
+                    <DataGridTextColumn Header="X" Binding="{Binding X}" Width="*"/>
+                    <DataGridTextColumn Header="Y" Binding="{Binding Y}" Width="*"/>
+                    <DataGridTextColumn Header="Radius" Binding="{Binding Radius}" Width="70">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEnd}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Spiral" Binding="{Binding SpiralLength}" Width="70">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEnd}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Move point" Margin="0,0,3,6" Command="{Binding MovePointCommand}"/>
+                <Button Grid.Column="1" Content="Add point" Margin="3,0,3,6" Command="{Binding AddPointCommand}"/>
+                <Button Grid.Column="2" Content="Remove point" Margin="3,0,3,6" Command="{Binding RemovePointCommand}"/>
+                <Button Grid.Column="3" Content="Reset" Margin="3,0,0,6" Command="{Binding ResetPointsCommand}"/>
+            </Grid>
+            <TextBlock Text="{Binding PointsStatus}" TextWrapping="Wrap"/>
+            <TextBlock Text="Select a point, then Move point to pick its new position in the view, or edit its values. Radius 0 leaves a sharp corner; the first and last points are the ends of the alignment."
+                       TextWrapping="Wrap" FontSize="11" Opacity="0.7"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="6" Grid.ColumnSpan="2" Text="{Binding PlanNote}" TextWrapping="Wrap" FontSize="11" Opacity="0.7"
+                   Visibility="{Binding PlanNotEditable, Converter={StaticResource BoolToVisibility}}"/>
+
+        <Button Grid.Row="7" Grid.ColumnSpan="2" Content="Apply" IsDefault="True" Height="30"
+                Command="{Binding ApplyCommand}"/>
+    </Grid>
+</Window>

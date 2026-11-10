@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using System.Diagnostics;
 using TopoAlign.Helpers;
 
@@ -10,7 +10,7 @@ namespace TopoAlign.Geometry;
 /// orientation of curves to form a contiguous
 /// closed loop.
 /// </summary>
-internal class CurveUtils
+internal static class CurveUtils
 {
     private const double _inch = 1.0d / 12.0d;
     private const double _sixteenth = _inch / 16.0d;
@@ -36,29 +36,6 @@ internal class CurveUtils
     /// <returns>The reversed curve.</returns>
     /// <throws cref="NotImplementedException">If the
     /// curve type is not supported by this utility.</throws>
-    private static Curve CreateReversedCurve(Autodesk.Revit.Creation.Application creapp, Curve orig)
-    {
-        if (!IsSupported(orig))
-        {
-            throw new NotImplementedException("CreateReversedCurve for type " + orig.GetType().Name);
-        }
-
-        if (orig is Line)
-        {
-            return Line.CreateBound(orig.GetEndPoint(1), orig.GetEndPoint(0));
-        }
-        // Return creapp.NewLineBound(orig.GetEndPoint(1), orig.GetEndPoint(0))
-        else if (orig is Arc)
-        {
-            return Arc.Create(orig.GetEndPoint(1), orig.GetEndPoint(0), orig.Evaluate(0.5d, true));
-        }
-        // Return creapp.NewArc(orig.GetEndPoint(1), orig.GetEndPoint(0), orig.Evaluate(0.5, True))
-        else
-        {
-            throw new Exception("CreateReversedCurve - Unreachable");
-        }
-    }
-
     private static Curve CreateReversedCurve(Curve orig)
     {
         if (!IsSupported(orig))
@@ -144,7 +121,7 @@ internal class CurveUtils
                             Debug.Print("{0} end point, reverse {1}", j, i + 1);
                         }
 
-                        curves[i + 1] = CreateReversedCurve(creapp, curves[j]);
+                        curves[i + 1] = CreateReversedCurve(curves[j]);
                     }
                     else
                     {
@@ -154,7 +131,7 @@ internal class CurveUtils
                         }
 
                         var tmp = curves[i + 1];
-                        curves[i + 1] = CreateReversedCurve(creapp, curves[j]);
+                        curves[i + 1] = CreateReversedCurve(curves[j]);
                         curves[j] = tmp;
                     }
 

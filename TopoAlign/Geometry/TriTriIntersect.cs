@@ -1,9 +1,9 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using g3;
 
 namespace TopoAlign.Geometry;
 
-public class TriTriIntersect
+public static class TriTriIntersect
 {
 
 #if REVIT2024_OR_GREATER

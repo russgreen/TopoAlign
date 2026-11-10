@@ -1,4 +1,5 @@
 using TopoAlign.Sweep;
+using TopoAlign.Sweep.Road;
 
 namespace TopoAlign.Tests;
 

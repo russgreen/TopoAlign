@@ -4,6 +4,10 @@ using Autodesk.Revit.UI;
 using Serilog;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
+using TopoAlign.Views.AlignmentTools;
+using TopoAlign.ViewModels.AlignmentTools;
+using TopoAlign.Alignments.Civil;
+using TopoAlign.Commands.Shared;
 
 namespace TopoAlign.Commands;
 
@@ -17,12 +21,10 @@ public class CommandCreateAlignment : IExternalCommand
     {
         log.Information("{command}", nameof(CommandCreateAlignment));
 
-        App.CachedUiApp = commandData.Application;
-        App.RevitDocument = commandData.Application.ActiveUIDocument.Document;
+        CommandFlow.Initialise(commandData);
 
-        if (!Alignments.AlignmentApi.Supports(Alignments.AlignmentApi.AlignmentFeature.Read | Alignments.AlignmentApi.AlignmentFeature.Create, out var problem))
+        if (!CommandFlow.AlignmentFeaturesSupported(AlignmentFeature.Read | AlignmentFeature.Create, "Create Alignment"))
         {
-            TaskDialog.Show("Create Alignment", problem);
             return Result.Cancelled;
         }
 
@@ -31,18 +33,7 @@ public class CommandCreateAlignment : IExternalCommand
 
         // The dialog hides itself to let the user pick lines or a toposolid; the pick runs here in the API context,
         // then the same dialog is shown again.
-        bool? dialogResult;
-        do
-        {
-            viewModel.PickRequested = false;
-            dialogResult = view.ShowDialog();
-
-            if (viewModel.PickRequested)
-            {
-                viewModel.RunPendingPick();
-            }
-        }
-        while (viewModel.PickRequested);
+        var dialogResult = CommandFlow.ShowDialogWithPicks(view, () => viewModel.PickRequested = false, () => viewModel.PickRequested, viewModel.RunPendingPick);
 
         if (dialogResult != true || viewModel.Request is not { } request)
         {
@@ -52,7 +43,7 @@ public class CommandCreateAlignment : IExternalCommand
         // Create after the dialog has closed so the transaction runs in the Revit API context.
         try
         {
-            var createdId = Alignments.AlignmentApi.Create(
+            var createdId = Alignments.Civil.AlignmentApi.Create(
                 App.RevitDocument,
                 request.Name,
                 request.Json,

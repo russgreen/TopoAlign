@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 
 namespace TopoAlign.Extensions;
 internal static class JtLineExtensionMethods

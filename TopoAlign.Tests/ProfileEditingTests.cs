@@ -1,6 +1,8 @@
 using static TopoAlign.Tests.TestKit;
 using System.Text.Json.Nodes;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.AlignmentJson;
+using TopoAlign.Alignments.Profile;
 
 namespace TopoAlign.Tests;
 

@@ -1,6 +1,7 @@
 using static TopoAlign.Tests.TestKit;
 using Autodesk.Revit.DB;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.Plan;
 
 namespace TopoAlign.Tests;
 
@@ -245,10 +246,10 @@ public class CurveChainerTests : TopoAlignTest
     [Test]
     public async Task ChainResult_IsContinuous_RequiresCurvesAndNoError()
     {
-        var empty = new CurveChainer.ChainResult();
-        var withError = new CurveChainer.ChainResult { ErrorMessage = "bad" };
+        var empty = new ChainResult();
+        var withError = new ChainResult { ErrorMessage = "bad" };
         withError.Curves.Add(Ln(0, 0, 1, 0));
-        var good = new CurveChainer.ChainResult();
+        var good = new ChainResult();
         good.Curves.Add(Ln(0, 0, 1, 0));
 
         await Assert.That(empty.IsContinuous).IsFalse();

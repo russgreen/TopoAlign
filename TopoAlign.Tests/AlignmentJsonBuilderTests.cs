@@ -2,6 +2,7 @@ using static TopoAlign.Tests.TestKit;
 using Autodesk.Revit.DB;
 using System.Text.Json.Nodes;
 using TopoAlign.Alignments;
+using TopoAlign.Alignments.AlignmentJson;
 
 namespace TopoAlign.Tests;
 
