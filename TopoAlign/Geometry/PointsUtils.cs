@@ -301,6 +301,42 @@ public static class PointsUtils
 
 #endif
 
+    /// <summary>Adds the points along one face edge: its tessellation, or evenly divided points when it is a long straight edge. Every point is lowered by <paramref name="offset"/>.</summary>
+    public static void AddEdgePoints(Edge m_edge, double offset, double divide, List<XYZ> points)
+    {
+        int i = m_edge.Tessellate().Count;
+        if (i > 2)
+        {
+            foreach (XYZ pt in m_edge.Tessellate())
+            {
+                var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)offset);
+                points.Add(pt1);
+            }
+        }
+        else
+        {
+            double len = m_edge.ApproximateLength;
+            if (len > (double)divide)
+            {
+                var pt0 = new XYZ(m_edge.Tessellate()[0].X, m_edge.Tessellate()[0].Y, m_edge.Tessellate()[0].Z);
+                var pt1 = new XYZ(m_edge.Tessellate()[1].X, m_edge.Tessellate()[1].Y, m_edge.Tessellate()[1].Z);
+                foreach (XYZ pt in GeometryCalculation.DividePoints(pt0, pt1, len, (double)divide))
+                {
+                    var p = new XYZ(pt.X, pt.Y, pt.Z - (double)offset);
+                    points.Add(p);
+                }
+            }
+            else
+            {
+                foreach (XYZ pt in m_edge.Tessellate())
+                {
+                    var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)offset);
+                    points.Add(pt1);
+                }
+            }
+        }
+    }
+
     public static IList<XYZ> GetPointsFromElement(GeometryElement geometryElements, bool topFace, double offset = 0, double divide = 1000d * 0.00328084d)
     {
         var points = new List<XYZ>();
@@ -400,37 +436,7 @@ public static class PointsUtils
             // For Each ea As EdgeArray In lf.EdgeLoops
             foreach (Edge m_edge in ea)
             {
-                int i = m_edge.Tessellate().Count;
-                if (i > 2)
-                {
-                    foreach (XYZ pt in m_edge.Tessellate())
-                    {
-                        var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)offset);
-                        points.Add(pt1);
-                    }
-                }
-                else
-                {
-                    double len = m_edge.ApproximateLength;
-                    if (len > (double)divide)
-                    {
-                        var pt0 = new XYZ(m_edge.Tessellate()[0].X, m_edge.Tessellate()[0].Y, m_edge.Tessellate()[0].Z);
-                        var pt1 = new XYZ(m_edge.Tessellate()[1].X, m_edge.Tessellate()[1].Y, m_edge.Tessellate()[1].Z);
-                        foreach (XYZ pt in GeometryCalculation.DividePoints(pt0, pt1, len, (double)divide))
-                        {
-                            var p = new XYZ(pt.X, pt.Y, pt.Z - (double)offset);
-                            points.Add(p);
-                        }
-                    }
-                    else
-                    {
-                        foreach (XYZ pt in m_edge.Tessellate())
-                        {
-                            var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)offset);
-                            points.Add(pt1);
-                        }
-                    }
-                }
+                AddEdgePoints(m_edge, offset, divide, points);
             }
         }
 

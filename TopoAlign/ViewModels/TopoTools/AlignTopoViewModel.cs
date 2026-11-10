@@ -432,37 +432,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
                 {
                     foreach (Edge m_edge in ea)
                     {
-                        int i = m_edge.Tessellate().Count;
-                        if (i > 2)
-                        {
-                            foreach (XYZ pt in m_edge.Tessellate())
-                            {
-                                var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)Offset);
-                                points.Add(pt1);
-                            }
-                        }
-                        else
-                        {
-                            double len = m_edge.ApproximateLength;
-                            if (len > (double)Divide)
-                            {
-                                var pt0 = new XYZ(m_edge.Tessellate()[0].X, m_edge.Tessellate()[0].Y, m_edge.Tessellate()[0].Z);
-                                var pt1 = new XYZ(m_edge.Tessellate()[1].X, m_edge.Tessellate()[1].Y, m_edge.Tessellate()[1].Z);
-                                foreach (XYZ pt in GeometryCalculation.DividePoints(pt0, pt1, len, (double)Divide))
-                                {
-                                    var p = new XYZ(pt.X, pt.Y, pt.Z - (double)Offset);
-                                    points.Add(p);
-                                }
-                            }
-                            else
-                            {
-                                foreach (XYZ pt in m_edge.Tessellate())
-                                {
-                                    var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)Offset);
-                                    points.Add(pt1);
-                                }
-                            }
-                        }
+                        PointsUtils.AddEdgePoints(m_edge, (double)Offset, (double)Divide, points);
                     }
                 }
             }
@@ -539,37 +509,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
                 // For Each ea As EdgeArray In lf.EdgeLoops
                 foreach (Edge m_edge in ea)
                 {
-                    int i = m_edge.Tessellate().Count;
-                    if (i > 2)
-                    {
-                        foreach (XYZ pt in m_edge.Tessellate())
-                        {
-                            var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)Offset);
-                            points.Add(pt1);
-                        }
-                    }
-                    else
-                    {
-                        double len = m_edge.ApproximateLength;
-                        if (len > (double)Divide)
-                        {
-                            var pt0 = new XYZ(m_edge.Tessellate()[0].X, m_edge.Tessellate()[0].Y, m_edge.Tessellate()[0].Z);
-                            var pt1 = new XYZ(m_edge.Tessellate()[1].X, m_edge.Tessellate()[1].Y, m_edge.Tessellate()[1].Z);
-                            foreach (XYZ pt in GeometryCalculation.DividePoints(pt0, pt1, len, (double)Divide))
-                            {
-                                var p = new XYZ(pt.X, pt.Y, pt.Z - (double)Offset);
-                                points.Add(p);
-                            }
-                        }
-                        else
-                        {
-                            foreach (XYZ pt in m_edge.Tessellate())
-                            {
-                                var pt1 = new XYZ(pt.X, pt.Y, pt.Z - (double)Offset);
-                                points.Add(pt1);
-                            }
-                        }
-                    }
+                    PointsUtils.AddEdgePoints(m_edge, (double)Offset, (double)Divide, points);
                 }
             }
         }

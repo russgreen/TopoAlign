@@ -291,7 +291,7 @@ internal static class AlignmentApi
             throw new InvalidOperationException("Civil Alignments API returned no alignment object.");
         }
 
-        var alignmentElement = alignment.GetType().GetProperty("Element", AnyMember)?.GetValue(alignment) as Element;
+        var alignmentElement = ReadProperty<Element>(alignment, "Element");
 
         if (!string.IsNullOrWhiteSpace(name))
         {
