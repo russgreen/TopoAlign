@@ -30,7 +30,7 @@ internal static class BoundaryPoints
             }
             else if (AtCorner(point, outline, tolerance))
             {
-                if (!split.MoveCorner.Any(moved => PlanDistance(moved, point) <= 2.0 * tolerance))
+                if (!split.MoveCorner.Any(moved => PlanMath.Distance(moved, point) <= 2.0 * tolerance))
                 {
                     split.MoveCorner.Add(point);
                 }
@@ -133,7 +133,7 @@ internal static class BoundaryPoints
     {
         foreach (var segment in outline)
         {
-            if (PlanDistance(point, segment.Start) <= tolerance || PlanDistance(point, segment.End) <= tolerance)
+            if (PlanMath.Distance(point, segment.Start) <= tolerance || PlanMath.Distance(point, segment.End) <= tolerance)
             {
                 return true;
             }
@@ -170,13 +170,6 @@ internal static class BoundaryPoints
         }
 
         return inside;
-    }
-
-    private static double PlanDistance(GradePoint a, GradePoint b)
-    {
-        var dx = a.X - b.X;
-        var dy = a.Y - b.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
     }
 
     private static double DistanceToSegment(GradePoint point, EdgeSegment segment)

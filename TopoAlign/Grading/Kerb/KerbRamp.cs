@@ -82,7 +82,7 @@ internal static class KerbRamp
         var result = new KerbRampResult { Stations = ramp.Stations.Count };
         result.NewPoints.AddRange(ramp.NewPoints);
         result.ClearPolygons.AddRange(ramp.Corridor);
-        result.RampLength = ramp.Stations.Max(station => Distance(station.Edge, station.Daylight) * station.PerpendicularFactor);
+        result.RampLength = ramp.Stations.Max(station => PlanMath.Distance(station.Edge, station.Daylight) * station.PerpendicularFactor);
 
         // the ramp's first station is at the start of the window and its last at the end
         result.StartFlareLength = AddFlare(result, kerb, from, -1, ramp.Stations[0], input.FlareRatio);
@@ -193,12 +193,5 @@ internal static class KerbRamp
         outline.Add(end.Daylight);
         result.ClearPolygons.Add(outline.ToArray());
         return length;
-    }
-
-    private static double Distance(GradePoint a, GradePoint b)
-    {
-        var dx = b.X - a.X;
-        var dy = b.Y - a.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
     }
 }

@@ -85,7 +85,7 @@ internal static class TopoEdgeAligner
         var seen = new List<GradePoint>();
         foreach (var vertex in firstVertices)
         {
-            if (seen.Any(point => PlanDistance(point, vertex) <= planTolerance))
+            if (seen.Any(point => PlanMath.Distance(point, vertex) <= planTolerance))
             {
                 continue;
             }
@@ -113,8 +113,8 @@ internal static class TopoEdgeAligner
         shared = 0;
         foreach (var vertex in vertices)
         {
-            if (onto.Any(segment => PlanDistance(vertex, segment.Start) <= tolerance || PlanDistance(vertex, segment.End) <= tolerance) ||
-                existing?.Any(point => PlanDistance(vertex, point) <= tolerance) == true)
+            if (onto.Any(segment => PlanMath.Distance(vertex, segment.Start) <= tolerance || PlanMath.Distance(vertex, segment.End) <= tolerance) ||
+                existing?.Any(point => PlanMath.Distance(vertex, point) <= tolerance) == true)
             {
                 shared++;
             }
@@ -133,7 +133,7 @@ internal static class TopoEdgeAligner
         foreach (var segment in segments)
         {
             var candidate = ClosestPointOnSegment(point, segment);
-            var distance = PlanDistance(point, candidate);
+            var distance = PlanMath.Distance(point, candidate);
             if (distance <= best)
             {
                 best = distance;
@@ -152,7 +152,7 @@ internal static class TopoEdgeAligner
         {
             foreach (var point in new[] { segment.Start, segment.End })
             {
-                if (keys.Add(KeyOf(point)) && !vertices.Any(v => PlanDistance(v, point) <= tolerance && Math.Abs(v.Z - point.Z) <= HeightTolerance))
+                if (keys.Add(KeyOf(point)) && !vertices.Any(v => PlanMath.Distance(v, point) <= tolerance && Math.Abs(v.Z - point.Z) <= HeightTolerance))
                 {
                     vertices.Add(point);
                 }
@@ -160,13 +160,6 @@ internal static class TopoEdgeAligner
         }
 
         return vertices;
-    }
-
-    private static double PlanDistance(GradePoint a, GradePoint b)
-    {
-        var dx = a.X - b.X;
-        var dy = a.Y - b.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
     }
 
     /// <summary>The nearest point in plan, with height interpolated along the edge.</summary>

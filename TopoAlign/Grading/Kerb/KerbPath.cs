@@ -22,7 +22,7 @@ internal sealed class KerbPath
         _cumulative = new double[_points.Length];
         for (var i = 1; i < _points.Length; i++)
         {
-            _cumulative[i] = _cumulative[i - 1] + PlanDistance(_points[i - 1], _points[i]);
+            _cumulative[i] = _cumulative[i - 1] + PlanMath.Distance(_points[i - 1], _points[i]);
         }
     }
 
@@ -52,7 +52,7 @@ internal sealed class KerbPath
         for (var i = 0; i < segments.Count; i++)
         {
             var segment = segments[i];
-            if (PlanDistance(segment.Start, segment.End) < Epsilon)
+            if (PlanMath.Distance(segment.Start, segment.End) < Epsilon)
             {
                 continue;
             }
@@ -163,7 +163,7 @@ internal sealed class KerbPath
         var i = SegmentIndex(position, forward);
         var a = _points[i];
         var b = _points[i + 1];
-        var length = PlanDistance(a, b);
+        var length = PlanMath.Distance(a, b);
         return ((b.X - a.X) / length, (b.Y - a.Y) / length);
     }
 
@@ -287,13 +287,6 @@ internal sealed class KerbPath
     }
 
     private static (long, long) KeyOf(GradePoint point) => ((long)Math.Round(point.X / Snap), (long)Math.Round(point.Y / Snap));
-
-    private static double PlanDistance(GradePoint a, GradePoint b)
-    {
-        var dx = b.X - a.X;
-        var dy = b.Y - a.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
-    }
 
     private static double DistanceToSegment(double px, double py, GradePoint a, GradePoint b, out double t)
     {
