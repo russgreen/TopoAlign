@@ -32,6 +32,10 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.Resources>
             <Style TargetType="TextBlock">
@@ -61,45 +65,64 @@
         <Button Grid.Row="2" Grid.ColumnSpan="2" Content="Pick side road alignment" Command="{Binding PickSideCommand}"/>
         <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Text="{Binding SideStatus}" TextWrapping="Wrap"/>
 
-        <TextBlock Grid.Row="4" Text="Units"/>
-        <ComboBox Grid.Row="4" Grid.Column="1"
+        <Grid Grid.Row="4" Grid.ColumnSpan="2" Margin="0,0,0,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Margin="0" Content="Pick main road element (optional)" Command="{Binding PickMainRoadCommand}"
+                    IsEnabled="{Binding HasMain}"
+                    ToolTip="Pick the element that models the main road surface. The kerb levels are then read from its geometry instead of the alignment profile, so crossfall is picked up."/>
+            <Button Grid.Column="1" Margin="6,0,0,0" Padding="8,0" Content="Clear" Command="{Binding ClearMainRoadCommand}"/>
+        </Grid>
+        <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Text="{Binding RoadStatus}" TextWrapping="Wrap"/>
+
+        <TextBlock Grid.Row="6" Text="Units"/>
+        <ComboBox Grid.Row="6" Grid.Column="1"
                   ItemsSource="{Binding DisplayUnits}"
                   DisplayMemberPath="Label"
                   SelectedValue="{Binding SelectedDisplayUnit, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <TextBlock Grid.Row="5" Text="Kerb radius"/>
-        <TextBox Grid.Row="5" Grid.Column="1"
+        <TextBlock Grid.Row="7" Text="Kerb radius"/>
+        <TextBox Grid.Row="7" Grid.Column="1"
                  Text="{Binding KerbRadius, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Radius of the kerb returns."/>
 
-        <TextBlock Grid.Row="6" Text="Side road half-width"/>
-        <TextBox Grid.Row="6" Grid.Column="1"
+        <TextBlock Grid.Row="8" Text="Side road half-width"/>
+        <TextBox Grid.Row="8" Grid.Column="1"
                  Text="{Binding SideHalfWidth, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Distance from the side road centreline to its kerb. Use 0 to fillet between the centrelines."/>
 
-        <TextBlock Grid.Row="7" Text="Main road half-width"/>
-        <TextBox Grid.Row="7" Grid.Column="1"
+        <TextBlock Grid.Row="9" Text="Main road half-width"/>
+        <TextBox Grid.Row="9" Grid.Column="1"
                  Text="{Binding MainHalfWidth, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Distance from the main road centreline to its kerb. Use 0 to fillet between the centrelines."/>
 
-        <CheckBox Grid.Row="8" Grid.ColumnSpan="2" Content="Use the other end of the side road" IsChecked="{Binding UseOtherEnd}"
+        <TextBlock Grid.Row="10" Text="Main kerb level offset"/>
+        <TextBox Grid.Row="10" Grid.Column="1"
+                 Text="{Binding MainLevelOffset, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
+                 MaxLength="12" behaviours:TextBoxInput.RegularExpression="^-?[0-9]*[.,]?[0-9]*$"
+                 ToolTip="Added to the main road level at the kerb returns (after any picked road element). Negative values lower the kerbs."/>
+        <TextBlock Grid.Row="11" Grid.ColumnSpan="2" Text="{Binding LevelReadout}" TextWrapping="Wrap"/>
+
+        <CheckBox Grid.Row="12" Grid.ColumnSpan="2" Content="Use the other end of the side road" IsChecked="{Binding UseOtherEnd}"
                   ToolTip="When both ends of the side road reach the main road, join the farther one instead of the nearer one."/>
 
-        <CheckBox Grid.Row="9" Grid.ColumnSpan="2" Content="Create road surface at the junction" IsChecked="{Binding CreateSurface}"
+        <CheckBox Grid.Row="13" Grid.ColumnSpan="2" Content="Create road surface at the junction" IsChecked="{Binding CreateSurface}"
                   ToolTip="Makes the road surface where the roads meet, as a separate piece of geometry."/>
 
-        <TextBlock Grid.Row="10" Text="Surface thickness"/>
-        <TextBox Grid.Row="10" Grid.Column="1" IsEnabled="{Binding CreateSurface}"
+        <TextBlock Grid.Row="14" Text="Surface thickness"/>
+        <TextBox Grid.Row="14" Grid.Column="1" IsEnabled="{Binding CreateSurface}"
                  Text="{Binding SurfaceThickness, UpdateSourceTrigger=PropertyChanged, Converter={behaviours:NumericText}}"
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Thickness of the road surface, measured down from its top."/>
 
-        <TextBlock Grid.Row="11" Grid.ColumnSpan="2" Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="#B00020"/>
+        <TextBlock Grid.Row="15" Grid.ColumnSpan="2" Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="#B00020"/>
 
-        <Button Grid.Row="12" Grid.ColumnSpan="2" Content="Create T-Junction" IsDefault="True" Height="30"
+        <Button Grid.Row="16" Grid.ColumnSpan="2" Content="Create T-Junction" IsDefault="True" Height="30"
                 Command="{Binding CreateCommand}"/>
     </Grid>
 </Window>

@@ -177,7 +177,7 @@ public class TJunctionGeometryTests : TopoAlignTest
 
         var mapped = TJunctionGeometry.Map(new PlanSegment[] { Line(0, 0, 1, 0), arc }, p => new PlanPoint(p.X + 10.0, p.Y + 5.0));
 
-        await Assert.That(mapped[0].StartPoint.X).IsEqualTo(10.0).Within(Tol);
+        await Assert.That(mapped[0].StartPoint.X).IsEqualTo(10.0).Within(1e-6);
         var mappedArc = (PlanArc)mapped[1];
         await Assert.That(mappedArc.Center.X).IsEqualTo(11.0).Within(Tol);
         await Assert.That(mappedArc.StartPoint.X).IsEqualTo(13.0).Within(Tol);
@@ -370,5 +370,18 @@ public class TJunctionSurfaceTests : TopoAlignTest
 
         await Assert.That(TJunctionGeometry.StationAlong(chain, new PlanPoint(4, 3))).IsEqualTo(4.0).Within(1e-9);
         await Assert.That(TJunctionGeometry.StationAlong(chain, new PlanPoint(13, 5))).IsEqualTo(15.0).Within(1e-9);
+    }
+
+    [Test]
+    public async Task MainLevel_UsesTheRoadElementWhereItIsHit_ElseTheAlignmentLevel_PlusTheOffset()
+    {
+        double Alignment(PlanPoint p) => 10.0;
+        double? Road(PlanPoint p) => p.X > 0 ? 10.05 : null;
+
+        var level = TJunctionLevels.MainLevel(Alignment, Road, 0.01);
+
+        await Assert.That(level(new PlanPoint(1, 0))).IsEqualTo(10.06).Within(1e-6);
+        await Assert.That(level(new PlanPoint(-1, 0))).IsEqualTo(10.01).Within(1e-6);
+        await Assert.That(TJunctionLevels.MainLevel(Alignment, null, 0.0)(new PlanPoint(1, 0))).IsEqualTo(10.0).Within(1e-6);
     }
 }

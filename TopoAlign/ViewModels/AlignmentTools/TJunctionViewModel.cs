@@ -18,7 +18,8 @@ internal enum TJunctionPick
 {
     None,
     Main,
-    Side
+    Side,
+    MainRoad
 }
 
 /// <summary>One alignment to create: its name, JSON and plan length.</summary>
@@ -75,6 +76,16 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
     private string _sideStatus = "No side alignment selected.";
 
     [ObservableProperty]
+    private string _roadStatus = "No road element picked: kerb levels follow the main alignment profile.";
+
+    [ObservableProperty]
+    private string _levelReadout = string.Empty;
+
+    /// <summary>Added to the main road level at the kerb returns, on top of the alignment or road element level.</summary>
+    [ObservableProperty]
+    private decimal _mainLevelOffset;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
     private decimal _kerbRadius;
 
@@ -117,6 +128,8 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
 
     private Element? _main;
     private Element? _side;
+    private Element? _mainRoad;
+    private RoadElementLevel? _roadLevel;
     private AlignmentJsonDocument? _mainDocument;
     private AlignmentJsonDocument? _sideDocument;
     private List<PlanSegment>? _mainPlan;
@@ -163,7 +176,11 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
         SideHalfWidth = Helpers.UnitConversion.Convert(SideHalfWidth, oldValue.DisplayUnit, newValue.DisplayUnit);
         MainHalfWidth = Helpers.UnitConversion.Convert(MainHalfWidth, oldValue.DisplayUnit, newValue.DisplayUnit);
         SurfaceThickness = Helpers.UnitConversion.Convert(SurfaceThickness, oldValue.DisplayUnit, newValue.DisplayUnit);
+        MainLevelOffset = Helpers.UnitConversion.Convert(MainLevelOffset, oldValue.DisplayUnit, newValue.DisplayUnit);
+        UpdateLevelReadout();
     }
+
+    partial void OnMainLevelOffsetChanged(decimal value) => UpdateLevelReadout();
 
     partial void OnKerbRadiusChanged(decimal value) => Recompute();
 
@@ -208,10 +225,73 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
             case TJunctionPick.Side:
                 AlignmentPicker.PickAndSelect("Select the side road alignment", "T-Junction", element => SelectSide(element), log);
                 break;
+
+            case TJunctionPick.MainRoad:
+                PickMainRoadElement();
+                break;
         }
 
         PendingPick = TJunctionPick.None;
     }
+
+    [RelayCommand]
+    private void PickMainRoad() => RequestPick(TJunctionPick.MainRoad);
+
+    [RelayCommand]
+    private void ClearMainRoad() => SelectMainRoad(null);
+
+    /// <summary>Lets the user click the element that models the main road surface. Called by the command while the dialog is hidden.</summary>
+    private void PickMainRoadElement()
+    {
+        try
+        {
+            var uidoc = App.CachedUiApp.ActiveUIDocument;
+            var reference = uidoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element, "Select the element that is the main road surface");
+            SelectMainRoad(App.RevitDocument.GetElement(reference));
+        }
+        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+        {
+            // user cancelled selection
+        }
+        catch (Exception ex)
+        {
+            log.Error(ex, "Failed while selecting the main road element");
+            TaskDialog.Show("T-Junction", ex.Message);
+        }
+    }
+
+    /// <summary>Chooses the element whose surface gives the main road level at the kerbs; null clears it. False if no ray can be cast at it.</summary>
+    internal bool SelectMainRoad(Element? element)
+    {
+        _mainRoad = null;
+        _roadLevel = null;
+        try
+        {
+            if (element is null)
+            {
+                RoadStatus = "No road element picked: kerb levels follow the main alignment profile.";
+                return true;
+            }
+
+            _roadLevel = RoadElementLevel.TryCreate(App.RevitDocument, element.Id);
+            if (_roadLevel is null)
+            {
+                RoadStatus = "The document has no 3D view to check the road geometry in.";
+                return false;
+            }
+
+            _mainRoad = element;
+            RoadStatus = string.IsNullOrWhiteSpace(element.Name) ? $"Element {element.Id}" : element.Name;
+            return true;
+        }
+        finally
+        {
+            OnPropertyChanged(nameof(HasMainRoad));
+            UpdateLevelReadout();
+        }
+    }
+
+    public bool HasMainRoad => _mainRoad is not null;
 
     internal bool SelectMain(Element element) => Select(element, isMain: true);
 
@@ -323,7 +403,49 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
         }
 
         UpdatePreview();
+        UpdateLevelReadout();
         CreateCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>The main road level at a plan point: road element if picked (and hit), else the alignment profile, plus the manual offset.</summary>
+    private Func<PlanPoint, double>? MainLevelFunction()
+    {
+        if (_mainDocument is null || _mainPlan is null)
+        {
+            return null;
+        }
+
+        var mainProfile = _mainDocument.ReadProfile();
+        var mainPlan = _mainPlan;
+        double AlignmentLevel(PlanPoint p) => ProfileEditing.ElevationAt(mainProfile, TJunctionGeometry.StationAlong(mainPlan, p));
+        Func<PlanPoint, double?>? road = _roadLevel is { } level ? level.LevelAt : null;
+        return TJunctionLevels.MainLevel(AlignmentLevel, road, ToInternal(MainLevelOffset));
+    }
+
+    /// <summary>Shows how far the kerb levels at the main road sit from the main alignment's profile level.</summary>
+    private void UpdateLevelReadout()
+    {
+        LevelReadout = string.Empty;
+        if (_result is not { IsValid: true } result || SelectedDisplayUnit is null || MainLevelFunction() is not { } level)
+        {
+            return;
+        }
+
+        try
+        {
+            var mainProfile = _mainDocument!.ReadProfile();
+            string Offset(PlanPoint p)
+            {
+                var delta = level(p) - ProfileEditing.ElevationAt(mainProfile, TJunctionGeometry.StationAlong(_mainPlan!, p));
+                return $"{UnitUtils.ConvertFromInternalUnits(delta, SelectedDisplayUnit.DisplayUnit):+0.000;-0.000;0.000}";
+            }
+
+            LevelReadout = $"Kerb level vs main alignment: left {Offset(result.KerbLeft!.EndPoint)}, right {Offset(result.KerbRight!.EndPoint)} {SelectedDisplayUnit.Label}";
+        }
+        catch (Exception ex)
+        {
+            log.Warning(ex, "T-junction level read-out failed");
+        }
     }
 
     private void UpdatePreview()
@@ -390,10 +512,10 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
             var sideLength = sideDocument.SetPlan(result.TrimmedSide);
 
             var sideProfile = sideDocument.ReadProfile();
-            var mainProfile = _mainDocument!.ReadProfile();
+            var mainElevation = MainLevelFunction()!;
 
             double SideElevation(PlanPoint p) => ProfileEditing.ElevationAt(sideProfile, TJunctionGeometry.StationAlong(result.TrimmedSide, p));
-            double MainElevation(PlanPoint p) => ProfileEditing.ElevationAt(mainProfile, TJunctionGeometry.StationAlong(_mainPlan!, p));
+            double MainElevation(PlanPoint p) => mainElevation(p);
 
             var sideName = string.IsNullOrWhiteSpace(sideDocument.Name) ? "Side road" : sideDocument.Name;
             var kerbs = new List<TJunctionNewAlignment>();
@@ -448,6 +570,7 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
         MainHalfWidth = ToDisplay(_settings.TJunctionMainHalfWidth);
         SurfaceThickness = ToDisplay(_settings.TJunctionSurfaceThickness);
         CreateSurface = _settings.TJunctionCreateSurface;
+        MainLevelOffset = ToDisplay(_settings.TJunctionMainLevelOffset);
     }
 
     private void SaveSettings()
@@ -458,6 +581,7 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
         _settings.TJunctionMainHalfWidth = (decimal)ToInternal(MainHalfWidth);
         _settings.TJunctionSurfaceThickness = (decimal)ToInternal(SurfaceThickness);
         _settings.TJunctionCreateSurface = CreateSurface;
+        _settings.TJunctionMainLevelOffset = (decimal)ToInternal(MainLevelOffset);
         _settings.SaveSettings();
     }
 }
