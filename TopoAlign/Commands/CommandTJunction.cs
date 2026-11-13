@@ -56,46 +56,105 @@ public class CommandTJunction : IExternalCommand
         }
 
         // Write after the dialog has closed so the transactions run in the Revit API context.
+        var document = App.RevitDocument;
+        using var group = new TransactionGroup(document, "T-Junction");
+        group.Start();
+
         try
         {
+            var fitting = new CutOutcome();
+            var surfaceMade = false;
+
             using (var progress = ProgressService.Start("T-Junction", cancelEnabled: false))
             {
                 progress.Report("Trimming the side road...");
-                AlignmentApi.Update(App.RevitDocument, request.Side, request.SideJson, request.SidePlanLength);
+                AlignmentApi.Update(document, request.Side, request.SideJson, request.SidePlanLength);
+
+                // a kerb return left by an earlier run of the same junction is replaced, not duplicated
+                var kerbNames = new HashSet<string>(request.KerbReturns.Select(k => k.Name));
+                var earlier = AlignmentApi.GetAlignmentElements(document)
+                    .Where(e => AlignmentApi.GetInfo(e)?.Name is { } name && kerbNames.Contains(name))
+                    .Select(e => e.Id)
+                    .ToList();
+                if (earlier.Count > 0)
+                {
+                    using var delete = new Transaction(document, "Remove earlier kerb returns");
+                    delete.Start();
+                    document.Delete(earlier);
+                    delete.Commit();
+                }
 
                 foreach (var kerb in request.KerbReturns)
                 {
                     progress.Report($"Creating '{kerb.Name}'...");
-                    AlignmentApi.Create(App.RevitDocument, kerb.Name, kerb.Json, kerb.PlanLength);
+                    AlignmentApi.Create(document, kerb.Name, kerb.Json, kerb.PlanLength);
                 }
-            }
 
-            var surfaceMade = false;
-            if (request.SurfaceOutline is { } outline)
-            {
-                using var surfaceProgress = ProgressService.Start("T-Junction", cancelEnabled: false);
-                surfaceProgress.Report("Creating the road surface...");
-                var category = RoadBuilder.GetCategories(App.RevitDocument).First().Category;
-                using var transaction = new Transaction(App.RevitDocument, "Create junction surface");
-                transaction.Start();
-                surfaceMade = TJunctionSurfaceBuilder.Create(App.RevitDocument, outline, request.SurfaceThickness, category, $"T-Junction {request.SideName}") is not null;
-                if (surfaceMade)
+                // fit the roads that already exist to the junction
+                if (request.CutPolygon is not null || request.SideJoin is not null || request.SurfaceOutline is not null)
                 {
+                    using var transaction = new Transaction(document, "Fit roads to junction");
+                    transaction.Start();
+
+                    if (request.CutPolygon is { } polygon && request.Main is { } main)
+                    {
+                        progress.Report("Cutting the junction out of the main road...");
+                        fitting.Add(RoadSolidCutter.CutPolygon(document, RoadBuilder.FindRoads(document, main), polygon));
+                    }
+
+                    if (request.SideJoin is { } join)
+                    {
+                        progress.Report("Joining the side road to the junction...");
+                        fitting.Add(RoadSolidCutter.JoinSide(document, RoadBuilder.FindRoads(document, request.Side), join));
+                    }
+
+                    if (request.SurfaceOutline is { } outline)
+                    {
+                        progress.Report("Creating the road surface...");
+                        TJunctionSurfaceBuilder.DeletePrevious(document, request.Side);
+                        var category = RoadBuilder.GetCategories(document).First().Category;
+                        surfaceMade = TJunctionSurfaceBuilder.Create(document, outline, request.SurfaceThickness, category, $"T-Junction {request.SideName}", request.Side) is not null;
+                    }
+
                     transaction.Commit();
                 }
-                else
-                {
-                    transaction.RollBack();
-                }
             }
 
-            TaskDialog.Show("T-Junction", $"Alignment '{request.SideName}' joined to the main road and {request.KerbReturns.Count} kerb return alignments created"
-                + (request.SurfaceOutline is null ? "." : surfaceMade ? ", with the road surface." : ". The road surface could not be created."));
+            group.Assimilate();
+
+            var text = $"Alignment '{request.SideName}' joined to the main road and {request.KerbReturns.Count} kerb return alignments created"
+                + (request.SurfaceOutline is null ? "." : surfaceMade ? ", with the road surface." : ". The road surface could not be created.");
+            if (request.CutPolygon is not null)
+            {
+                text += $"{Environment.NewLine}Main road: {fitting.Changed} parts cut, {fitting.Removed} removed.";
+            }
+
+            if (request.SideJoin is not null)
+            {
+                text += $"{Environment.NewLine}Side road: {fitting.Extended} parts extended to the junction; the rest were trimmed.";
+            }
+
+            if ((request.CutPolygon is not null || request.SideJoin is not null) && fitting.Changed + fitting.Removed + fitting.Extended == 0)
+            {
+                text += $"{Environment.NewLine}No existing road geometry was found to fit (roads must have been made by TopoAlign).";
+            }
+
+            if (fitting.Warnings.Count > 0)
+            {
+                text += $"{Environment.NewLine}{Environment.NewLine}{string.Join(Environment.NewLine, fitting.Warnings.Distinct())}";
+            }
+
+            TaskDialog.Show("T-Junction", text);
             return Result.Succeeded;
         }
         catch (Exception ex)
         {
             log.Error(ex, "T-junction failed");
+            if (group.GetStatus() == TransactionStatus.Started)
+            {
+                group.RollBack();
+            }
+
             TaskDialog.Show("T-Junction", ex.Message);
             return Result.Failed;
         }

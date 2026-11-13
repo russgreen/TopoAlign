@@ -71,6 +71,8 @@ public class Settings
     public decimal TJunctionSideHalfWidth { get; set; } = Convert.ToDecimal(3.0 / 0.3048);               // 3 m
     public decimal TJunctionSurfaceThickness { get; set; } = Convert.ToDecimal(0.15 / 0.3048);           // 150 mm
     public bool TJunctionCreateSurface { get; set; } = true;
+    public bool TJunctionCutMainRoad { get; set; } = true;
+    public bool TJunctionJoinSideRoad { get; set; } = true;
     public decimal TJunctionMainLevelOffset { get; set; }
     public decimal TJunctionMainHalfWidth { get; set; } = Convert.ToDecimal(3.0 / 0.3048);               // 3 m
 

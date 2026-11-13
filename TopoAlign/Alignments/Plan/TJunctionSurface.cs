@@ -36,6 +36,14 @@ internal static class TJunctionSurface
 
         var points = new List<SurfacePoint>();
 
+        // the surface begins on the join line, square to the side road, and runs along each side kerb line to the kerb return
+        // (no distance at all when the return starts on the join line)
+        var join = TJunctionFootprint.Join(result);
+        if (join is { } line)
+        {
+            points.Add(new SurfacePoint(line.Left, sideElevation(line.Left)));
+        }
+
         // left return, from the side road kerb to the main road kerb
         AddArc(points, result.KerbLeft, sideElevation(result.KerbLeft.StartPoint), mainElevation(result.KerbLeft.EndPoint), false);
 
@@ -43,7 +51,12 @@ internal static class TJunctionSurface
         // right return, from the main road kerb back to the side road kerb
         AddArc(points, result.KerbRight, sideElevation(result.KerbRight.StartPoint), mainElevation(result.KerbRight.EndPoint), true);
 
-        // the closing edge runs from the end of the right return back to the start of the left return, across the side road
+        if (join is { } closing)
+        {
+            points.Add(new SurfacePoint(closing.Right, sideElevation(closing.Right)));
+        }
+
+        // the closing edge is the join line itself, across the side road
 
         var cleaned = new List<SurfacePoint>();
         foreach (var p in points)

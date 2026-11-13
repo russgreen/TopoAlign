@@ -3,14 +3,23 @@ namespace TopoAlign.Alignments.Plan;
 /// <summary>The result of laying out a T-junction. <see cref="Errors"/> is empty when the layout is valid.</summary>
 internal sealed class TJunctionResult
 {
-    public TJunctionResult(IReadOnlyList<PlanSegment> trimmedSide, PlanArc? kerbLeft, PlanArc? kerbRight, PlanPoint junction, IReadOnlyList<string> errors)
+    public TJunctionResult(IReadOnlyList<PlanSegment> trimmedSide, PlanArc? kerbLeft, PlanArc? kerbRight, PlanPoint junction, IReadOnlyList<string> errors,
+        PlanPoint sideDirection = default, PlanPoint mainNormal = default)
     {
+        MainNormal = mainNormal;
         TrimmedSide = trimmedSide;
         KerbLeft = kerbLeft;
         KerbRight = kerbRight;
         Junction = junction;
         Errors = errors;
+        SideDirection = sideDirection;
     }
+
+    /// <summary>Unit direction of travel along the side road as it runs into the main road.</summary>
+    public PlanPoint SideDirection { get; }
+
+    /// <summary>Unit vector perpendicular to the main road, pointing to the side the side road comes from.</summary>
+    public PlanPoint MainNormal { get; }
 
     /// <summary>The side road, in its original direction, ending on the main road's centreline.</summary>
     public IReadOnlyList<PlanSegment> TrimmedSide { get; }
@@ -122,7 +131,7 @@ internal static class TJunctionGeometry
         var left = Fillet(junction, d, m, sideNormal, +1, mainNormal, kerbRadius, sideHalfWidth, mainHalfWidth, last, mainLine, "left", errors);
         var right = Fillet(junction, d, m, sideNormal, -1, mainNormal, kerbRadius, sideHalfWidth, mainHalfWidth, last, mainLine, "right", errors);
 
-        return new TJunctionResult(trimmedSide, left, right, junction, errors);
+        return new TJunctionResult(trimmedSide, left, right, junction, errors, d, mainNormal);
     }
 
     /// <summary>

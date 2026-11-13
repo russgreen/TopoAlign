@@ -61,6 +61,15 @@ internal sealed class TJunctionRequest
     public IReadOnlyList<XYZ>? SurfaceOutline { get; }
 
     public double SurfaceThickness { get; }
+
+    /// <summary>The main road alignment, whose road solids are cut where the junction opens.</summary>
+    public Element? Main { get; set; }
+
+    /// <summary>Plan outline of the junction in internal coordinates (Z is ignored); null when the main road is to be left alone.</summary>
+    public IReadOnlyList<XYZ>? CutPolygon { get; set; }
+
+    /// <summary>The line the side road ends on, in internal coordinates; null when the side road solids are to be left alone.</summary>
+    public SideJoin? SideJoin { get; set; }
 }
 
 internal partial class TJunctionViewModel : BaseViewModel, IDisposable
@@ -106,6 +115,14 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
 
     [ObservableProperty]
     private decimal _surfaceThickness;
+
+    /// <summary>Cut the junction area out of the main road's solids.</summary>
+    [ObservableProperty]
+    private bool _cutMainRoad = true;
+
+    /// <summary>Trim or extend the side road's solids to the junction.</summary>
+    [ObservableProperty]
+    private bool _joinSideRoad = true;
 
     [ObservableProperty]
     private string _resultMessage = string.Empty;
@@ -548,9 +565,41 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
                 surface = outline.Select(p => sharedToInternal.OfPoint(new XYZ(p.Point.X, p.Point.Y, p.Elevation))).ToList();
             }
 
+            // where the existing road solids are to be fitted to the junction, in internal coordinates
+            var toInternal = App.RevitDocument.ActiveProjectLocation.GetTotalTransform();
+            List<XYZ>? cutPolygon = null;
+            if (CutMainRoad && _main is not null && TJunctionFootprint.CutPolygon(result) is { } footprint)
+            {
+                cutPolygon = footprint.Select(p => toInternal.OfPoint(new XYZ(p.X, p.Y, 0.0))).ToList();
+            }
+
+            SideJoin? join = null;
+            if (JoinSideRoad && TJunctionFootprint.Join(result) is { } shared)
+            {
+                PlanPoint Point(PlanPoint p)
+                {
+                    var q = toInternal.OfPoint(new XYZ(p.X, p.Y, 0.0));
+                    return new PlanPoint(q.X, q.Y);
+                }
+
+                PlanPoint Vector(PlanPoint v)
+                {
+                    var q = toInternal.OfVector(new XYZ(v.X, v.Y, 0.0));
+                    var length = Math.Sqrt(q.X * q.X + q.Y * q.Y);
+                    return new PlanPoint(q.X / length, q.Y / length);
+                }
+
+                join = new SideJoin(Point(shared.Left), Point(shared.Right), Vector(shared.Normal), Vector(shared.Direction));
+            }
+
             // The alignments are updated and created by the command once this dialog has closed, so the transactions
             // run inside the Revit API context rather than from a WPF button handler.
-            Request = new TJunctionRequest(_side, sideName, sideDocument.ToJson(), sideLength, kerbs, surface, ToInternal(SurfaceThickness));
+            Request = new TJunctionRequest(_side, sideName, sideDocument.ToJson(), sideLength, kerbs, surface, ToInternal(SurfaceThickness))
+            {
+                Main = _main,
+                CutPolygon = cutPolygon,
+                SideJoin = join
+            };
             OnClosingRequest();
         }
         catch (Exception ex)
@@ -570,6 +619,8 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
         MainHalfWidth = ToDisplay(_settings.TJunctionMainHalfWidth);
         SurfaceThickness = ToDisplay(_settings.TJunctionSurfaceThickness);
         CreateSurface = _settings.TJunctionCreateSurface;
+        CutMainRoad = _settings.TJunctionCutMainRoad;
+        JoinSideRoad = _settings.TJunctionJoinSideRoad;
         MainLevelOffset = ToDisplay(_settings.TJunctionMainLevelOffset);
     }
 
@@ -581,6 +632,8 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
         _settings.TJunctionMainHalfWidth = (decimal)ToInternal(MainHalfWidth);
         _settings.TJunctionSurfaceThickness = (decimal)ToInternal(SurfaceThickness);
         _settings.TJunctionCreateSurface = CreateSurface;
+        _settings.TJunctionCutMainRoad = CutMainRoad;
+        _settings.TJunctionJoinSideRoad = JoinSideRoad;
         _settings.TJunctionMainLevelOffset = (decimal)ToInternal(MainLevelOffset);
         _settings.SaveSettings();
     }

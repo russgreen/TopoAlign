@@ -36,6 +36,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.Resources>
             <Style TargetType="TextBlock">
@@ -120,9 +122,15 @@
                  MaxLength="12" behaviours:TextBoxInput.RegularExpression="^[0-9]*[.,]?[0-9]*$"
                  ToolTip="Thickness of the road surface, measured down from its top."/>
 
-        <TextBlock Grid.Row="15" Grid.ColumnSpan="2" Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="#B00020"/>
+        <CheckBox Grid.Row="15" Grid.ColumnSpan="2" Content="Cut the junction out of the main road" IsChecked="{Binding CutMainRoad}"
+                  ToolTip="Removes the parts of the main road's geometry (kerbs, footways and so on) that fall inside the junction, so the junction can take their place. Needs a road made by TopoAlign along the main alignment."/>
 
-        <Button Grid.Row="16" Grid.ColumnSpan="2" Content="Create T-Junction" IsDefault="True" Height="30"
+        <CheckBox Grid.Row="16" Grid.ColumnSpan="2" Content="Trim or extend the side road to the junction" IsChecked="{Binding JoinSideRoad}"
+                  ToolTip="Cuts the side road's geometry back to where the junction surface begins, or extends it up to there if it stops short. Needs a road made by TopoAlign along the side alignment."/>
+
+        <TextBlock Grid.Row="17" Grid.ColumnSpan="2" Text="{Binding ResultMessage}" TextWrapping="Wrap" Foreground="#B00020"/>
+
+        <Button Grid.Row="18" Grid.ColumnSpan="2" Content="Create T-Junction" IsDefault="True" Height="30"
                 Command="{Binding CreateCommand}"/>
     </Grid>
 </Window>

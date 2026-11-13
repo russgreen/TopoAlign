@@ -385,3 +385,115 @@ public class TJunctionSurfaceTests : TopoAlignTest
         await Assert.That(TJunctionLevels.MainLevel(Alignment, null, 0.0)(new PlanPoint(1, 0))).IsEqualTo(10.0).Within(1e-6);
     }
 }
+
+public class TJunctionFootprintTests : TopoAlignTest
+{
+    private const double Tol = 1e-6;
+
+    private static PlanSegment Line(double x0, double y0, double x1, double y1) => new PlanLine(new PlanPoint(x0, y0), new PlanPoint(x1, y1));
+
+    // main road along x, side road coming down x = 0 towards it; radius 5, half-widths 3
+    private static TJunctionResult Layout() =>
+        TJunctionGeometry.Create(new List<PlanSegment> { Line(-50, 0, 50, 0) }, new List<PlanSegment> { Line(0, 40, 0, 10) }, 5.0, 3.0, 3.0);
+
+    private static bool Inside(IReadOnlyList<PlanPoint> polygon, double x, double y)
+    {
+        var inside = false;
+        for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
+        {
+            var a = polygon[i];
+            var b = polygon[j];
+            if ((a.Y > y) != (b.Y > y) && x < (b.X - a.X) * (y - a.Y) / (b.Y - a.Y) + a.X)
+            {
+                inside = !inside;
+            }
+        }
+
+        return inside;
+    }
+
+    [Test]
+    public async Task Join_PassesThroughTheKerbReturnStartsAndFacesTheMainRoad()
+    {
+        var join = TJunctionFootprint.Join(Layout());
+
+        await Assert.That(join.HasValue).IsTrue();
+        await Assert.That(Math.Abs(join!.Value.Left.X)).IsEqualTo(3.0).Within(Tol);
+        await Assert.That(join.Value.Left.Y).IsEqualTo(8.0).Within(Tol);
+        await Assert.That(join.Value.Right.Y).IsEqualTo(8.0).Within(Tol);
+        await Assert.That(join.Value.Normal.Y).IsEqualTo(-1.0).Within(Tol);
+        await Assert.That(join.Value.Direction.Y).IsEqualTo(-1.0).Within(Tol);
+        await Assert.That(join.Value.SignedDistance(new PlanPoint(0, 0))).IsEqualTo(8.0).Within(Tol);
+        await Assert.That(join.Value.SignedDistance(new PlanPoint(0, 20))).IsEqualTo(-12.0).Within(Tol);
+    }
+
+    [Test]
+    public async Task Join_ZeroHalfWidth_HasNoLine()
+    {
+        var result = TJunctionGeometry.Create(new List<PlanSegment> { Line(-50, 0, 50, 0) }, new List<PlanSegment> { Line(0, 40, 0, 10) }, 5.0, 0.0, 3.0);
+
+        await Assert.That(TJunctionFootprint.Join(result).HasValue).IsFalse();
+    }
+
+    [Test]
+    public async Task CutPolygon_Perpendicular_IsARectangleFromTheMainKerbToTheJoinLine()
+    {
+        var polygon = TJunctionFootprint.CutPolygon(Layout());
+
+        await Assert.That(polygon).IsNotNull();
+        await Assert.That(TJunctionSurface.SignedArea(polygon!)).IsEqualTo(16.0 * 5.0).Within(Tol); // x -8..8, y 3..8, counter-clockwise
+        await Assert.That(Inside(polygon!, 0, 5)).IsTrue();      // between the kerbs of the side road
+        await Assert.That(Inside(polygon!, 7, 3.5)).IsTrue();    // the corner inside the kerb return is cleared too
+        await Assert.That(Inside(polygon!, 0, -1)).IsFalse();    // the main carriageway stays
+        await Assert.That(Inside(polygon!, 0, 12)).IsFalse();    // the side road stays
+        await Assert.That(Inside(polygon!, 9, 5)).IsFalse();     // beyond the end of the kerb return
+    }
+
+    [Test]
+    public async Task Skewed_CutEndsAreSquareToTheMainRoadAndTheJoinIsSquareToTheSideRoad()
+    {
+        // the side road runs down and to the left, so it meets the main road at a skew
+        var result = TJunctionGeometry.Create(new List<PlanSegment> { Line(-50, 0, 50, 0) }, new List<PlanSegment> { Line(20, 40, 0, 10) }, 5.0, 3.0, 3.0);
+        await Assert.That(result.IsValid).IsTrue();
+
+        var join = TJunctionFootprint.Join(result)!.Value;
+        var polygon = TJunctionFootprint.CutPolygon(result)!;
+
+        // the join line is square to the side road, and both kerb returns start on or beyond it
+        await Assert.That((join.Right.X - join.Left.X) * join.Direction.X + (join.Right.Y - join.Left.Y) * join.Direction.Y).IsEqualTo(0.0).Within(Tol);
+        await Assert.That(join.SignedDistance(result.KerbLeft!.StartPoint)).IsGreaterThanOrEqualTo(-Tol);
+        await Assert.That(join.SignedDistance(result.KerbRight!.StartPoint)).IsGreaterThanOrEqualTo(-Tol);
+
+        // the cut starts on the main kerb line (y = 3) and runs straight out, square to the main road, to the join line
+        var onKerbLine = polygon.Where(p => Math.Abs(p.Y - 3.0) < Tol).ToList();
+        await Assert.That(onKerbLine.Count).IsEqualTo(2);
+        foreach (var start in onKerbLine)
+        {
+            var far = polygon.Single(p => Math.Abs(p.Y - 3.0) > Tol && Math.Abs(p.X - start.X) < Tol);
+            await Assert.That(far.Y).IsGreaterThan(3.0);
+            await Assert.That(join.SignedDistance(far)).IsEqualTo(0.0).Within(Tol);
+        }
+    }
+
+    [Test]
+    public async Task Surface_ReachesTheSquareJoinLine()
+    {
+        var result = TJunctionGeometry.Create(new List<PlanSegment> { Line(-50, 0, 50, 0) }, new List<PlanSegment> { Line(20, 40, 0, 10) }, 5.0, 3.0, 3.0);
+        var join = TJunctionFootprint.Join(result)!.Value;
+
+        var outline = TJunctionSurface.Outline(result, _ => 0.0, _ => 0.0)!;
+
+        await Assert.That(outline.Any(p => PlanPoint.Distance(p.Point, join.Left) < Tol)).IsTrue();
+        await Assert.That(outline.Any(p => PlanPoint.Distance(p.Point, join.Right) < Tol)).IsTrue();
+        await Assert.That(TJunctionSurface.Triangulate(outline.Select(p => p.Point).ToList())).IsNotNull();
+    }
+
+    [Test]
+    public async Task CutPolygon_InvalidLayout_IsNull()
+    {
+        var result = TJunctionGeometry.Create(new List<PlanSegment> { Line(-50, 0, 50, 0) }, new List<PlanSegment> { Line(0, 40, 0, 10) }, 0.0, 3.0, 3.0);
+
+        await Assert.That(TJunctionFootprint.CutPolygon(result)).IsNull();
+        await Assert.That(TJunctionFootprint.Join(result).HasValue).IsFalse();
+    }
+}

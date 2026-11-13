@@ -11,7 +11,8 @@ internal static class TJunctionSurfaceBuilder
     /// whose bottom is <paramref name="thickness"/> feet below. Returns null if the outline can't be triangulated.
     /// Must be called inside a transaction.
     /// </summary>
-    public static DirectShape? Create(Document document, IReadOnlyList<XYZ> outline, double thickness, BuiltInCategory category, string name)
+    public static DirectShape? Create(Document document, IReadOnlyList<XYZ> outline, double thickness, BuiltInCategory category, string name,
+        Element? sideAlignment = null)
     {
         var triangles = Triangulate(outline);
         if (triangles is null)
@@ -49,7 +50,35 @@ internal static class TJunctionSurfaceBuilder
         var shape = DirectShape.CreateElement(document, new ElementId(category));
         shape.SetShape(builder.GetBuildResult().GetGeometricalObjects());
         shape.Name = name;
+        if (sideAlignment is not null)
+        {
+            shape.ApplicationId = ApplicationId;
+            shape.ApplicationDataId = sideAlignment.UniqueId;
+        }
+
         return shape;
+    }
+
+    /// <summary>
+    /// Marks the junction surfaces made here. It is deliberately not the road tag, so re-making the side road doesn't delete the junction.
+    /// </summary>
+    public const string ApplicationId = "TopoAlign.TJunction";
+
+    /// <summary>Deletes the junction surfaces an earlier run made for the side alignment. Must be called inside a transaction.</summary>
+    public static int DeletePrevious(Document document, Element sideAlignment)
+    {
+        var ids = new FilteredElementCollector(document)
+            .OfClass(typeof(DirectShape))
+            .Cast<DirectShape>()
+            .Where(shape => shape.ApplicationId == ApplicationId && shape.ApplicationDataId == sideAlignment.UniqueId)
+            .Select(shape => shape.Id)
+            .ToList();
+        if (ids.Count > 0)
+        {
+            document.Delete(ids);
+        }
+
+        return ids.Count;
     }
 
     /// <summary>The triangles (vertex indices, counter-clockwise from above) of an outline, or null if it can't be triangulated.</summary>
