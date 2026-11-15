@@ -341,6 +341,22 @@ public class TJunctionSurfaceTests : TopoAlignTest
     }
 
     [Test]
+    public async Task Outline_KerbReturnChordsStayWithinTolerance()
+    {
+        var main = new List<PlanSegment> { Line(-50, 0, 50, 0) };
+        var side = new List<PlanSegment> { Line(0, 40, 0, 10) };
+        var result = TJunctionGeometry.Create(main, side, 19.69, 3.0, 3.0);
+        var arc = result.KerbLeft!;
+
+        var outline = TJunctionSurface.Outline(result, p => 10.0, p => 12.0)!;
+        var onArc = outline.Select(p => p.Point).Where(p => Math.Abs(PlanPoint.Distance(p, arc.Center) - arc.Radius) < 1e-6).ToList();
+
+        await Assert.That(onArc.Count).IsGreaterThan(TJunctionSurface.ArcSteps(arc.Radius, arc.Sweep) - 1);
+        var step = Math.Abs(arc.Sweep) / TJunctionSurface.ArcSteps(arc.Radius, arc.Sweep);
+        await Assert.That(arc.Radius * (1.0 - Math.Cos(step / 2.0))).IsLessThanOrEqualTo(TJunctionSurface.ArcTolerance);
+    }
+
+    [Test]
     public async Task Outline_ElevationRunsFromTheSideRoadToTheMainRoad()
     {
         var main = new List<PlanSegment> { Line(-50, 0, 50, 0) };

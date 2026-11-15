@@ -82,6 +82,161 @@ internal static class RoadSolidCutter
 
     private static double Along(PlanPoint p, XYZ direction) => p.X * direction.X + p.Y * direction.Y;
 
+    /// <summary>
+    /// How far the road parts stop short of the join line: zero when they reach it (within a small tolerance) or when no geometry is
+    /// found. Measured from the vertices of the parts' edges, so a skewed road is not overestimated as it would be from a bounding box.
+    /// </summary>
+    public static double GapToJoin(IEnumerable<Element> roads, SideJoin join, out string note)
+    {
+        note = "no road geometry found";
+        var solids = new List<Solid>();
+        var options = new Options { DetailLevel = ViewDetailLevel.Fine, ComputeReferences = false };
+        foreach (var road in roads)
+        {
+            try
+            {
+                if (road.get_Geometry(options) is not { } geometry)
+                {
+                    continue;
+                }
+
+                foreach (var item in geometry)
+                {
+                    switch (item)
+                    {
+                        case Solid solid when solid.Volume > MinVolume:
+                            solids.Add(solid);
+                            break;
+
+                        case GeometryInstance instance:
+                            solids.AddRange(instance.GetInstanceGeometry().OfType<Solid>().Where(inner => inner.Volume > MinVolume));
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Warning(ex, "Could not measure {road} against the junction", road.Id);
+            }
+        }
+
+        if (solids.Count == 0)
+        {
+            return 0.0;
+        }
+
+        // The road's end faces tell how far back the surface must reach. The end of a road that bends is not square to the join line, so
+        // its nearest corner is not enough: the surface has to run back to the deepest corner of the end, or a wedge is left open.
+        var caps = solids.SelectMany(solid => EndCaps(solid, join)).ToList();
+        note = $"{solids.Count} solids, {caps.Count} end faces towards the junction"
+            + (caps.Count > 0 ? $", nearest {caps.Max(cap => cap.Nearest) * 0.3048:0.00} m from the join line, deepest {caps.Min(cap => cap.Deepest) * 0.3048:0.00} m" : string.Empty)
+            + $", nearest vertex near the junction {solids.Max(solid => Farthest(solid, join)) * 0.3048:0.00} m";
+        if (caps.Count > 0)
+        {
+            var nearest = caps.Max(cap => cap.Nearest);
+            if (nearest >= -GapTolerance)
+            {
+                return 0.0;
+            }
+
+            var width = Math.Sqrt((join.Right.X - join.Left.X) * (join.Right.X - join.Left.X) + (join.Right.Y - join.Left.Y) * (join.Right.Y - join.Left.Y));
+            return -caps.Where(cap => cap.Nearest >= nearest - width).Min(cap => cap.Deepest);
+        }
+
+        var farthest = solids.Max(solid => Farthest(solid, join));
+        return farthest == double.MinValue || farthest >= -GapTolerance ? 0.0 : -farthest;
+    }
+
+    /// <summary>
+    /// The faces at the end of a road part that look towards the junction: upright planar faces whose plan normal points along the side
+    /// road towards the main road (within 60 degrees, so a bent road's skewed end still counts). Each is returned as the signed
+    /// distances from the join line of its nearest and deepest corners.
+    /// </summary>
+    private static IEnumerable<(double Nearest, double Deepest)> EndCaps(Solid solid, SideJoin join)
+    {
+        foreach (Face face in solid.Faces)
+        {
+            if (face is not PlanarFace planar || Math.Abs(planar.FaceNormal.Z) > 0.3)
+            {
+                continue;
+            }
+
+            var normal = planar.FaceNormal;
+            var length = Math.Sqrt(normal.X * normal.X + normal.Y * normal.Y);
+            if (length < 1e-9 || (normal.X * join.Direction.X + normal.Y * join.Direction.Y) / length < 0.5)
+            {
+                continue;
+            }
+
+            var nearest = double.MinValue;
+            var deepest = double.MaxValue;
+            var lateral = 0.0;
+            var count = 0;
+            foreach (var loop in planar.GetEdgesAsCurveLoops())
+            {
+                foreach (var curve in loop)
+                {
+                    foreach (var end in new[] { curve.GetEndPoint(0), curve.GetEndPoint(1) })
+                    {
+                        var point = new PlanPoint(end.X, end.Y);
+                        var distance = join.SignedDistance(point);
+                        nearest = Math.Max(nearest, distance);
+                        deepest = Math.Min(deepest, distance);
+                        lateral += Lateral(join, point);
+                        count++;
+                    }
+                }
+            }
+
+            // only the road at this junction: a road that loops back (a U) has other ends, and the cut left at another junction, that
+            // lie on the far side of the join line's extension but nowhere near the junction
+            if (count > 0 && Math.Abs(lateral / count) <= LateralReach(join))
+            {
+                yield return (nearest, deepest);
+            }
+        }
+    }
+
+    /// <summary>How far the join line's middle is from a point, measured along the join line.</summary>
+    private static double Lateral(SideJoin join, PlanPoint p)
+    {
+        var dx = join.Right.X - join.Left.X;
+        var dy = join.Right.Y - join.Left.Y;
+        var length = Math.Sqrt(dx * dx + dy * dy);
+        var mx = (join.Left.X + join.Right.X) / 2.0;
+        var my = (join.Left.Y + join.Right.Y) / 2.0;
+        return ((p.X - mx) * dx + (p.Y - my) * dy) / length;
+    }
+
+    /// <summary>How far to the side of the junction a road end can be and still count as the end at this junction.</summary>
+    private static double LateralReach(SideJoin join) => 1.5 * Math.Sqrt(Math.Pow(join.Right.X - join.Left.X, 2) + Math.Pow(join.Right.Y - join.Left.Y, 2));
+
+    private const double GapTolerance = 0.05; // feet
+
+    private static double Farthest(Solid solid, SideJoin join)
+    {
+        var farthest = double.MinValue;
+        if (solid.Volume <= MinVolume)
+        {
+            return farthest;
+        }
+
+        foreach (Edge edge in solid.Edges)
+        {
+            var curve = edge.AsCurve();
+            foreach (var end in new[] { curve.GetEndPoint(0), curve.GetEndPoint(1) })
+            {
+                var point = new PlanPoint(end.X, end.Y);
+                if (Math.Abs(Lateral(join, point)) <= LateralReach(join))
+                {
+                    farthest = Math.Max(farthest, join.SignedDistance(point));
+                }
+            }
+        }
+
+        return farthest;
+    }
+
     private delegate IReadOnlyList<Solid?>? Operation(Solid solid, (double Min, double Max) zRange);
 
     private static void Apply(Document document, Element road, CutOutcome outcome, Operation operation, Func<Solid, Element, Solid>? extend)

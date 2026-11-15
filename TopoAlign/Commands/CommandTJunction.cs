@@ -16,6 +16,8 @@ namespace TopoAlign.Commands;
 [Regeneration(RegenerationOption.Manual)]
 public class CommandTJunction : IExternalCommand
 {
+    private const double MaxSurfaceExtension = 60.0; // feet, the most the surface is lengthened along a side road that stops short
+
     private static readonly ILogger log = Log.ForContext<CommandTJunction>();
 
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -156,6 +158,22 @@ public class CommandTJunction : IExternalCommand
                             stage = "creating the road surface";
                             TJunctionSurfaceBuilder.DeletePrevious(document, request.Key);
                             var category = RoadBuilder.GetCategories(document).First().Category;
+
+                            // a side road that stops short of the join line is met by lengthening the surface back along it
+                            if (request.SideJoin is { } sideJoin && sideRoads.Count > 0)
+                            {
+                                document.Regenerate();
+                                var current = sideRoads.Select(r => document.GetElement(r.Id)).OfType<Element>().ToList();
+                                var gap = Math.Min(RoadSolidCutter.GapToJoin(current, sideJoin, out var measured), MaxSurfaceExtension);
+                                log.Information("Side road gap to the join line: {gap} ft ({measured})", gap, measured);
+                                fitting.Warnings.Add($"Side road measured against the join line ({current.Count} of {sideRoads.Count} parts found): {measured}.");
+                                if (gap > 0.0)
+                                {
+                                    outline = TJunctionSurfaceBuilder.ExtendBack(outline, sideJoin, gap);
+                                    fitting.Warnings.Add($"The side road stops {gap * 0.3048:0.00} m short of the junction, so the surface was extended along it to meet it.");
+                                }
+                            }
+
                             surfaceMade = TJunctionSurfaceBuilder.Create(document, outline, request.SurfaceThickness, category, $"T-Junction {request.SideName}", request.Key) is not null;
                         }
 
