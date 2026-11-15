@@ -16,6 +16,9 @@ internal sealed class TJunctionResult
         SideDirection = sideDirection;
     }
 
+    /// <summary>True when the junction is at the start of the side alignment, false when at its end.</summary>
+    public bool JunctionAtStart { get; init; }
+
     /// <summary>Where the side road ended, at the junction's end, before it was trimmed or extended to the main road's centreline.</summary>
     public PlanPoint SideEnd { get; }
 
@@ -135,7 +138,7 @@ internal static class TJunctionGeometry
         var left = Fillet(junction, d, m, sideNormal, +1, mainNormal, kerbRadius, sideHalfWidth, mainHalfWidth, last, mainLine, "left", errors);
         var right = Fillet(junction, d, m, sideNormal, -1, mainNormal, kerbRadius, sideHalfWidth, mainHalfWidth, last, mainLine, "right", errors);
 
-        return new TJunctionResult(trimmedSide, left, right, junction, errors, d, mainNormal, last.EndPoint);
+        return new TJunctionResult(trimmedSide, left, right, junction, errors, d, mainNormal, last.EndPoint) { JunctionAtStart = useStart };
     }
 
     /// <summary>

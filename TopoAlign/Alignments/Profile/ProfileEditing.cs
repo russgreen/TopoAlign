@@ -123,6 +123,55 @@ internal static class ProfileEditing
         return result;
     }
 
+    /// <summary>
+    /// Refits a profile to an alignment whose length changed by lengthening or trimming it at the junction end, so the profile
+    /// finishes at <paramref name="junctionElevation"/> there. At the end the last PVI moves to <paramref name="newLength"/>; at the
+    /// start the other PVIs shift by the length change and a new first PVI is put at 0. PVIs that no longer fit are dropped.
+    /// Throws <see cref="InvalidOperationException"/> if fewer than two PVIs are left.
+    /// </summary>
+    public static List<ProfileVertex> FitToJunction(IReadOnlyList<ProfileVertex> original, double oldLength, double newLength, bool junctionAtStart,
+        double junctionElevation)
+    {
+        if (original is null || original.Count < 2)
+        {
+            throw new InvalidOperationException("The profile needs at least two stations.");
+        }
+
+        var result = new List<ProfileVertex>();
+        if (junctionAtStart)
+        {
+            var shift = newLength - oldLength;
+            result.Add(new ProfileVertex(0.0, junctionElevation, 0.0));
+            for (var i = 1; i < original.Count; i++)
+            {
+                var distance = original[i].Distance + shift;
+                if (distance - result[result.Count - 1].Distance >= MinSpacing)
+                {
+                    result.Add(new ProfileVertex(distance, original[i].Elevation, i == original.Count - 1 ? 0.0 : original[i].CurveLength));
+                }
+            }
+        }
+        else
+        {
+            for (var i = 0; i < original.Count - 1; i++)
+            {
+                if (original[i].Distance < newLength - MinSpacing)
+                {
+                    result.Add(original[i]);
+                }
+            }
+
+            result.Add(new ProfileVertex(newLength, junctionElevation, 0.0));
+        }
+
+        if (result.Count < 2)
+        {
+            throw new InvalidOperationException("The side road is too short for its profile to meet the main road level.");
+        }
+
+        return result;
+    }
+
     /// <summary>Grade (rise over run) of the straight between two consecutive PVIs.</summary>
     public static double Grade(ProfileVertex from, ProfileVertex to)
     {

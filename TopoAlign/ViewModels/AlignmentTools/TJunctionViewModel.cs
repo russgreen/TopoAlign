@@ -536,10 +536,14 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
 
             // work on a fresh copy so the dialog can be reused if anything below fails
             var sideDocument = AlignmentJsonDocument.Parse(_sideDocument.ToJson());
-            var sideLength = sideDocument.SetPlan(result.TrimmedSide);
+            var mainElevation = MainLevelFunction()!;
+
+            // the side road's profile is refitted so it finishes at the main road's level where the two meet
+            var junctionElevation = mainElevation(result.Junction);
+            var sideLength = sideDocument.SetPlan(result.TrimmedSide, fitProfile: (original, newLength) =>
+                ProfileEditing.FitToJunction(original, original[original.Count - 1].Distance, newLength, result.JunctionAtStart, junctionElevation));
 
             var sideProfile = sideDocument.ReadProfile();
-            var mainElevation = MainLevelFunction()!;
 
             double SideElevation(PlanPoint p) => ProfileEditing.ElevationAt(sideProfile, TJunctionGeometry.StationAlong(result.TrimmedSide, p));
             double MainElevation(PlanPoint p) => mainElevation(p);
