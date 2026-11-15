@@ -4,8 +4,9 @@ namespace TopoAlign.Alignments.Plan;
 internal sealed class TJunctionResult
 {
     public TJunctionResult(IReadOnlyList<PlanSegment> trimmedSide, PlanArc? kerbLeft, PlanArc? kerbRight, PlanPoint junction, IReadOnlyList<string> errors,
-        PlanPoint sideDirection = default, PlanPoint mainNormal = default)
+        PlanPoint sideDirection = default, PlanPoint mainNormal = default, PlanPoint sideEnd = default)
     {
+        SideEnd = sideEnd;
         MainNormal = mainNormal;
         TrimmedSide = trimmedSide;
         KerbLeft = kerbLeft;
@@ -14,6 +15,9 @@ internal sealed class TJunctionResult
         Errors = errors;
         SideDirection = sideDirection;
     }
+
+    /// <summary>Where the side road ended, at the junction's end, before it was trimmed or extended to the main road's centreline.</summary>
+    public PlanPoint SideEnd { get; }
 
     /// <summary>Unit direction of travel along the side road as it runs into the main road.</summary>
     public PlanPoint SideDirection { get; }
@@ -131,7 +135,7 @@ internal static class TJunctionGeometry
         var left = Fillet(junction, d, m, sideNormal, +1, mainNormal, kerbRadius, sideHalfWidth, mainHalfWidth, last, mainLine, "left", errors);
         var right = Fillet(junction, d, m, sideNormal, -1, mainNormal, kerbRadius, sideHalfWidth, mainHalfWidth, last, mainLine, "right", errors);
 
-        return new TJunctionResult(trimmedSide, left, right, junction, errors, d, mainNormal);
+        return new TJunctionResult(trimmedSide, left, right, junction, errors, d, mainNormal, last.EndPoint);
     }
 
     /// <summary>

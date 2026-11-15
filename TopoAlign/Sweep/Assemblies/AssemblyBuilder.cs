@@ -101,35 +101,63 @@ internal static class AssemblyBuilder
 
         progress?.ThrowIfCancelled();
         progress?.SetIndeterminate("Adding the road to the model...");
-        using var transaction = new Transaction(document, "Create road assembly");
-        transaction.Start();
 
-        var failureHandlingOptions = transaction.GetFailureHandlingOptions();
-        failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
-        transaction.SetFailureHandlingOptions(failureHandlingOptions);
-
-        var previous = RoadBuilder.FindPreviousIds(document, alignment, alignmentName);
-        if (previous.Count > 0)
+        var categoryIds = built.Select(b =>
         {
-            document.Delete(previous);
-            result.ReplacedPrevious = true;
-        }
+            var category = ParseCategory(b.Part.Category);
+            return RoadBuilder.IsValidCategory(document, category) ? new ElementId(category) : new ElementId(BuiltInCategory.OST_GenericModel);
+        }).ToList();
 
-        foreach (var (label, part, solids) in built)
+        // As families, every part gets its own family file, made before the model is touched so a failure leaves the model as it was.
+        var familyFiles = new List<string>();
+        try
         {
-            var category = ParseCategory(part.Category);
-            var categoryId = RoadBuilder.IsValidCategory(document, category)
-                ? new ElementId(category)
-                : new ElementId(BuiltInCategory.OST_GenericModel);
+            if (options.Output == RoadOutput.Family)
+            {
+                var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                for (var i = 0; i < built.Count; i++)
+                {
+                    progress?.ThrowIfCancelled();
+                    var familyName = RoadFamilyBuilder.PartFamilyName(alignment, alignmentName, built[i].Label, usedNames);
+                    familyFiles.Add(RoadFamilyBuilder.CreateFamilyFile(document, familyName, built[i].Solids, categoryIds[i]));
+                }
+            }
 
-            var shape = RoadBuilder.CreateShape(document, categoryId, solids, alignment);
-            RoadBuilder.SetComments(shape, $"Road assembly '{assembly.Name}' - {label} along {alignmentName}");
+            using var transaction = new Transaction(document, "Create road assembly");
+            transaction.Start();
 
-            result.ShapeIds.Add(shape.Id);
-            result.BuiltParts.Add(label);
+            var failureHandlingOptions = transaction.GetFailureHandlingOptions();
+            failureHandlingOptions.SetFailuresPreprocessor(new FailureHandler());
+            transaction.SetFailureHandlingOptions(failureHandlingOptions);
+
+            var previous = RoadBuilder.FindPreviousIds(document, alignment, alignmentName);
+            if (previous.Count > 0)
+            {
+                document.Delete(previous);
+                result.ReplacedPrevious = true;
+            }
+
+            for (var i = 0; i < built.Count; i++)
+            {
+                var (label, _, solids) = built[i];
+                Element element = familyFiles.Count > 0
+                    ? RoadFamilyBuilder.Place(document, familyFiles[i], solids).Instance
+                    : RoadBuilder.CreateShape(document, categoryIds[i], solids, alignment);
+                RoadBuilder.SetComments(element, $"Road assembly '{assembly.Name}' - {label} along {alignmentName}");
+
+                result.ShapeIds.Add(element.Id);
+                result.BuiltParts.Add(label);
+            }
+
+            transaction.Commit();
         }
-
-        transaction.Commit();
+        finally
+        {
+            foreach (var file in familyFiles)
+            {
+                RoadFamilyBuilder.DeleteFile(file);
+            }
+        }
 
         if (topographies is { Count: > 0 } && (assembly.Left.Enabled || assembly.Right.Enabled))
         {

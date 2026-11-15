@@ -41,6 +41,7 @@ public class Settings
 
     /// <summary>Name of the last assembly used.</summary>
     public string SweepAssemblyName { get; set; } = string.Empty;
+    public bool SweepAssemblyFamilies { get; set; }
 
     /// <summary>Whether sweeping an assembly also grades the picked toposolid out from its sides.</summary>
     public bool SweepGradeTopo { get; set; }

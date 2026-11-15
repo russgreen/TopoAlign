@@ -11,10 +11,15 @@ internal sealed class CutOutcome
     public int Unchanged { get; set; }
     public int Removed { get; set; }
     public int Extended { get; set; }
+
+    /// <summary>Road parts (family instances) cut by a void.</summary>
+    public int VoidCuts { get; set; }
+
     public List<string> Warnings { get; } = new();
 
     public void Add(CutOutcome other)
     {
+        VoidCuts += other.VoidCuts;
         Changed += other.Changed;
         Unchanged += other.Unchanged;
         Removed += other.Removed;
@@ -34,7 +39,6 @@ internal static class RoadSolidCutter
     private const double MinVolume = 1e-7;      // cubic feet
     private const double Margin = 1.0;          // feet, how far a tool reaches past the road it cuts
     private const double Overlap = 0.05;        // feet, so an extension overlaps the face it grows from
-    private const double HalfSpaceSize = 300.0; // feet
 
     /// <summary>
     /// Removes everything inside a plan polygon from the road shapes. <paramref name="polygon"/> is in internal coordinates; only X and Y are used.
@@ -275,21 +279,26 @@ internal static class RoadSolidCutter
         return Extrude(points, z1 - z0);
     }
 
-    /// <summary>A large block on the main road side of the join line.</summary>
+    /// <summary>
+    /// The block on the main road side of the join line that the side road is cut back with. It reaches only as far as the road ran past
+    /// the line, plus a pad, so a road that bends back is not cut at its far end.
+    /// </summary>
     private static Solid? BuildHalfSpace(SideJoin join, double z0, double z1)
     {
         var dx = join.Right.X - join.Left.X;
         var dy = join.Right.Y - join.Left.Y;
         var length = Math.Sqrt(dx * dx + dy * dy);
-        if (length < 1e-9)
+        if (length < 1e-9 || join.Reach <= 0.0)
         {
             return null;
         }
 
-        var wx = dx / length * HalfSpaceSize;
-        var wy = dy / length * HalfSpaceSize;
-        var nx = join.Normal.X * HalfSpaceSize;
-        var ny = join.Normal.Y * HalfSpaceSize;
+        const double widthPad = 25.0;
+        const double depthPad = 30.0;
+        var wx = dx / length * widthPad;
+        var wy = dy / length * widthPad;
+        var nx = join.Normal.X * (join.Reach + depthPad);
+        var ny = join.Normal.Y * (join.Reach + depthPad);
 
         var a = new XYZ(join.Left.X - wx, join.Left.Y - wy, z0);
         var b = new XYZ(join.Right.X + wx, join.Right.Y + wy, z0);

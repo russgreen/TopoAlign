@@ -12,7 +12,7 @@ internal static class TJunctionSurfaceBuilder
     /// Must be called inside a transaction.
     /// </summary>
     public static DirectShape? Create(Document document, IReadOnlyList<XYZ> outline, double thickness, BuiltInCategory category, string name,
-        Element? sideAlignment = null)
+        string? junctionKey = null)
     {
         var triangles = Triangulate(outline);
         if (triangles is null)
@@ -50,10 +50,10 @@ internal static class TJunctionSurfaceBuilder
         var shape = DirectShape.CreateElement(document, new ElementId(category));
         shape.SetShape(builder.GetBuildResult().GetGeometricalObjects());
         shape.Name = name;
-        if (sideAlignment is not null)
+        if (junctionKey is not null)
         {
             shape.ApplicationId = ApplicationId;
-            shape.ApplicationDataId = sideAlignment.UniqueId;
+            shape.ApplicationDataId = junctionKey;
         }
 
         return shape;
@@ -64,13 +64,13 @@ internal static class TJunctionSurfaceBuilder
     /// </summary>
     public const string ApplicationId = "TopoAlign.TJunction";
 
-    /// <summary>Deletes the junction surfaces an earlier run made for the side alignment. Must be called inside a transaction.</summary>
-    public static int DeletePrevious(Document document, Element sideAlignment)
+    /// <summary>Deletes the junction surfaces an earlier run made for the junction. Must be called inside a transaction.</summary>
+    public static int DeletePrevious(Document document, string junctionKey)
     {
         var ids = new FilteredElementCollector(document)
             .OfClass(typeof(DirectShape))
             .Cast<DirectShape>()
-            .Where(shape => shape.ApplicationId == ApplicationId && shape.ApplicationDataId == sideAlignment.UniqueId)
+            .Where(shape => shape.ApplicationId == ApplicationId && shape.ApplicationDataId == junctionKey)
             .Select(shape => shape.Id)
             .ToList();
         if (ids.Count > 0)

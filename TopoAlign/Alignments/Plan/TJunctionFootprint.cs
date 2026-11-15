@@ -7,13 +7,20 @@ namespace TopoAlign.Alignments.Plan;
 /// </summary>
 internal readonly struct SideJoin
 {
-    public SideJoin(PlanPoint left, PlanPoint right, PlanPoint normal, PlanPoint direction)
+    public SideJoin(PlanPoint left, PlanPoint right, PlanPoint normal, PlanPoint direction, double reach = 0.0)
     {
+        Reach = reach;
         Left = left;
         Right = right;
         Normal = normal;
         Direction = direction;
     }
+
+    /// <summary>
+    /// How far the side road ran beyond the join line, towards the main road, before it was trimmed (zero if it stopped at or short of
+    /// the line). It limits how far past the line anything is cut, so a road that curves back is not cut at its other end.
+    /// </summary>
+    public double Reach { get; }
 
     /// <summary>Where the join line meets the side road's left kerb line (left of travel towards the main road).</summary>
     public PlanPoint Left { get; }
@@ -112,6 +119,7 @@ internal static class TJunctionFootprint
             return null; // zero half-width: there is no line to join on
         }
 
-        return new SideJoin(a, b, d, d);
+        var reach = Math.Max(0.0, (result.SideEnd.X - a.X) * d.X + (result.SideEnd.Y - a.Y) * d.Y);
+        return new SideJoin(a, b, d, d, reach);
     }
 }

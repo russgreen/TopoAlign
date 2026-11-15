@@ -152,6 +152,35 @@ internal sealed class AlignmentPickPreview : IDisposable
         Refresh();
     }
 
+    /// <summary>Shows several separate pieces of linework (each is drawn on its own, with nothing joining one to the next) and redraws.</summary>
+    public void SetChains(IReadOnlyList<IReadOnlyList<PlanSegment>> chains)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        try
+        {
+            var lines = new List<PreviewLine>();
+            foreach (var chain in chains)
+            {
+                if (chain.Count > 0)
+                {
+                    AddPolyline(lines, PlanPolyline.FromSegments(chain, CurveDeviation), AlignmentColour);
+                }
+            }
+
+            _server.SetLines(lines, _elevation);
+        }
+        catch (Exception ex)
+        {
+            log.Warning(ex, "The alignment preview could not be updated");
+        }
+
+        Refresh();
+    }
+
     public void Dispose()
     {
         if (_disposed)

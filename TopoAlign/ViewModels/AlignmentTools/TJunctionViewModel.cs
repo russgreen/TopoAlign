@@ -65,6 +65,9 @@ internal sealed class TJunctionRequest
     /// <summary>The main road alignment, whose road solids are cut where the junction opens.</summary>
     public Element? Main { get; set; }
 
+    /// <summary>Identifies this junction (see <see cref="TJunctionKey"/>): a side road can have one at each end.</summary>
+    public string Key { get; set; } = string.Empty;
+
     /// <summary>Plan outline of the junction in internal coordinates (Z is ignored); null when the main road is to be left alone.</summary>
     public IReadOnlyList<XYZ>? CutPolygon { get; set; }
 
@@ -263,7 +266,10 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
         try
         {
             var uidoc = App.CachedUiApp.ActiveUIDocument;
-            var reference = uidoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element, "Select the element that is the main road surface");
+            var reference = uidoc.Selection.PickObject(
+                Autodesk.Revit.UI.Selection.ObjectType.Element,
+                new RoadPickFilter(),
+                "Select the element that is the main road surface");
             SelectMainRoad(App.RevitDocument.GetElement(reference));
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)
@@ -482,7 +488,7 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
 
             if (_result is not { IsValid: true } result)
             {
-                _preview.SetSegments(Array.Empty<PlanSegment>());
+                _preview.SetChains(Array.Empty<IReadOnlyList<PlanSegment>>());
                 return;
             }
 
@@ -493,10 +499,14 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
                 return new PlanPoint(q.X, q.Y);
             }
 
-            var shown = new List<PlanSegment>();
-            shown.AddRange(TJunctionGeometry.Map(result.TrimmedSide, Map));
-            shown.AddRange(TJunctionGeometry.Map(new PlanSegment[] { result.KerbLeft!, result.KerbRight! }, Map));
-            _preview.SetSegments(shown);
+            // each piece is drawn on its own: drawn as one chain, straight lines would join the end of one to the start of the next
+            var shown = new List<IReadOnlyList<PlanSegment>>
+            {
+                TJunctionGeometry.Map(result.TrimmedSide, Map),
+                TJunctionGeometry.Map(new PlanSegment[] { result.KerbLeft! }, Map),
+                TJunctionGeometry.Map(new PlanSegment[] { result.KerbRight! }, Map)
+            };
+            _preview.SetChains(shown);
         }
         catch (Exception ex)
         {
@@ -535,10 +545,11 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
             double MainElevation(PlanPoint p) => mainElevation(p);
 
             var sideName = string.IsNullOrWhiteSpace(sideDocument.Name) ? "Side road" : sideDocument.Name;
+            var junctionKey = TJunctionKey.Make(_side.UniqueId, result.Junction);
             var kerbs = new List<TJunctionNewAlignment>();
             foreach (var (suffix, arc) in new[] { ("L", result.KerbLeft!), ("R", result.KerbRight!) })
             {
-                var name = $"{sideName} kerb {suffix}";
+                var name = $"{sideName} kerb {suffix} ({TJunctionKey.Short(junctionKey)})";
 
                 // the geometry is already in shared coordinates, so no transform is needed; the profile runs from the
                 // side road's elevation at the start of the return to the main road's elevation at its end
@@ -589,7 +600,7 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
                     return new PlanPoint(q.X / length, q.Y / length);
                 }
 
-                join = new SideJoin(Point(shared.Left), Point(shared.Right), Vector(shared.Normal), Vector(shared.Direction));
+                join = new SideJoin(Point(shared.Left), Point(shared.Right), Vector(shared.Normal), Vector(shared.Direction), shared.Reach);
             }
 
             // The alignments are updated and created by the command once this dialog has closed, so the transactions
@@ -597,6 +608,7 @@ internal partial class TJunctionViewModel : BaseViewModel, IDisposable
             Request = new TJunctionRequest(_side, sideName, sideDocument.ToJson(), sideLength, kerbs, surface, ToInternal(SurfaceThickness))
             {
                 Main = _main,
+                Key = junctionKey,
                 CutPolygon = cutPolygon,
                 SideJoin = join
             };
