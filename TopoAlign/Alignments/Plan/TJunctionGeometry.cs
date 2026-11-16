@@ -17,7 +17,7 @@ internal sealed class TJunctionResult
     }
 
     /// <summary>True when the junction is at the start of the side alignment, false when at its end.</summary>
-    public bool JunctionAtStart { get; init; }
+    public bool JunctionAtStart { get; set; }
 
     /// <summary>Where the side road ended, at the junction's end, before it was trimmed or extended to the main road's centreline.</summary>
     public PlanPoint SideEnd { get; }
@@ -202,27 +202,11 @@ internal static class TJunctionGeometry
         return result;
     }
 
-    private readonly struct Hit
-    {
-        public Hit(PlanPoint point, int mainIndex, double distance)
-        {
-            Point = point;
-            MainIndex = mainIndex;
-            Distance = distance;
-        }
-
-        public PlanPoint Point { get; }
-        public int MainIndex { get; }
-
-        /// <summary>How far the side road's end is from the junction.</summary>
-        public double Distance { get; }
-    }
-
     /// <summary>
     /// Looks for the main-road straight that the last straight of <paramref name="side"/> reaches when run forward (extended if it
     /// stops short). Takes the nearest.
     /// </summary>
-    private static bool TryHit(IReadOnlyList<PlanSegment> main, IReadOnlyList<PlanSegment> side, out Hit hit, out string? message)
+    private static bool TryHit(IReadOnlyList<PlanSegment> main, IReadOnlyList<PlanSegment> side, out TJunctionHit hit, out string? message)
     {
         hit = default;
         message = null;
@@ -265,7 +249,7 @@ internal static class TJunctionGeometry
             bestT = t;
             found = true;
             var point = new PlanPoint(last.StartPoint.X + dx * t, last.StartPoint.Y + dy * t);
-            hit = new Hit(point, i, Math.Abs(t - 1.0) * last.Length);
+            hit = new TJunctionHit(point, i, Math.Abs(t - 1.0) * last.Length);
         }
 
         if (!found)

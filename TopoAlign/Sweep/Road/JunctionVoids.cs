@@ -303,23 +303,6 @@ internal static class JunctionVoids
         }
     }
 
-    /// <summary>A void a junction put in a family, as the data to make it again. The points are in the family's coordinates.</summary>
-    private sealed class StoredVoid
-    {
-        public StoredVoid(string side, string role, IReadOnlyList<XYZ> points, double height)
-        {
-            Side = side;
-            Role = role;
-            Points = points;
-            Height = height;
-        }
-
-        public string Side { get; }
-        public string Role { get; }
-        public IReadOnlyList<XYZ> Points { get; }
-        public double Height { get; }
-    }
-
     private static string FormatNumber(double value) => value.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
 
     private static string FormatPoints(IEnumerable<XYZ> points) =>
@@ -369,29 +352,6 @@ internal static class JunctionVoids
         }
 
         return voids;
-    }
-
-    /// <summary>What one family needs to be cut, read from the road part while its element is still valid.</summary>
-    private sealed class VoidJob
-    {
-        public VoidJob(string familyId, IReadOnlyList<XYZ> polygon, string role, double minZ, double maxZ, Transform toFamily)
-        {
-            FamilyName = familyId;
-            Polygon = polygon;
-            Role = role;
-            MinZ = minZ;
-            MaxZ = maxZ;
-            ToFamily = toFamily;
-        }
-
-        public string FamilyName { get; }
-        public IReadOnlyList<XYZ> Polygon { get; }
-        public string Role { get; }
-        public double MinZ { get; }
-        public double MaxZ { get; }
-
-        /// <summary>Takes a point in the model into the family's own coordinates (the family is built around the instance's origin).</summary>
-        public Transform ToFamily { get; }
     }
 
     private static VoidJob? MakeJob(FamilyInstance part, IReadOnlyList<XYZ> polygon, string role)

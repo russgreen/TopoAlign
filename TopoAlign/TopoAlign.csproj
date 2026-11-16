@@ -81,7 +81,14 @@
 	</PropertyGroup>
 	
 	<PropertyGroup>
-		<IsRepackable Condition="$(Configuration.Contains('Release'))">true</IsRepackable>
+		<IsRepackable Condition="$(Configuration.Contains('Release')) Or 
+					  ($(Configuration.Contains('Debug')) And (
+					  '$(RevitVersion)' == '2021' Or 
+					  '$(RevitVersion)' == '2022' Or 
+					  '$(RevitVersion)' == '2023' Or 
+					  '$(RevitVersion)' == '2024' Or 
+					  '$(RevitVersion)' == '2025' Or 
+					  '$(RevitVersion)' == '2026'))">true</IsRepackable>
 		<!--<RepackBinariesExcludes>Syncfusion*.dll</RepackBinariesExcludes>-->
 	</PropertyGroup>
 
