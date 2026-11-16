@@ -61,7 +61,7 @@ class App : IExternalApplication
 
         Log.Logger = loggerConfigTopoAlign.CreateLogger();
 
-        _ = CreateRibbonPanel();
+        CreateRibbonPanel();
 
         return Result.Succeeded;
     }
@@ -71,16 +71,15 @@ class App : IExternalApplication
         return Result.Succeeded;
     }
 
-    private RibbonPanel CreateRibbonPanel()
+    private void CreateRibbonPanel()
     {
-        RibbonPanel panel;
-
         CachedUiCtrApp.CreateRibbonTab(_tabName);
-        panel = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
-        panel.Name = "ARBG_TopoAlign_ExtApp";
-        panel.Title = "Topo Align";
 
-        PushButton pbTopoAlign = (PushButton)panel.AddItem(new PushButtonData(
+        var panelTopo = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
+        panelTopo.Name = "Topo Editing";
+        panelTopo.Title = "Topo Editing";
+
+        PushButton pbTopoAlign = (PushButton)panelTopo.AddItem(new PushButtonData(
         nameof(Commands.CommandAlignTopo),
         $"Align to{Environment.NewLine}Element",
         Assembly.GetExecutingAssembly().Location,
@@ -89,7 +88,7 @@ class App : IExternalApplication
         pbTopoAlign.LargeImage = PngImageSource("TopoAlign.Images.TopoAlign32.png");
         pbTopoAlign.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandAlignTopo.html"));
 
-        PushButton pbFloorAlign = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbFloorAlign = (PushButton)panelTopo.AddItem(new PushButtonData(
             nameof(Commands.CommndAlignFloor),
             $"Align to{Environment.NewLine}Topo",
             Assembly.GetExecutingAssembly().Location,
@@ -102,7 +101,7 @@ class App : IExternalApplication
         pbFloorAlign.LargeImage = PngImageSource("TopoAlign.Images.FloorToTopo32.png");
         pbFloorAlign.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandAlignFloor.html"));
 
-        PushButton pbAlignTopoEdges = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbAlignTopoEdges = (PushButton)panelTopo.AddItem(new PushButtonData(
             nameof(Commands.CommandAlignTopoEdges),
             $"Align Topo{Environment.NewLine}Edges",
             Assembly.GetExecutingAssembly().Location,
@@ -111,7 +110,7 @@ class App : IExternalApplication
         pbAlignTopoEdges.LargeImage = PngImageSource("TopoAlign.Images.AlignTopoEdges32.png");
         pbAlignTopoEdges.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandAlignTopoEdges.html"));
 
-        PushButton pbPointsFromLines =(PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbPointsFromLines =(PushButton)panelTopo.AddItem(new PushButtonData(
             nameof(Commands.CommandPointsOnSurface),
             $"Points from{Environment.NewLine}Lines",
             Assembly.GetExecutingAssembly().Location,
@@ -120,7 +119,7 @@ class App : IExternalApplication
         pbPointsFromLines.LargeImage = PngImageSource("TopoAlign.Images.PointsFromLines32.png");
         pbPointsFromLines.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandPointsOnSurface.html"));
 
-        PushButton pbPointsAlongContours = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbPointsAlongContours = (PushButton)panelTopo.AddItem(new PushButtonData(
             nameof(Commands.CommandPointsAlongContours),
             $"Points along{Environment.NewLine}Contours",
             Assembly.GetExecutingAssembly().Location,
@@ -129,7 +128,7 @@ class App : IExternalApplication
         pbPointsAlongContours.LargeImage = PngImageSource("TopoAlign.Images.PointsFromContours32.png");
         pbPointsAlongContours.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandPointsAlongContours.html"));
 
-        PushButton pbPointsAtIntersection = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbPointsAtIntersection = (PushButton)panelTopo.AddItem(new PushButtonData(
             nameof(Commands.CommandPointsAtIntersection),
             $"Points at{Environment.NewLine}Intersection",
             Assembly.GetExecutingAssembly().Location,
@@ -138,7 +137,7 @@ class App : IExternalApplication
         pbPointsAtIntersection.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
         pbPointsAtIntersection.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandPointsAtIntersection.html"));
 
-        PushButton pbResetRegion = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbResetRegion = (PushButton)panelTopo.AddItem(new PushButtonData(
             nameof(Commands.CommandResetTopoRegion),
             $"Reset{Environment.NewLine}region",
             Assembly.GetExecutingAssembly().Location,
@@ -147,7 +146,12 @@ class App : IExternalApplication
         pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
         pbResetRegion.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandResetTopoRegion.html"));
 
-        PushButton pbCreateAlignment = (PushButton)panel.AddItem(new PushButtonData(
+
+        var panelAlignment = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
+        panelAlignment.Name = "Alignments";
+        panelAlignment.Title = "Alignments";
+
+        PushButton pbCreateAlignment = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandCreateAlignment),
             $"Create{Environment.NewLine}Alignment",
             Assembly.GetExecutingAssembly().Location,
@@ -156,7 +160,7 @@ class App : IExternalApplication
         pbCreateAlignment.LargeImage = PngImageSource("TopoAlign.Images.AlignmentFromCurve32.png");
         pbCreateAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandCreateAlignment.html"));
 
-        PushButton pbEditAlignment = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbEditAlignment = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandEditAlignment),
             $"Edit{Environment.NewLine}Alignment",
             Assembly.GetExecutingAssembly().Location,
@@ -165,7 +169,25 @@ class App : IExternalApplication
         pbEditAlignment.LargeImage = PngImageSource("TopoAlign.Images.EditAlignment32.png");
         pbEditAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandEditAlignment.html"));
 
-        PushButton pbEditProfile = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbTJunction = (PushButton)panelAlignment.AddItem(new PushButtonData(
+            nameof(Commands.CommandTJunction),
+            $"T-Junction",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandTJunction)}"));
+        pbTJunction.ToolTip = "Join a side road alignment to a main road alignment with kerb return alignments of a given radius.";
+        pbTJunction.LargeImage = PngImageSource("TopoAlign.Images.TJunction32.png");
+        pbTJunction.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandTJunction.html"));
+
+        PushButton pbTJunctionRemove = (PushButton)panelAlignment.AddItem(new PushButtonData(
+            nameof(Commands.CommandTJunctionRemove),
+            $"Remove{Environment.NewLine}T-Junction",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandTJunctionRemove)}"));
+        pbTJunctionRemove.ToolTip = "Remove a T-junction: its road surface, the voids that cut the roads (putting the cut parts back) and its kerb return alignments.";
+        pbTJunctionRemove.LargeImage = PngImageSource("TopoAlign.Images.TJunctionRemove32.png");
+        pbTJunctionRemove.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandTJunction.html"));
+
+        PushButton pbEditProfile = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandEditProfile),
             $"Edit{Environment.NewLine}Profile",
             Assembly.GetExecutingAssembly().Location,
@@ -174,7 +196,7 @@ class App : IExternalApplication
         pbEditProfile.LargeImage = PngImageSource("TopoAlign.Images.EditProfile32.png");
         pbEditProfile.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandEditProfile.html"));
 
-        PushButton pbStationLabels = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbStationLabels = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandStationLabels),
             $"Station{Environment.NewLine}Labels",
             Assembly.GetExecutingAssembly().Location,
@@ -183,7 +205,7 @@ class App : IExternalApplication
         pbStationLabels.LargeImage = PngImageSource("TopoAlign.Images.StationLabels32.png");
         pbStationLabels.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandStationLabels.html"));
 
-        PushButton pbSweepAlignment = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbSweepAlignment = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandSweepAlignment),
             $"Sweep Along{Environment.NewLine}Alignment",
             Assembly.GetExecutingAssembly().Location,
@@ -192,7 +214,7 @@ class App : IExternalApplication
         pbSweepAlignment.LargeImage = PngImageSource("TopoAlign.Images.SweepAlongAlignment32.png");
         pbSweepAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepAlignment.html"));
 
-        PushButton pbKerb = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbKerb = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandKerb),
             $"Sweep{Environment.NewLine}Kerb",
             Assembly.GetExecutingAssembly().Location,
@@ -202,7 +224,7 @@ class App : IExternalApplication
         pbKerb.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandKerb.html"));
 
 #if REVIT2024_OR_GREATER
-        PushButton pbSweepToToposolid = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbSweepToToposolid = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandSweepToToposolid),
             $"Sweep to{Environment.NewLine}Toposolid",
             Assembly.GetExecutingAssembly().Location,
@@ -211,7 +233,7 @@ class App : IExternalApplication
         pbSweepToToposolid.LargeImage = PngImageSource("TopoAlign.Images.SweepToToposolid32.png");
         pbSweepToToposolid.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepToToposolid.html"));
 
-        PushButton pbGradeToSurface = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbGradeToSurface = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandGradeToSurface),
             $"Grade to{Environment.NewLine}Surface",
             Assembly.GetExecutingAssembly().Location,
@@ -220,7 +242,7 @@ class App : IExternalApplication
         pbGradeToSurface.LargeImage = PngImageSource("TopoAlign.Images.GradeToSurface32.png");
         pbGradeToSurface.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandGradeToSurface.html"));
 
-        PushButton pbDroppedKerbRamp = (PushButton)panel.AddItem(new PushButtonData(
+        PushButton pbDroppedKerbRamp = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandDroppedKerbRamp),
             $"Dropped{Environment.NewLine}Kerb Ramp",
             Assembly.GetExecutingAssembly().Location,
@@ -229,8 +251,6 @@ class App : IExternalApplication
         pbDroppedKerbRamp.LargeImage = PngImageSource("TopoAlign.Images.DroppedKerbRamp32.png");
         pbDroppedKerbRamp.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandDroppedKerbRamp.html"));
 #endif
-
-        return panel;
     }
 
     private System.Windows.Media.ImageSource? PngImageSource(string embeddedPath)

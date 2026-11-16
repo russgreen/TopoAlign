@@ -142,6 +142,10 @@
                   SelectedItem="{Binding SelectedOutput}"
                   ToolTip="A direct shape is plain geometry. A family is loaded into the project with a type you can see in the Project Browser. Toposolid only adds no road at all: the swept geometry is only used to make a toposolid that follows its top surface."/>
 
+        <CheckBox Grid.Row="13" Grid.ColumnSpan="2" Content="Make each part a family" IsChecked="{Binding AssemblyAsFamilies}"
+                  Visibility="{Binding IsAssemblyMode, Converter={StaticResource BoolToVisibility}}"
+                  ToolTip="Each part is loaded as its own family. A T-junction then cuts the road with voids you can see, move and delete, instead of changing the road's geometry for good."/>
+
         <TextBlock Grid.Row="14" Text="Toposolid type" Visibility="{Binding IsToposolidOutput, Converter={StaticResource BoolToVisibility}}"/>
         <ComboBox Grid.Row="14" Grid.Column="1"
                   Visibility="{Binding IsToposolidOutput, Converter={StaticResource BoolToVisibility}}"

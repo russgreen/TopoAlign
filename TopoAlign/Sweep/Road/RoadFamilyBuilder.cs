@@ -1,5 +1,6 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
+using Nice3point.Revit.Extensions;
 using Serilog;
 using System.IO;
 
@@ -22,6 +23,23 @@ internal static class RoadFamilyBuilder
     public static string FamilyName(Element alignment, string? alignmentName)
     {
         return $"{NamePrefix}{CleanName(alignmentName, "Alignment")} ({IdOf(alignment)})";
+    }
+
+    /// <summary>
+    /// The family name for one part of an assembly along an alignment. It keeps the road prefix and the id on the end, so the part is
+    /// found and replaced with the rest of the alignment's road. <paramref name="used"/> keeps two parts with the same name apart.
+    /// </summary>
+    public static string PartFamilyName(Element alignment, string? alignmentName, string partName, ISet<string> used)
+    {
+        var prefix = $"{NamePrefix}{CleanName(alignmentName, "Alignment")} - {CleanName(partName, "Part")}";
+        var suffix = $" ({IdOf(alignment)})";
+        var name = prefix + suffix;
+        for (var number = 2; !used.Add(name); number++)
+        {
+            name = $"{prefix} {number}{suffix}";
+        }
+
+        return name;
     }
 
     private const string KerbNamePrefix = "TopoAlign Kerb - ";
@@ -130,6 +148,14 @@ internal static class RoadFamilyBuilder
     /// </summary>
     public static (Family Family, FamilyInstance Instance) Place(Document document, string file, IReadOnlyList<Solid> solids)
     {
+        var placed = PlaceAt(document, file, FamilyOrigin(solids));
+        CheckPosition(placed.Instance, solids);
+        return placed;
+    }
+
+    /// <summary>Loads the family file into the project and places one instance of its first type at <paramref name="origin"/>. Call inside a transaction.</summary>
+    public static (Family Family, FamilyInstance Instance) PlaceAt(Document document, string file, XYZ origin)
+    {
         if (!document.LoadFamily(file, new FamilyOverwriteOptions(), out var family) || family is null)
         {
             throw new InvalidOperationException("Revit could not load the road family.");
@@ -145,13 +171,11 @@ internal static class RoadFamilyBuilder
         }
 
         var level = new FilteredElementCollector(document).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).FirstOrDefault();
-        var origin = FamilyOrigin(solids);
         var instance = level is null
             ? document.Create.NewFamilyInstance(origin, symbol, StructuralType.NonStructural)
             : document.Create.NewFamilyInstance(origin, symbol, level, StructuralType.NonStructural);
 
         document.Regenerate();
-        CheckPosition(instance, solids);
         return (family, instance);
     }
 
@@ -326,12 +350,8 @@ internal static class RoadFamilyBuilder
         return string.Equals(Path.GetFileNameWithoutExtension(path), name, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string IdOf(Element element)
+    internal static string IdOf(Element element)
     {
-#if REVIT2024_OR_GREATER
-        return element.Id.Value.ToString();
-#else
-        return element.Id.IntegerValue.ToString();
-#endif
+        return element.Id.ToLong().ToString();
     }
 }

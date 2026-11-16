@@ -1,10 +1,29 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI.Selection;
+using Nice3point.Revit.Extensions;
 
 namespace TopoAlign;
 
 public class ElemPickFilter : ISelectionFilter
 {
+    private static readonly BuiltInCategory[] Categories =
+    {
+        BuiltInCategory.OST_Topography,
+        BuiltInCategory.OST_BuildingPad,
+        BuiltInCategory.OST_Floors,
+        BuiltInCategory.OST_Roofs,
+        BuiltInCategory.OST_Site,
+#if REVIT2024_OR_GREATER
+        BuiltInCategory.OST_Roads,
+        BuiltInCategory.OST_Hardscape,
+#endif
+        BuiltInCategory.OST_GenericModel,
+        BuiltInCategory.OST_Furniture,
+        BuiltInCategory.OST_Mass,
+        BuiltInCategory.OST_Planting,
+        BuiltInCategory.OST_Walls
+    };
+
     public bool AllowElement(Element elem)
     {
         if (elem.Category is null)
@@ -12,136 +31,15 @@ public class ElemPickFilter : ISelectionFilter
             return false;
         }
 
-#if REVIT2024_OR_GREATER
-        switch (elem.Category.Id.Value)
+        foreach (var category in Categories)
         {
-            case (long)BuiltInCategory.OST_Topography:
+            if (elem.Category.Id.IsCategory(category))
             {
                 return true;
-            }
-
-            case (long)BuiltInCategory.OST_BuildingPad:
-            {
-                return true;
-            }
-
-            case (long)BuiltInCategory.OST_Floors:
-            {
-                return true;
-            }
-
-            case (long)BuiltInCategory.OST_Roofs:
-            {
-                return true;
-            }
-
-            case (long)BuiltInCategory.OST_Site:
-            {
-                return true;
-            }
-
-            case (long)BuiltInCategory.OST_Roads:
-                {
-                    return true;
-                }
-
-            case (long)BuiltInCategory.OST_Hardscape:
-                {
-                    return true;
-                }
-
-            case (long)BuiltInCategory.OST_GenericModel:
-            {
-                return true;
-            }
-            // Case CInt(BuiltInCategory.OST_Stairs) : Return True
-            // Case CInt(BuiltInCategory.OST_Ramps) : Return True
-            case (long)BuiltInCategory.OST_Furniture:
-            {
-                return true;
-            }
-
-            case (long)BuiltInCategory.OST_Mass:
-            {
-                return true;
-            }
-
-            case (long)BuiltInCategory.OST_Planting:
-            {
-                return true;
-            }
-
-            case (long)BuiltInCategory.OST_Walls:
-            {
-                return true;
-            }
-
-            default:
-            {
-                return false;
             }
         }
-#else
-     switch (elem.Category.Id.IntegerValue)
-        {
-            case (int)BuiltInCategory.OST_Topography:
-            {
-                return true;
-            }
 
-            case (int)BuiltInCategory.OST_BuildingPad:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Floors:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Roofs:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Site:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_GenericModel:
-            {
-                return true;
-            }
-            // Case CInt(BuiltInCategory.OST_Stairs) : Return True
-            // Case CInt(BuiltInCategory.OST_Ramps) : Return True
-            case (int)BuiltInCategory.OST_Furniture:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Mass:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Planting:
-            {
-                return true;
-            }
-
-            case (int)BuiltInCategory.OST_Walls:
-            {
-                return true;
-            }
-
-            default:
-            {
-                return false;
-            }
-        }   
-#endif
-
+        return false;
     }
 
     public bool AllowReference(Reference reference, XYZ position)

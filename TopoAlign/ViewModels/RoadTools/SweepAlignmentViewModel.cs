@@ -120,6 +120,10 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
     private bool _gradeTopo;
 
+    /// <summary>Make each part of the assembly a family instead of a direct shape, so voids (such as a T-junction's) can cut it and be edited by hand.</summary>
+    [ObservableProperty]
+    private bool _assemblyAsFamilies;
+
     public bool ShowGradeTopo => IsAssemblyMode && CanGradeTopo;
 
     public bool ShowGradeTopoPick => ShowGradeTopo && GradeTopo;
@@ -502,7 +506,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
             return;
         }
 
-        var key = ElementIdValue(type.SymbolId);
+        var key = type.SymbolId.ToLong();
         if (!_profileCache.TryGetValue(key, out var cached))
         {
             var profile = SectionProfileReader.Read(App.RevitDocument, type.SymbolId, out var error);
@@ -535,15 +539,6 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         var height = UnitUtils.ConvertFromInternalUnits(_profile.Height, unit);
         ProfileStatus = $"Section {width:N2} wide by {height:N2} high ({SelectedDisplayUnit.Label})" +
                         (MirrorProfile ? ", flipped left to right." : ".");
-    }
-
-    private static long ElementIdValue(ElementId id)
-    {
-#if REVIT2024_OR_GREATER
-        return id.Value;
-#else
-        return id.IntegerValue;
-#endif
     }
 
     // ---- creating -----------------------------------------------------------------------------------------------
@@ -638,7 +633,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
                 VerticalOffset = ToInternal(VerticalOffset),
                 ProfileName = SelectedAssembly.Name,
                 GeometryMethod = SelectedGeometryMethod?.Value ?? RoadGeometryMethod.SegmentedLoft,
-                Output = RoadOutput.DirectShape
+                Output = AssemblyAsFamilies ? RoadOutput.Family : RoadOutput.DirectShape
             };
 
             SaveSettings();
@@ -671,6 +666,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         VerticalOffset = ToDisplay(_settings.SweepVerticalOffset);
         MirrorProfile = _settings.SweepMirrorProfile;
         GradeTopo = _settings.SweepGradeTopo;
+        AssemblyAsFamilies = _settings.SweepAssemblyFamilies;
 
         SelectedCategory = Categories.FirstOrDefault(c => c.Category.ToString() == _settings.SweepCategory) ?? Categories.FirstOrDefault();
         SelectedProfileType = ProfileTypes.FirstOrDefault(t => t.Name == _settings.SweepProfileName) ?? ProfileTypes.FirstOrDefault();
@@ -693,6 +689,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         _settings.SweepVerticalOffset = (decimal)ToInternal(VerticalOffset);
         _settings.SweepMirrorProfile = MirrorProfile;
         _settings.SweepGradeTopo = GradeTopo;
+        _settings.SweepAssemblyFamilies = AssemblyAsFamilies;
         _settings.SweepCategory = SelectedCategory?.Category.ToString() ?? string.Empty;
         _settings.SweepProfileName = SelectedProfileType?.Name ?? string.Empty;
         _settings.SweepGeometryMethod = (SelectedGeometryMethod?.Value ?? RoadGeometryMethod.SegmentedLoft).ToString();

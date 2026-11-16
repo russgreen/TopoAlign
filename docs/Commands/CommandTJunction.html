@@ -1,0 +1,74 @@
+<!-- docs/Commands/CommandTJunction.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>TopoAlign – T-Junction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=Fragment+Mono&amp;display=swap">
+    <link rel="stylesheet" href="../assets/style.css">
+    <script defer src="../assets/analytics.js"></script>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="../index.html">
+      <span class="brand-wordmark">russ green</span>
+      <span class="brand-product">TopoAlign</span>
+    </a>
+    <nav class="side-nav" aria-label="Documentation"></nav>
+  </div>
+</header>
+
+<main>
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Breadcrumb">
+          <ol>
+            <li class="crumb"><a href="../index.html">TopoAlign</a></li>
+            <li class="crumb">T-Junction</li>
+          </ol>
+        </nav>
+        <article>
+            <h1 id="overview">T-Junction</h1>
+            <p>Joins a side road alignment to a main road alignment. The side road is trimmed (or extended) to the centreline of the main road, and two new alignments are created for the kerb returns, one on each side of the side road.</p>
+
+            <h2 id="usage">Usage / Steps</h2>
+            <ol>
+                <li>Select the main road alignment and then the side road alignment in the model first, or launch <strong>T-Junction</strong> and use <strong>Pick main road alignment</strong> and <strong>Pick side road alignment</strong>.</li>
+                <li>Enter the <strong>Kerb radius</strong> and the half-width of each road (the distance from its centreline to its kerb).</li>
+                <li>A preview of the trimmed side road and the kerb returns is drawn in the active plan view. Click <strong>Create T-Junction</strong>.</li>
+            </ol>
+
+            <h2 id="options">Options / Parameters</h2>
+            <ul>
+                <li><strong>Units</strong> — The units used to enter lengths.</li>
+                <li><strong>Kerb radius</strong> — The radius of the kerb returns.</li>
+                <li><strong>Side road half-width</strong> — Distance from the side road centreline to its kerb. Use 0 to fillet between the centrelines.</li>
+                <li><strong>Main road half-width</strong> — Distance from the main road centreline to its kerb. Use 0 to fillet between the centrelines.</li>
+                <li><strong>Pick main road element (optional)</strong> — Available once the main alignment is chosen. Pick the element that models the main road surface (a road, floor, toposolid and so on). The kerb levels at the main road are then read from its top surface at each kerb return end, so crossfall or camber is picked up instead of the alignment profile level. Where the check misses the element the alignment level is used. <strong>Clear</strong> removes the element.</li>
+                <li><strong>Main kerb level offset</strong> — A fixed amount added to the main road level at the kerb returns, after any picked element. Negative values lower the kerbs. The dialog shows the resulting left and right kerb levels relative to the main alignment profile.</li>
+                <li><strong>Cut the junction out of the main road</strong> — Removes the parts of the main road's geometry that fall inside the junction (for example the kerb and footway on the side road's side), so the junction surface can take their place. The cut starts on the main road kerb line at the ends of the two kerb returns and runs straight out, square to the main road, to a line across the side road, so kerbs and footways finish in a straight edge. Every part of the road is cut where it overlaps. Works on roads made by TopoAlign along the main alignment; other elements are left alone.</li>
+                <li><strong>Trim or extend the side road to the junction</strong> — Cuts the side road's geometry back to a line square to the side road, at the kerb return start that is furthest from the main road, where the junction begins, so the side road ends in a straight edge. A direct shape that stops short of that line is first extended straight on from its end face; a family part that stops short is reported, and making the road again from the trimmed alignment extends it. Works on roads made by TopoAlign along the side alignment.</li>
+                <li><strong>Voids or changed geometry</strong> — Road parts made as families (tick <strong>Make each part a family</strong> in Sweep Along Alignment when making an assembly) get a void extrusion added inside each part's family, and the family is reloaded, so the road is cut without its geometry being changed. Open a part in the Family Editor to move or edit the void. Road parts are made of free-form solids that a void can't be linked to, so each part is cut directly and a copy of the original family is kept in the project; Remove T-Junction (or running the command again) puts that copy back. Parts made as direct shapes can't hold a void, so their geometry is changed instead and can only be put back by making the road again. <strong>Remove T-Junction</strong> (select the junction surface or the side road alignment) takes the voids out of the families, deletes the junction surface and the kerb return alignments in one go; the side road alignment keeps its trimmed length.</li>
+                <li><strong>Create road surface at the junction</strong> — Also makes the road surface where the roads meet as a separate piece of geometry (a thin solid in Roads, Hardscape or Generic Models). Its top follows the side road's elevation at the side road end, the main road's elevation along the main road kerb, and changes evenly round the kerb returns. <strong>Surface thickness</strong> is measured down from the top.</li>
+                <li><strong>Use the other end of the side road</strong> — When both ends of the side road reach the main road, the nearer end is used. Tick this to use the other.</li>
+            </ul>
+
+            <h2 id="notes">Notes</h2>
+            <ul>
+                <li>The main road is not changed.</li>
+                <li>The side road must end in a straight where it meets a straight of the main road. Its profile is kept, with the last grade extended or trimmed to the new length.</li>
+                <li>The kerb returns are new alignments named after the side road, for example "Side kerb L" and "Side kerb R" (left and right when travelling towards the main road). Each runs from the side road kerb to the main road kerb. Its profile runs from the side road's elevation at its start to the main road's elevation at its end, so the kerb returns line up vertically with the roads.</li>
+                <li>The command refuses when the kerb return would be longer than the side road or run off the end of the main road straight; use a smaller radius.</li>
+            </ul>
+      </article>
+        <nav class="pager" aria-label="Previous and next page"></nav>
+    </div>
+  </main>
+
+<footer><div class="wrap">TopoAlign • Documentation</div></footer>
+  <script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -221,11 +221,7 @@ internal partial class CreateAlignmentViewModel : BaseViewModel
             }
 
             _topography = topography;
-#if REVIT2024_OR_GREATER
-            var topographyId = topography.Id.Value;
-#else
-            var topographyId = topography.Id.IntegerValue;
-#endif
+            var topographyId = topography.Id.ToLong();
             TopoStatus = $"{topography.Category?.Name ?? "Topography"} (Id {topographyId})";
             ProfilePreview = string.Empty;
         }

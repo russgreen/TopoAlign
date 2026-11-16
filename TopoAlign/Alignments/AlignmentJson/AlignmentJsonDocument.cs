@@ -235,7 +235,8 @@ internal sealed class AlignmentJsonDocument
     /// keeps its PVI distances and its last grade is extended or trimmed to the new length. Returns the new plan length.
     /// Throws <see cref="InvalidOperationException"/> if the plan or profile can't be edited, and leaves the document unchanged.
     /// </summary>
-    public double SetPlan(IReadOnlyList<PlanSegment> segments, double spiralDeviation = 0.005)
+    public double SetPlan(IReadOnlyList<PlanSegment> segments, double spiralDeviation = 0.005,
+        Func<List<ProfileVertex>, double, List<ProfileVertex>>? fitProfile = null)
     {
         if (!CanEditPlan(out var reason))
         {
@@ -291,7 +292,20 @@ internal sealed class AlignmentJsonDocument
                      ?? throw new InvalidOperationException("The alignment has no horizontal geometry.");
 
         // work out the new profile before anything is written, so a profile that can't follow leaves the document as it was
-        var profile = ResizedProfile(length);
+        List<ProfileVertex>? profile;
+        if (fitProfile is not null && Curves(ProfileGeometry()).Count > 0 && CanEditProfile(out _))
+        {
+            profile = fitProfile(ReadProfile(), length);
+            var errors = ProfileEditing.Validate(profile, length);
+            if (errors.Count > 0)
+            {
+                throw new InvalidOperationException(errors[0]);
+            }
+        }
+        else
+        {
+            profile = ResizedProfile(length);
+        }
 
         holder["curves"] = nodes;
         if (profile is not null)
