@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using Nice3point.Revit.Extensions;
 using Serilog;
 using TopoAlign.Alignments;
 using TopoAlign.Alignments.Civil;
@@ -298,11 +299,11 @@ internal static class RoadBuilder
         var families = RoadFamilyBuilder.FindFamilies(document, alignment, AlignmentApi.GetInfo(alignment)?.Name);
         if (families.Count > 0)
         {
-            var familyIds = new HashSet<long>(families.Select(f => ElementIdValue(f.Id)));
+            var familyIds = new HashSet<long>(families.Select(f => f.Id.ToLong()));
             roads.AddRange(new FilteredElementCollector(document)
                 .OfClass(typeof(FamilyInstance))
                 .Cast<FamilyInstance>()
-                .Where(instance => instance.Symbol?.Family is { } family && familyIds.Contains(ElementIdValue(family.Id))));
+                .Where(instance => instance.Symbol?.Family is { } family && familyIds.Contains(family.Id.ToLong())));
         }
 
         return roads;
@@ -319,14 +320,5 @@ internal static class RoadBuilder
             .Select(shape => shape.Id));
         ids.AddRange(RoadFamilyBuilder.FindFamilies(document, alignment, alignmentName).Select(family => family.Id));
         return ids;
-    }
-
-    private static long ElementIdValue(ElementId id)
-    {
-#if REVIT2024_OR_GREATER
-        return id.Value;
-#else
-        return id.IntegerValue;
-#endif
     }
 }

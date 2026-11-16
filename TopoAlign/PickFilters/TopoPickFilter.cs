@@ -1,31 +1,20 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI.Selection;
+using Nice3point.Revit.Extensions;
 
 namespace TopoAlign;
 
 public class TopoPickFilter : ISelectionFilter
 {
-    public bool AllowElement(Element elem)
-    {
-        if (elem.Category is null)
-        {
-            return false;
-        }
-
 #if REVIT2024_OR_GREATER
-        if (elem.Category.Id.Value == (int)BuiltInCategory.OST_Toposolid)
-        {
-            return true;
-        }
+    private const BuiltInCategory TopoCategory = BuiltInCategory.OST_Toposolid;
 #else
-        if (elem.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Topography)
-        {
-            return true;
-        }
+    private const BuiltInCategory TopoCategory = BuiltInCategory.OST_Topography;
 #endif
 
-        return false;
-        // Return (elem.Category.Id.IntegerValue.Equals(CInt(BuiltInCategory.OST_Topography)))
+    public bool AllowElement(Element elem)
+    {
+        return elem.Category is not null && elem.Category.Id.IsCategory(TopoCategory);
     }
 
     public bool AllowReference(Reference reference, XYZ position)

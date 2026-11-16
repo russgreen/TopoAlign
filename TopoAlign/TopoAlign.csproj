@@ -5,7 +5,7 @@
 	  <Configurations>$(Configurations);Release R21;Release R22;Release R23;Release R24;Release R25;Release R26;Release R27</Configurations>
 	  <Description>Align topo surface to model elements</Description>
 	  <Copyright>Copyright © Russell Green</Copyright>
-	  <Version>3.5.1</Version>
+	  <Version>3.6.0</Version>
 	  <PlatformTarget>x64</PlatformTarget>
 	  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 	  <LangVersion>latest</LangVersion>
@@ -81,7 +81,14 @@
 	</PropertyGroup>
 	
 	<PropertyGroup>
-		<IsRepackable Condition="$(Configuration.Contains('Release'))">true</IsRepackable>
+		<IsRepackable Condition="$(Configuration.Contains('Release')) Or 
+					  ($(Configuration.Contains('Debug')) And (
+					  '$(RevitVersion)' == '2021' Or 
+					  '$(RevitVersion)' == '2022' Or 
+					  '$(RevitVersion)' == '2023' Or 
+					  '$(RevitVersion)' == '2024' Or 
+					  '$(RevitVersion)' == '2025' Or 
+					  '$(RevitVersion)' == '2026'))">true</IsRepackable>
 		<!--<RepackBinariesExcludes>Syncfusion*.dll</RepackBinariesExcludes>-->
 	</PropertyGroup>
 

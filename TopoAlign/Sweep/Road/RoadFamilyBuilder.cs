@@ -1,5 +1,6 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
+using Nice3point.Revit.Extensions;
 using Serilog;
 using System.IO;
 
@@ -351,10 +352,6 @@ internal static class RoadFamilyBuilder
 
     internal static string IdOf(Element element)
     {
-#if REVIT2024_OR_GREATER
-        return element.Id.Value.ToString();
-#else
-        return element.Id.IntegerValue.ToString();
-#endif
+        return element.Id.ToLong().ToString();
     }
 }

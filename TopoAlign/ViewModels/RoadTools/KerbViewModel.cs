@@ -258,7 +258,7 @@ internal partial class KerbViewModel : BaseViewModel
             return;
         }
 
-        var key = ElementIdValue(type.SymbolId);
+        var key = type.SymbolId.ToLong();
         if (!_profileCache.TryGetValue(key, out var cached))
         {
             var profile = SectionProfileReader.Read(App.RevitDocument, type.SymbolId, out var error);
@@ -291,15 +291,6 @@ internal partial class KerbViewModel : BaseViewModel
         var height = UnitUtils.ConvertFromInternalUnits(_profile.Height, unit);
         ProfileStatus = $"Profile {width:N2} wide by {height:N2} high ({SelectedDisplayUnit.Label}), on the " +
                         (FlipProfile ? "left" : "right") + " of the direction of the first edge.";
-    }
-
-    private static long ElementIdValue(ElementId id)
-    {
-#if REVIT2024_OR_GREATER
-        return id.Value;
-#else
-        return id.IntegerValue;
-#endif
     }
 
     // ---- creating -----------------------------------------------------------------------------------------------

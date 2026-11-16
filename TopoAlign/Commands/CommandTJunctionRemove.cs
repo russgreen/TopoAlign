@@ -33,7 +33,7 @@ public class CommandTJunctionRemove : IExternalCommand
 
         try
         {
-            var picked = uidoc.Selection.GetElementIds().Select(id => document.GetElement(id)).FirstOrDefault(IsJunctionPart);
+            var picked = uidoc.Selection.GetElementIds().Select(id => document.GetElement(id)).FirstOrDefault(JunctionPartFilter.IsJunctionPart);
             if (picked is null)
             {
                 var reference = uidoc.Selection.PickObject(ObjectType.Element, new JunctionPartFilter(), "Select the junction surface or the side road alignment");
@@ -135,21 +135,5 @@ public class CommandTJunctionRemove : IExternalCommand
             TaskDialog.Show("Remove T-Junction", ex.Message);
             return Result.Failed;
         }
-    }
-
-    private static bool IsJunctionPart(Element? element)
-    {
-        return element switch
-        {
-            DirectShape shape => shape.ApplicationId == TJunctionSurfaceBuilder.ApplicationId,
-            Element other => AlignmentApi.IsValid(other)
-        };
-    }
-
-    private sealed class JunctionPartFilter : ISelectionFilter
-    {
-        public bool AllowElement(Element elem) => IsJunctionPart(elem);
-
-        public bool AllowReference(Reference reference, XYZ position) => false;
     }
 }

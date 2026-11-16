@@ -1,6 +1,7 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Nice3point.Revit.Extensions;
 using Serilog;
 using TopoAlign.ViewModels;
 using TopoAlign.Views;
@@ -62,11 +63,7 @@ public class CommandCreateAlignment : IExternalCommand
                 return Result.Failed;
             }
 
-#if REVIT2024_OR_GREATER
-            var createdElementId = createdId.Value;
-#else
-            var createdElementId = createdId.IntegerValue;
-#endif
+            var createdElementId = createdId.ToLong();
             var summary = $"Alignment '{request.Name}' created (Id: {createdElementId}).";
             if (!string.IsNullOrEmpty(request.Notice))
             {
