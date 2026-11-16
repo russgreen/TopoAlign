@@ -118,22 +118,64 @@ public static class PointInPoly
 
 
     // New: explicit boundary check with tolerance-aware line test
+    /// <summary>
+    /// Distance (feet) within which a point counts as lying on a polygon edge.
+    /// </summary>
+    public const double BoundaryTolerance = 0.001d;
+
     public static bool IsPointOnPolygonBoundary(UVArray polygon, UV point)
+    {
+        return IsPointOnPolygonBoundary(polygon, point, BoundaryTolerance);
+    }
+
+    public static bool IsPointOnPolygonBoundary(UVArray polygon, UV point, double tolerance)
     {
         for (int i = 0, j = polygon.Size - 1; i < polygon.Size; j = i++)
         {
-            var a = polygon.Item(i);
-            var b = polygon.Item(j);
-
-            // vertex hit
-            if (a.IsAlmostEqualTo(point) || b.IsAlmostEqualTo(point))
-                return true;
-
-            // edge hit
-            if (point.IsOnLine(a, b))
+            if (DistanceToSegment(point, polygon.Item(i), polygon.Item(j)) <= tolerance)
                 return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Shortest distance from a point to the finite segment a-b (handles zero-length segments).
+    /// </summary>
+    public static double DistanceToSegment(UV p, UV a, UV b)
+    {
+        double dx = b.U - a.U;
+        double dy = b.V - a.V;
+        double len2 = dx * dx + dy * dy;
+        double t = 0d;
+        if (len2 > 0d)
+        {
+            t = ((p.U - a.U) * dx + (p.V - a.V) * dy) / len2;
+            t = Math.Max(0d, Math.Min(1d, t));
+        }
+        double cx = a.U + t * dx - p.U;
+        double cy = a.V + t * dy - p.V;
+        return Math.Sqrt(cx * cx + cy * cy);
+    }
+
+    /// <summary>
+    /// Even-odd containment: boundary of any loop counts as inside, otherwise the point is inside
+    /// when it falls within an odd number of loops (outer loop plus holes).
+    /// </summary>
+    public static bool LoopsContain(IList<UVArray> loops, UV point)
+    {
+        foreach (var loop in loops)
+        {
+            if (IsPointOnPolygonBoundary(loop, point))
+                return true;
+        }
+
+        bool inside = false;
+        foreach (var loop in loops)
+        {
+            if (PolygonContains(loop, point))
+                inside = !inside;
+        }
+        return inside;
     }
 
     public static bool PointInPolygon(UVArray polygon, UV point)
@@ -165,7 +207,7 @@ public static class PointInPoly
             }
 
             // Check if point is on edge of polygon
-            if (point.IsOnLine(polygon.Item(i), polygon.Item(j)))
+            if (DistanceToSegment(point, polygon.Item(i), polygon.Item(j)) <= BoundaryTolerance)
             {
                 return true;
             }

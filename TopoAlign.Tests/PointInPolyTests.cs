@@ -88,7 +88,6 @@ public class PointInPolyTests : TopoAlignTest
     }
 
     [Test]
-    [Skip("Known defect: a repeated vertex makes a zero-length edge, and UV.IsOnLine treats every point as on a zero-length line.")]
     public async Task PolygonContains_IgnoresRepeatedVertices()
     {
         var polygon = new UVArray(new List<UV> { new(0, 0), new(10, 0), new(10, 0), new(10, 10), new(0, 10) });
@@ -98,7 +97,6 @@ public class PointInPolyTests : TopoAlignTest
     }
 
     [Test]
-    [Skip("Known defect: UV.IsOnLine tests the infinite line through an edge, so a point collinear with an edge but outside the polygon counts as on the boundary.")]
     public async Task PolygonContains_PointInLineWithAnEdgeButOutside_IsFalse()
     {
         await Assert.That(PointInPoly.PolygonContains(Square(), new UV(20, 0))).IsFalse();

@@ -534,34 +534,36 @@ internal partial class AlignTopoViewModel : BaseViewModel
         };
         var geometryElement = element.get_Geometry(opt);
 
-        var polygons = new List<List<XYZ>>();
-        polygons = GetPolygonsFromGeometryElement(geometryElement);
-
-        // Build separate UV loops for each polygon loop (no flattening across loops)
-        var uvLoops = GetUvLoops(polygons);
-
-        // Get topo points withing bounding box of element
-        Autodesk.Revit.DB.View? v = null;
-        var bb = element.get_BoundingBox(v);
-
-        XYZ min = new();
-        XYZ max = new();
-
-#if REVIT2024_OR_GREATER
-        if (_topoSolid != null)
+        // One entry per bottom face; each holds that face's loops (outer + holes), oriented and closed.
+        var faceLoops = FootprintBuilder.GetFaceLoops(geometryElement);
+        if (faceLoops.Count == 0)
         {
-            min = new XYZ(bb.Min.X - 1d, bb.Min.Y - 1d, _topoSolid.get_BoundingBox(v).Min.Z - 1d);
-            max = new XYZ(bb.Max.X + 1d, bb.Max.Y + 1d, _topoSolid.get_BoundingBox(v).Max.Z + 2d);
+            return;
         }
-#else
-        if(_topoSurface != null)
-        {
-            min = new XYZ(bb.Min.X - 1d, bb.Min.Y - 1d, _topoSurface.get_BoundingBox(v).Min.Z - 1d);
-            max = new XYZ(bb.Max.X + 1d, bb.Max.Y + 1d, _topoSurface.get_BoundingBox(v).Max.Z + 2d);
-        }
-#endif
 
-        var outline = new Outline(min, max);
+        // Plan extents of the footprint, padded slightly, used as a cheap prefilter.
+        double minU = double.MaxValue, minV = double.MaxValue, maxU = double.MinValue, maxV = double.MinValue;
+        foreach (var loops in faceLoops)
+        {
+            foreach (var loop in loops)
+            {
+                for (int i = 0; i < loop.Size; i++)
+                {
+                    var uv = loop.Item(i);
+                    minU = Math.Min(minU, uv.U);
+                    minV = Math.Min(minV, uv.V);
+                    maxU = Math.Max(maxU, uv.U);
+                    maxV = Math.Max(maxV, uv.V);
+                }
+            }
+        }
+
+        const double pad = 0.01d;
+        minU -= pad;
+        minV -= pad;
+        maxU += pad;
+        maxV += pad;
+
         var topoPoints = new List<XYZ>();
         var topoPointsInBoundingBox = new List<XYZ>();
 
@@ -585,7 +587,7 @@ internal partial class AlignTopoViewModel : BaseViewModel
 
         foreach (XYZ pt in topoPoints)
         {
-            if (outline.Contains(pt, 0.000000001d))
+            if (pt.X >= minU && pt.X <= maxU && pt.Y >= minV && pt.Y <= maxV)
             {
                 topoPointsInBoundingBox.Add(pt);
             }
@@ -600,43 +602,16 @@ internal partial class AlignTopoViewModel : BaseViewModel
             {
                 pf.ThrowIfCancelled();
 
-                //Debug.WriteLine($"point to check : {pt}");
-
                 var pUV = PointsUtils.Flatten(pt);
 
-                //Debug.WriteLine($"point as uv : {pUV}");
-
-                // boundary first: if on any loop boundary, it's considered inside
-                bool onBoundary = false;
-                foreach (var loop in uvLoops)
-                {
-                    if (PointInPoly.IsPointOnPolygonBoundary(loop, pUV))
-                    {
-                        onBoundary = true;
-                        break;
-                    }
-                }
-
+                // Inside if within ANY bottom face (boundary inclusive, even-odd within a face for holes)
                 bool inside = false;
-                if (onBoundary)
+                foreach (var loops in faceLoops)
                 {
-                    inside = true;
-                }
-                else
-                {
-                    // even-odd across all loops
-                    foreach (var loop in uvLoops)
+                    if (PointInPoly.LoopsContain(loops, pUV))
                     {
-                        //for (global::System.Int32 i = 0; i < loop.Size; i++)
-                        //{
-                        //    var uv = loop.Item(i);
-                        //    Debug.WriteLine($"Boundary loop point : {uv}");
-                        //}
-
-                        if (PointInPoly.PolygonContains(loop, pUV))
-                        {
-                            inside = !inside;
-                        }
+                        inside = true;
+                        break;
                     }
                 }
 
