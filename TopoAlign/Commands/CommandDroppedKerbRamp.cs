@@ -59,7 +59,9 @@ public class CommandDroppedKerbRamp : IExternalCommand
 
             var summary = $"Created a dropped kerb with a ramp {FormatLength(result.RampLength)} long and flares " +
                           $"{FormatLength(result.StartFlareLength)} and {FormatLength(result.EndFlareLength)} long.{Environment.NewLine}" +
-                          $"Removed {result.PointsRemoved} existing toposolid points and added {result.PointsAdded}.";
+                          (result.FamilyName is null
+                              ? $"Removed {result.PointsRemoved} existing toposolid points and added {result.PointsAdded}."
+                              : $"Cut the ramp into {result.SolidsCut} solid(s) of the family '{result.FamilyName}'.");
             foreach (var warning in result.Warnings)
             {
                 summary += $"{Environment.NewLine}{Environment.NewLine}{warning}";

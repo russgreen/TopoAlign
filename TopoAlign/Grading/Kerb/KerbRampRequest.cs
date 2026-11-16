@@ -9,9 +9,9 @@ namespace TopoAlign.Grading.Kerb;
 internal sealed class KerbRampRequest
 {
     public KerbRampRequest(
-        Toposolid kerbToposolid,
+        Element kerbElement,
         XYZ kerbAnchor,
-        Toposolid targetToposolid,
+        Element targetElement,
         XYZ targetAnchor,
         XYZ centre,
         double width,
@@ -20,9 +20,9 @@ internal sealed class KerbRampRequest
         double maxRampLength,
         double levelOffset)
     {
-        KerbToposolid = kerbToposolid;
+        KerbElement = kerbElement;
         KerbAnchor = kerbAnchor;
-        TargetToposolid = targetToposolid;
+        TargetElement = targetElement;
         TargetAnchor = targetAnchor;
         Centre = centre;
         Width = width;
@@ -32,14 +32,14 @@ internal sealed class KerbRampRequest
         LevelOffset = levelOffset;
     }
 
-    /// <summary>The toposolid the ramp is cut into.</summary>
-    public Toposolid KerbToposolid { get; }
+    /// <summary>The toposolid or road part the ramp is cut into.</summary>
+    public Element KerbElement { get; }
 
     /// <summary>A point on the edge picked as the kerb.</summary>
     public XYZ KerbAnchor { get; }
 
-    /// <summary>The toposolid whose edge sets the level the ramp drops to.</summary>
-    public Toposolid TargetToposolid { get; }
+    /// <summary>The toposolid or road part whose edge sets the level the ramp drops to.</summary>
+    public Element TargetElement { get; }
 
     /// <summary>A point on the edge picked as the target.</summary>
     public XYZ TargetAnchor { get; }

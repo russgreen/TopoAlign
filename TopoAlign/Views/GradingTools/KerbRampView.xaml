@@ -53,15 +53,15 @@
         </Grid.Resources>
 
         <Button Grid.Row="0" Grid.ColumnSpan="2" Content="Pick kerb edge" Command="{Binding PickKerbCommand}"
-                ToolTip="Pick an edge of the footway toposolid along the kerb."/>
+                ToolTip="Pick an edge of the footway toposolid or road part along the kerb."/>
         <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding KerbStatus}" TextWrapping="Wrap"/>
         
          <Button Grid.Row="2" Grid.ColumnSpan="2" Content="Pick target edge" Command="{Binding PickTargetCommand}"
-                ToolTip="Pick the edge whose level the dropped kerb should come down to, usually the edge of the road toposolid."/>
+                ToolTip="Pick the edge whose level the dropped kerb should come down to, usually the edge of the road toposolid or road part."/>
         <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Text="{Binding TargetStatus}" TextWrapping="Wrap"/>       
 
         <Button Grid.Row="4" Grid.ColumnSpan="2" Content="Pick centre of drop" Command="{Binding PickCentreCommand}"
-                ToolTip="Click where the middle of the dropped kerb should be, along the kerb edge. In a 3D view, click on the footway toposolid."/>
+                ToolTip="Click where the middle of the dropped kerb should be, along the kerb edge. In a 3D view, click on the footway toposolid or road part."/>
         <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Text="{Binding CentreStatus}" TextWrapping="Wrap"/>
 
         <TextBlock Grid.Row="6" Text="Units used"/>

@@ -586,12 +586,6 @@ internal static class JunctionVoids
 
     private static bool CutSolidDirectly(Document familyDocument, FreeFormElement form, IReadOnlyList<XYZ> points, double height)
     {
-        var solids = form.get_Geometry(new Options())?.OfType<Solid>().Where(s => s.Volume > 1e-9).ToList() ?? new List<Solid>();
-        if (solids.Count == 0)
-        {
-            return false;
-        }
-
         var loop = new CurveLoop();
         for (var i = 0; i < points.Count; i++)
         {
@@ -599,45 +593,7 @@ internal static class JunctionVoids
         }
 
         var tool = GeometryCreationUtilities.CreateExtrusionGeometry(new List<CurveLoop> { loop }, XYZ.BasisZ, height);
-        var pieces = new List<Solid>();
-        foreach (var solid in solids)
-        {
-            // a tool face that lies exactly on a solid's edge or face can fail, so the tool is nudged a little and tried again
-            Solid? result = null;
-            Exception? failure = null;
-            foreach (var nudge in new[] { new XYZ(0, 0, 0), new XYZ(0.0007, 0.0011, 0), new XYZ(-0.0013, 0.0005, 0), new XYZ(0.0021, -0.0017, 0) })
-            {
-                try
-                {
-                    var moved = nudge.IsZeroLength() ? tool : SolidUtils.CreateTransformed(tool, Transform.CreateTranslation(nudge));
-                    result = BooleanOperationsUtils.ExecuteBooleanOperation(solid, moved, BooleanOperationsType.Difference);
-                    failure = null;
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    failure = ex;
-                }
-            }
-
-            if (failure is not null)
-            {
-                throw failure;
-            }
-
-            if (result is { Volume: > 1e-9 })
-            {
-                pieces.Add(result);
-            }
-        }
-
-        familyDocument.Delete(form.Id);
-        foreach (var piece in pieces)
-        {
-            FreeFormElement.Create(familyDocument, piece);
-        }
-
-        return true;
+        return FamilySolidCutter.Cut(familyDocument, form, tool);
     }
 
     /// <summary>

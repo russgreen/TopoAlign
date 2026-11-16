@@ -27,14 +27,14 @@ internal static class KerbRampRevit
             throw new ArgumentNullException(nameof(request));
         }
 
-        var toposolid = request.KerbToposolid;
-        var surface = TopographyReader.Read(toposolid);
+        var kerbElement = request.KerbElement;
+        var surface = TopographyReader.Read(kerbElement);
 
         var input = new KerbRampInput(
-            TopoEdgeAlignerRevit.ReadOutline(toposolid),
+            TopoEdgeAlignerRevit.ReadOutline(kerbElement),
             request.KerbAnchor.X,
             request.KerbAnchor.Y,
-            TopoEdgeAlignerRevit.ReadOutline(request.TargetToposolid),
+            TopoEdgeAlignerRevit.ReadOutline(request.TargetElement),
             request.TargetAnchor.X,
             request.TargetAnchor.Y,
             surface,
@@ -55,6 +55,16 @@ internal static class KerbRampRevit
             EndFlareLength = ramp.EndFlareLength
         };
         result.Warnings.AddRange(ramp.Warnings);
+
+        if (kerbElement is FamilyInstance part)
+        {
+            // a road part that is still a family: the ramp is cut out of the family's geometry
+            result.FamilyName = part.Symbol?.Family?.Name;
+            KerbRampFamilyEditor.Apply(document, part, ramp, result);
+            return result;
+        }
+
+        var toposolid = (Toposolid)kerbElement;
 
         // everything in the surface that isn't being replaced goes back in
         var kept = new List<XYZ>();

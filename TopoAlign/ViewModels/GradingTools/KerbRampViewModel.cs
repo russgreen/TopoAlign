@@ -60,9 +60,9 @@ internal partial class KerbRampViewModel : BaseViewModel
 
     private readonly Services.Settings _settings = new();
     private readonly ForgeTypeId _documentUnit;
-    private Toposolid? _kerbToposolid;
+    private Element? _kerbElement;
     private XYZ? _kerbAnchor;
-    private Toposolid? _targetToposolid;
+    private Element? _targetElement;
     private XYZ? _targetAnchor;
     private XYZ? _centre;
 
@@ -86,8 +86,8 @@ internal partial class KerbRampViewModel : BaseViewModel
     }
 
     private bool CanCreate() =>
-        _kerbToposolid is not null && _kerbAnchor is not null
-        && _targetToposolid is not null && _targetAnchor is not null
+        _kerbElement is not null && _kerbAnchor is not null
+        && _targetElement is not null && _targetAnchor is not null
         && _centre is not null
         && Width > 0 && RampGradient > 0 && FlareGradient > 0 && MaxRampLength > 0;
 
@@ -122,8 +122,8 @@ internal partial class KerbRampViewModel : BaseViewModel
             switch (kind)
             {
                 case KerbPickKind.Kerb:
-                    (_kerbToposolid, _kerbAnchor) = PickToposolidEdge("Select the edge of the footway toposolid at the kerb");
-                    KerbStatus = DescribeToposolid(_kerbToposolid);
+                    (_kerbElement, _kerbAnchor) = PickEdge("Select the edge of the footway toposolid or road part at the kerb");
+                    KerbStatus = DescribeElement(_kerbElement);
                     break;
 
                 case KerbPickKind.Centre:
@@ -132,8 +132,8 @@ internal partial class KerbRampViewModel : BaseViewModel
                     break;
 
                 case KerbPickKind.Target:
-                    (_targetToposolid, _targetAnchor) = PickToposolidEdge("Select the edge to drop down to, usually the edge of the road toposolid");
-                    TargetStatus = DescribeToposolid(_targetToposolid);
+                    (_targetElement, _targetAnchor) = PickEdge("Select the edge to drop down to, usually the edge of the road toposolid or road part");
+                    TargetStatus = DescribeElement(_targetElement);
                     break;
             }
         }
@@ -163,23 +163,23 @@ internal partial class KerbRampViewModel : BaseViewModel
             return uidoc.Selection.PickPoint("Click the centre of the dropped kerb, close to the kerb edge");
         }
 
-        var reference = uidoc.Selection.PickObject(ObjectType.PointOnElement, new TopoEdgePickFilter(), "Click on the footway toposolid at the centre of the dropped kerb, close to the kerb edge");
+        var reference = uidoc.Selection.PickObject(ObjectType.PointOnElement, new KerbEdgePickFilter(), "Click on the footway toposolid at the centre of the dropped kerb, close to the kerb edge");
         return reference.GlobalPoint ?? throw new InvalidOperationException("No point could be read from that pick.");
     }
 
-    private static string DescribeToposolid(Toposolid? toposolid) =>
-        toposolid is null || string.IsNullOrWhiteSpace(toposolid.Name) ? "Edge picked." : $"Edge of {toposolid.Name}.";
+    private static string DescribeElement(Element? element) =>
+        element is null || string.IsNullOrWhiteSpace(element.Name) ? "Edge picked." : $"Edge of {element.Name}.";
 
-    /// <summary>Asks for an edge of a toposolid, and returns the toposolid with a point on the edge.</summary>
-    private static (Toposolid Toposolid, XYZ Anchor) PickToposolidEdge(string prompt)
+    /// <summary>Asks for an edge of a toposolid or road part, and returns the element with a point on the edge.</summary>
+    private static (Element Element, XYZ Anchor) PickEdge(string prompt)
     {
         var uidoc = App.CachedUiApp.ActiveUIDocument;
-        var reference = uidoc.Selection.PickObject(ObjectType.Edge, new TopoEdgePickFilter(), prompt);
+        var reference = uidoc.Selection.PickObject(ObjectType.Edge, new KerbEdgePickFilter(), prompt);
 
         var element = App.RevitDocument.GetElement(reference.ElementId);
-        if (element is not Toposolid toposolid)
+        if (element is not (Toposolid or FamilyInstance))
         {
-            throw new InvalidOperationException("The edge is not on a toposolid.");
+            throw new InvalidOperationException("The edge is not on a toposolid or a road part.");
         }
 
         var edge = element.GetGeometryObjectFromReference(reference) as Edge
@@ -192,7 +192,9 @@ internal partial class KerbRampViewModel : BaseViewModel
             throw new InvalidOperationException("That edge is vertical. Pick an edge along the top of the toposolid.");
         }
 
-        return (toposolid, curve.Evaluate(0.5, true));
+        // an edge of a family instance is read in the family's own coordinates, so the point clicked on it is used for the anchor
+        var anchor = element is FamilyInstance && reference.GlobalPoint is { } clicked ? clicked : curve.Evaluate(0.5, true);
+        return (element, anchor);
     }
 
     // ---- creating -----------------------------------------------------------------------------------------------
@@ -200,7 +202,7 @@ internal partial class KerbRampViewModel : BaseViewModel
     [RelayCommand(CanExecute = nameof(CanCreate))]
     private void Create()
     {
-        if (_kerbToposolid is null || _kerbAnchor is null || _targetToposolid is null || _targetAnchor is null || _centre is null)
+        if (_kerbElement is null || _kerbAnchor is null || _targetElement is null || _targetAnchor is null || _centre is null)
         {
             return;
         }
@@ -212,9 +214,9 @@ internal partial class KerbRampViewModel : BaseViewModel
             // The surface is edited by the command once this dialog has closed, so the transaction
             // runs inside the Revit API context rather than from a WPF button handler.
             Request = new KerbRampRequest(
-                _kerbToposolid,
+                _kerbElement,
                 _kerbAnchor,
-                _targetToposolid,
+                _targetElement,
                 _targetAnchor,
                 _centre,
                 ToInternalUnits(Width),
