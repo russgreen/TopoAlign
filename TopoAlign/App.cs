@@ -137,6 +137,17 @@ class App : IExternalApplication
         pbPointsAtIntersection.LargeImage = PngImageSource("TopoAlign.Images.TopoAlignPlane32.png");
         pbPointsAtIntersection.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandPointsAtIntersection.html"));
 
+#if REVIT2024_OR_GREATER
+        PushButton pbGradeToSurface = (PushButton)panelTopo.AddItem(new PushButtonData(
+    nameof(Commands.CommandGradeToSurface),
+    $"Grade to{Environment.NewLine}Surface",
+    Assembly.GetExecutingAssembly().Location,
+    $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandGradeToSurface)}"));
+        pbGradeToSurface.ToolTip = "Grade a slope from an edge or model line down or up to the toposolid, replacing the toposolid points in between.";
+        pbGradeToSurface.LargeImage = PngImageSource("TopoAlign.Images.GradeToSurface32.png");
+        pbGradeToSurface.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandGradeToSurface.html"));
+#endif
+
         PushButton pbResetRegion = (PushButton)panelTopo.AddItem(new PushButtonData(
             nameof(Commands.CommandResetTopoRegion),
             $"Reset{Environment.NewLine}region",
@@ -145,6 +156,8 @@ class App : IExternalApplication
         pbResetRegion.ToolTip = "Copy points from existing topo surface to new topo surface within a region to undo changes made.";
         pbResetRegion.LargeImage = PngImageSource("TopoAlign.Images.Reset32.png");
         pbResetRegion.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandResetTopoRegion.html"));
+
+
 
 
         var panelAlignment = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
@@ -168,24 +181,6 @@ class App : IExternalApplication
         pbEditAlignment.ToolTip = "Rename an alignment, change its start station, reverse its direction, or move its points and edit its curve radii and spiral lengths.";
         pbEditAlignment.LargeImage = PngImageSource("TopoAlign.Images.EditAlignment32.png");
         pbEditAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandEditAlignment.html"));
-
-        PushButton pbTJunction = (PushButton)panelAlignment.AddItem(new PushButtonData(
-            nameof(Commands.CommandTJunction),
-            $"T-Junction",
-            Assembly.GetExecutingAssembly().Location,
-            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandTJunction)}"));
-        pbTJunction.ToolTip = "Join a side road alignment to a main road alignment with kerb return alignments of a given radius.";
-        pbTJunction.LargeImage = PngImageSource("TopoAlign.Images.TJunction32.png");
-        pbTJunction.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandTJunction.html"));
-
-        PushButton pbTJunctionRemove = (PushButton)panelAlignment.AddItem(new PushButtonData(
-            nameof(Commands.CommandTJunctionRemove),
-            $"Remove{Environment.NewLine}T-Junction",
-            Assembly.GetExecutingAssembly().Location,
-            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandTJunctionRemove)}"));
-        pbTJunctionRemove.ToolTip = "Remove a T-junction: its road surface, the voids that cut the roads (putting the cut parts back) and its kerb return alignments.";
-        pbTJunctionRemove.LargeImage = PngImageSource("TopoAlign.Images.TJunctionRemove32.png");
-        pbTJunctionRemove.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandTJunction.html"));
 
         PushButton pbEditProfile = (PushButton)panelAlignment.AddItem(new PushButtonData(
             nameof(Commands.CommandEditProfile),
@@ -214,7 +209,30 @@ class App : IExternalApplication
         pbSweepAlignment.LargeImage = PngImageSource("TopoAlign.Images.SweepAlongAlignment32.png");
         pbSweepAlignment.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepAlignment.html"));
 
-        PushButton pbKerb = (PushButton)panelAlignment.AddItem(new PushButtonData(
+        var panelModelling = CachedUiCtrApp.CreateRibbonPanel(_tabName, Guid.NewGuid().ToString());
+        panelModelling.Name = "Modelling";
+        panelModelling.Title = "Modelling";
+
+        PushButton pbTJunction = (PushButton)panelModelling.AddItem(new PushButtonData(
+    nameof(Commands.CommandTJunction),
+    $"T-Junction",
+    Assembly.GetExecutingAssembly().Location,
+    $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandTJunction)}"));
+        pbTJunction.ToolTip = "Join a side road alignment to a main road alignment with kerb return alignments of a given radius.";
+        pbTJunction.LargeImage = PngImageSource("TopoAlign.Images.TJunction32.png");
+        pbTJunction.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandTJunction.html"));
+
+        PushButton pbTJunctionRemove = (PushButton)panelModelling.AddItem(new PushButtonData(
+            nameof(Commands.CommandTJunctionRemove),
+            $"Remove{Environment.NewLine}T-Junction",
+            Assembly.GetExecutingAssembly().Location,
+            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandTJunctionRemove)}"));
+        pbTJunctionRemove.ToolTip = "Remove a T-junction: its road surface, the voids that cut the roads (putting the cut parts back) and its kerb return alignments.";
+        pbTJunctionRemove.LargeImage = PngImageSource("TopoAlign.Images.TJunctionRemove32.png");
+        pbTJunctionRemove.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandTJunction.html"));
+
+
+        PushButton pbKerb = (PushButton)panelModelling.AddItem(new PushButtonData(
             nameof(Commands.CommandKerb),
             $"Sweep{Environment.NewLine}Kerb",
             Assembly.GetExecutingAssembly().Location,
@@ -224,7 +242,7 @@ class App : IExternalApplication
         pbKerb.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandKerb.html"));
 
 #if REVIT2024_OR_GREATER
-        PushButton pbSweepToToposolid = (PushButton)panelAlignment.AddItem(new PushButtonData(
+        PushButton pbSweepToToposolid = (PushButton)panelModelling.AddItem(new PushButtonData(
             nameof(Commands.CommandSweepToToposolid),
             $"Sweep to{Environment.NewLine}Toposolid",
             Assembly.GetExecutingAssembly().Location,
@@ -233,16 +251,7 @@ class App : IExternalApplication
         pbSweepToToposolid.LargeImage = PngImageSource("TopoAlign.Images.SweepToToposolid32.png");
         pbSweepToToposolid.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandSweepToToposolid.html"));
 
-        PushButton pbGradeToSurface = (PushButton)panelAlignment.AddItem(new PushButtonData(
-            nameof(Commands.CommandGradeToSurface),
-            $"Grade to{Environment.NewLine}Surface",
-            Assembly.GetExecutingAssembly().Location,
-            $"{nameof(TopoAlign)}.{nameof(Commands)}.{nameof(Commands.CommandGradeToSurface)}"));
-        pbGradeToSurface.ToolTip = "Grade a slope from an edge or model line down or up to the toposolid, replacing the toposolid points in between.";
-        pbGradeToSurface.LargeImage = PngImageSource("TopoAlign.Images.GradeToSurface32.png");
-        pbGradeToSurface.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, @"https://russgreen.github.io/TopoAlign/Commands/CommandGradeToSurface.html"));
-
-        PushButton pbDroppedKerbRamp = (PushButton)panelAlignment.AddItem(new PushButtonData(
+        PushButton pbDroppedKerbRamp = (PushButton)panelModelling.AddItem(new PushButtonData(
             nameof(Commands.CommandDroppedKerbRamp),
             $"Dropped{Environment.NewLine}Kerb Ramp",
             Assembly.GetExecutingAssembly().Location,
