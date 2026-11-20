@@ -21,7 +21,17 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SourceIsModelLines))]
+    [NotifyPropertyChangedFor(nameof(PickSideEnabled))]
+    [NotifyCanExecuteChangedFor(nameof(GradeCommand))]
     private bool _sourceIsEdges = true;
+
+    /// <summary>Grade round the whole outline of one picked element, always on its outside.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SourceIsModelLines))]
+    [NotifyPropertyChangedFor(nameof(PickSideEnabled))]
+    [NotifyPropertyChangedFor(nameof(PickLineText))]
+    [NotifyCanExecuteChangedFor(nameof(GradeCommand))]
+    private bool _sourceIsPerimeter;
 
     [ObservableProperty]
     private string _lineStatus = "No line picked.";
@@ -62,7 +72,12 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
     [ObservableProperty]
     private bool _addEdgePoints = true;
 
-    public bool SourceIsModelLines => !SourceIsEdges;
+    public bool SourceIsModelLines => !SourceIsEdges && !SourceIsPerimeter;
+
+    /// <summary>The side is only picked for lines; round an element it is always the outside.</summary>
+    public bool PickSideEnabled => !SourceIsPerimeter;
+
+    public string PickLineText => SourceIsPerimeter ? "Pick element" : "Pick line";
 
     public string WindowTitle { get; }
 
@@ -106,7 +121,7 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
     }
 
     private bool CanGrade() =>
-        _curves is { Count: > 0 } && _sidePoint is not null && _toposolid is not null
+        _curves is { Count: > 0 } && (_sidePoint is not null || SourceIsPerimeter) && _toposolid is not null
         && SlopeValue > 0 && MaxWidth > 0 && Interval > 0;
 
     // ---- picking ------------------------------------------------------------------------------------------------
@@ -186,7 +201,20 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
         var uidoc = App.CachedUiApp.ActiveUIDocument;
         var curves = new List<Curve>();
 
-        if (SourceIsEdges)
+        if (SourceIsPerimeter)
+        {
+            var reference = uidoc.Selection.PickObject(ObjectType.Element, new ElemPickFilter(), "Select the element to grade around");
+            var element = App.RevitDocument.GetElement(reference);
+            var loop = Geometry.ElementPerimeter.GetOuterLoop(element);
+            curves.AddRange(loop);
+            if (curves.Count == 0)
+            {
+                _curves = null;
+                LineStatus = "The element has no top face to grade around.";
+                return;
+            }
+        }
+        else if (SourceIsEdges)
         {
             foreach (var reference in uidoc.Selection.PickObjects(ObjectType.Edge, "Select the edge(s) to grade from"))
             {
@@ -243,7 +271,7 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
     [RelayCommand(CanExecute = nameof(CanGrade))]
     private void Grade()
     {
-        if (_curves is null || _sidePoint is null || _toposolid is null)
+        if (_curves is null || (_sidePoint is null && !SourceIsPerimeter) || _toposolid is null)
         {
             return;
         }
@@ -257,13 +285,14 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
             Request = new GradeToSurfaceRequest(
                 _toposolid,
                 _curves,
-                _sidePoint,
+                SourceIsPerimeter ? null : _sidePoint,
                 SelectedSlopeMode.Mode,
                 (double)SlopeValue,
                 ToInternalUnits(MaxWidth),
                 ToInternalUnits(VerticalOffset),
                 ToInternalUnits(Interval),
-                AddEdgePoints);
+                AddEdgePoints,
+                SourceIsPerimeter);
 
             OnClosingRequest();
         }
@@ -296,7 +325,8 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
     {
         _settings.LoadSettings();
 
-        SourceIsEdges = _settings.GradeSource != "ModelLines";
+        SourceIsPerimeter = _settings.GradeSource == "Perimeter";
+        SourceIsEdges = _settings.GradeSource != "ModelLines" && !SourceIsPerimeter;
         SelectedSlopeMode = SlopeModes.FirstOrDefault(x => x.Mode.ToString() == _settings.GradeSlopeMode) ?? SlopeModes[0];
         SlopeValue = _settings.GradeSlopeValue;
         MaxWidth = FromInternalUnits(_settings.GradeMaxWidth);
@@ -308,7 +338,7 @@ internal partial class GradeToSurfaceViewModel : BaseViewModel
     private void SaveSettings()
     {
         _settings.LoadSettings();
-        _settings.GradeSource = SourceIsEdges ? "Edges" : "ModelLines";
+        _settings.GradeSource = SourceIsPerimeter ? "Perimeter" : SourceIsEdges ? "Edges" : "ModelLines";
         _settings.GradeSlopeMode = SelectedSlopeMode.Mode.ToString();
         _settings.GradeSlopeValue = SlopeValue;
         _settings.GradeMaxWidth = Convert.ToDecimal(ToInternalUnits(MaxWidth));
