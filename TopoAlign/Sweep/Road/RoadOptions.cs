@@ -27,6 +27,9 @@ internal sealed class RoadOptions
     /// <summary>The toposolid type to use when <see cref="Output"/> is <see cref="RoadOutput.Toposolid"/>.</summary>
     public ElementId ToposolidTypeId { get; set; } = ElementId.InvalidElementId;
 
+    /// <summary>Add points along the bottom of the road to the toposolid so its surface follows the underside of the road (Revit 2024 and later).</summary>
+    public bool ShapeTopoToBase { get; set; }
+
     /// <summary>The level to host the toposolid on when <see cref="Output"/> is <see cref="RoadOutput.Toposolid"/>.</summary>
     public ElementId LevelId { get; set; } = ElementId.InvalidElementId;
 }

@@ -15,6 +15,9 @@ internal sealed class AssemblyResult
     /// <summary>Parts that could not be built, with the reason.</summary>
     public List<string> SkippedParts { get; } = new();
 
+    /// <summary>What shaping the topo to the base of the road did; empty when it was not asked for.</summary>
+    public string BaseShapeNotice { get; set; } = string.Empty;
+
     /// <summary>Something the user should know, for example a part that fell back from smooth surfaces.</summary>
     public string Notice { get; set; } = string.Empty;
 
