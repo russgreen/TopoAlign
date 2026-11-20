@@ -40,6 +40,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.Resources>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
@@ -173,9 +174,14 @@
         <TextBlock Grid.Row="18" Grid.ColumnSpan="2" Text="{Binding GradeTopoStatus}" TextWrapping="Wrap"
                    Visibility="{Binding ShowGradeTopo, Converter={StaticResource BoolToVisibility}}"/>
 
-        <TextBlock Grid.Row="19" Grid.ColumnSpan="2" Text="{Binding ExistingRoadNote}" TextWrapping="Wrap"/>
+        <CheckBox Grid.Row="19" Grid.ColumnSpan="2" Content="Shape the topo to the base of the road"
+                  IsChecked="{Binding ShapeTopoToBase}"
+                  Visibility="{Binding ShowShapeTopo, Converter={StaticResource BoolToVisibility}}"
+                  ToolTip="Adds points along the bottom of the road elements, at every section, to the toposolid so its surface follows the underside of the road. For an assembly the toposolids picked for grading are shaped, otherwise every toposolid the road touches."/>
 
-        <Button Grid.Row="20" Grid.ColumnSpan="2" Content="{Binding CreateButtonText}" IsDefault="True" Height="30"
+        <TextBlock Grid.Row="20" Grid.ColumnSpan="2" Text="{Binding ExistingRoadNote}" TextWrapping="Wrap"/>
+
+        <Button Grid.Row="21" Grid.ColumnSpan="2" Content="{Binding CreateButtonText}" IsDefault="True" Height="30"
                 Command="{Binding CreateCommand}"/>
     </Grid>
 </Window>

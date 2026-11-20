@@ -172,6 +172,12 @@ internal static class AssemblyBuilder
             }
         }
 
+        if (options.ShapeTopoToBase)
+        {
+            progress?.SetIndeterminate("Shaping the toposolid to the base of the road...");
+            result.BaseShapeNotice = RoadBasePoints.Apply(document, path, stations, placedParts, options, topographies);
+        }
+
         result.Notice = string.Join(" ", notices);
         if (result.SkippedSpans > 0)
         {

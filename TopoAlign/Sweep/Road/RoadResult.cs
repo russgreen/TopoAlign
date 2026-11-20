@@ -24,6 +24,9 @@ internal sealed class RoadResult
     /// <summary>True when an earlier road for the same alignment was removed first.</summary>
     public bool ReplacedPrevious { get; set; }
 
+    /// <summary>What shaping the topo to the base of the road did; empty when it was not asked for.</summary>
+    public string BaseShapeNotice { get; set; } = string.Empty;
+
     /// <summary>The toposolid, when the road was only used to make one. No road is added to the model then.</summary>
     public ElementId ToposolidId { get; set; } = ElementId.InvalidElementId;
 
