@@ -26,6 +26,9 @@ internal sealed class GradeStation
     /// </summary>
     public double PerpendicularFactor { get; }
 
+    /// <summary>True for the second and later rays fanned out of the same corner, which start from the same edge point as the one before.</summary>
+    public bool SharesEdgeWithPrevious { get; set; }
+
     public bool Hit { get; set; }
 
     /// <summary>True when the slope's daylight point is left out because it would bunch up or cross its neighbours.</summary>

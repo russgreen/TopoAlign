@@ -61,15 +61,17 @@
 
         <TextBlock Grid.Row="0" Text="Grade from"/>
         <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
-            <RadioButton Content="Element edges" IsChecked="{Binding SourceIsEdges}"/>
+            <RadioButton Content="Edges" IsChecked="{Binding SourceIsEdges}"/>
             <RadioButton Content="Model lines" IsChecked="{Binding SourceIsModelLines, Mode=OneWay}"/>
+            <RadioButton Content="Element" IsChecked="{Binding SourceIsPerimeter}"
+                         ToolTip="Grade round the whole outline of one element, always on its outside, with rounded corners."/>
         </StackPanel>
 
-        <Button Grid.Row="1" Grid.ColumnSpan="2" Content="Pick line" Command="{Binding PickLineCommand}"
-                ToolTip="Pick the edges or model lines the slope starts from. They must join end to end."/>
+        <Button Grid.Row="1" Grid.ColumnSpan="2" Content="{Binding PickLineText}" Command="{Binding PickLineCommand}"
+                ToolTip="Pick the edges or model lines the slope starts from (they must join end to end), or the element to grade round."/>
         <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding LineStatus}" TextWrapping="Wrap"/>
 
-        <Button Grid.Row="3" Grid.ColumnSpan="2" Content="Pick side" Command="{Binding PickSideCommand}"
+        <Button Grid.Row="3" Grid.ColumnSpan="2" Content="Pick side" Command="{Binding PickSideCommand}" IsEnabled="{Binding PickSideEnabled}"
                 ToolTip="Click in a plan view on the side of the line the slope should run towards."/>
         <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Text="{Binding SideStatus}" TextWrapping="Wrap"/>
 

@@ -50,7 +50,8 @@ internal static class SlopeGrader
         double maxWidth,
         TriangleSurface surface,
         bool addEdgePoints,
-        Action<int, int>? onStation = null)
+        Action<int, int>? onStation = null,
+        bool perimeter = false)
     {
         if (path is null)
         {
@@ -85,22 +86,58 @@ internal static class SlopeGrader
         var result = new GradingResult();
 
         var normals = SegmentNormals(path, closed);
-        FlipTowards(normals, path, closed, sideX, sideY);
 
-        for (var i = 0; i < path.Count; i++)
+        // around the perimeter of something the slope always runs outwards; otherwise towards the picked side
+        var roundCorners = perimeter && closed;
+        double orientation = 0.0;
+        if (roundCorners)
         {
-            var station = CreateStation(path, normals, closed, i);
-            Trace(station, cutRiseOverRun, fillRiseOverRun, maxWidth, surface);
-            result.Stations.Add(station);
-            onStation?.Invoke(i + 1, path.Count);
+            orientation = SignedArea(path);
+            if (orientation > 0.0)
+            {
+                // anticlockwise: the left of travel is the inside
+                FlipAll(normals);
+            }
+        }
+        else
+        {
+            FlipTowards(normals, path, closed, sideX, sideY);
         }
 
-        var count = path.Count;
-        var segments = closed ? count : count - 1;
-        for (var i = 0; i < segments; i++)
+        // the station index each path point's first station sits at, so the corridor can join neighbouring points
+        var firstStation = new int[path.Count];
+        for (var i = 0; i < path.Count; i++)
+        {
+            firstStation[i] = result.Stations.Count;
+            var fan = roundCorners ? CornerFan(normals, i, path.Count, orientation) : null;
+            if (fan is null)
+            {
+                result.Stations.Add(CreateStation(path, normals, closed, i));
+            }
+            else
+            {
+                foreach (var direction in fan)
+                {
+                    result.Stations.Add(new GradeStation(path[i], direction.X, direction.Y, 1.0)
+                    {
+                        SharesEdgeWithPrevious = result.Stations.Count > firstStation[i]
+                    });
+                }
+            }
+        }
+
+        for (var i = 0; i < result.Stations.Count; i++)
+        {
+            Trace(result.Stations[i], cutRiseOverRun, fillRiseOverRun, maxWidth, surface);
+            onStation?.Invoke(i + 1, result.Stations.Count);
+        }
+
+        var stationCount = result.Stations.Count;
+        var segmentCount = closed ? stationCount : stationCount - 1;
+        for (var i = 0; i < segmentCount; i++)
         {
             var from = result.Stations[i];
-            var to = result.Stations[(i + 1) % count];
+            var to = result.Stations[(i + 1) % stationCount];
             if (from.Hit && to.Hit)
             {
                 result.Corridor.Add(new[] { from.Edge, to.Edge, to.Daylight, from.Daylight });
@@ -125,7 +162,7 @@ internal static class SlopeGrader
 
         foreach (var station in result.Stations.Where(station => station.Hit))
         {
-            if (addEdgePoints)
+            if (addEdgePoints && !station.SharesEdgeWithPrevious)
             {
                 result.NewPoints.Add(station.Edge);
             }
@@ -199,6 +236,65 @@ internal static class SlopeGrader
         }
 
         return normals;
+    }
+
+    // corners sharper than this get a fan of rays so the foot of the slope rounds the corner; the rays are this far apart
+    private const double FanThreshold = 15.0 * Math.PI / 180.0;
+    private const double FanStep = 10.0 * Math.PI / 180.0;
+
+    /// <summary>Twice the plan area of the closed path; positive when it runs anticlockwise.</summary>
+    private static double SignedArea(IReadOnlyList<GradePoint> path)
+    {
+        var sum = 0.0;
+        for (var i = 0; i < path.Count; i++)
+        {
+            var a = path[i];
+            var b = path[(i + 1) % path.Count];
+            sum += a.X * b.Y - b.X * a.Y;
+        }
+
+        return sum;
+    }
+
+    private static void FlipAll(List<(double X, double Y)> normals)
+    {
+        for (var i = 0; i < normals.Count; i++)
+        {
+            normals[i] = (-normals[i].X, -normals[i].Y);
+        }
+    }
+
+    /// <summary>
+    /// The ray directions for a corner of a closed outline whose slope runs outwards, or null when one mitred ray will do.
+    /// A convex corner gets rays turning from the normal of the segment before to that of the one after, each square to a circle round the corner.
+    /// </summary>
+    private static List<(double X, double Y)>? CornerFan(List<(double X, double Y)> normals, int index, int count, double orientation)
+    {
+        var before = normals[(index - 1 + count) % count];
+        var after = normals[index];
+        var cross = before.X * after.Y - before.Y * after.X;
+        var dot = before.X * after.X + before.Y * after.Y;
+        var angle = Math.Atan2(Math.Abs(cross), dot);
+
+        // the rays only spread apart round a convex corner: a left turn of an anticlockwise outline, a right turn of a clockwise one
+        var convex = orientation > 0.0 ? cross > 0.0 : cross < 0.0;
+        if (!convex || angle < FanThreshold)
+        {
+            return null;
+        }
+
+        var steps = (int)Math.Ceiling(angle / FanStep);
+        var turn = cross > 0.0 ? 1.0 : -1.0;
+        var fan = new List<(double X, double Y)>(steps + 1);
+        for (var k = 0; k <= steps; k++)
+        {
+            var theta = turn * angle * k / steps;
+            var cos = Math.Cos(theta);
+            var sin = Math.Sin(theta);
+            fan.Add((before.X * cos - before.Y * sin, before.X * sin + before.Y * cos));
+        }
+
+        return fan;
     }
 
     /// <summary>Turns every normal round together if the picked point is on the other side of the nearest part of the line.</summary>

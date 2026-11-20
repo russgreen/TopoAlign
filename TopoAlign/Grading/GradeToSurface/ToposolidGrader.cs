@@ -35,7 +35,8 @@ internal static class ToposolidGrader
 
         var path = BuildPath(request.Curves, request.Interval, request.VerticalOffset, out var closed);
         var slope = SlopeUnits.ToRiseOverRun(request.SlopeMode, request.SlopeValue);
-        return ApplyToPath(document, request.Toposolid, path, closed, request.SidePoint.X, request.SidePoint.Y, slope, slope, request.MaxWidth, request.AddEdgePoints, "Grade to surface", progress);
+        return ApplyToPath(document, request.Toposolid, path, closed, request.SidePoint?.X ?? 0.0, request.SidePoint?.Y ?? 0.0, slope, slope, request.MaxWidth, request.AddEdgePoints, "Grade to surface", progress,
+            perimeter: request.GradeOutside);
     }
 
     /// <summary>
@@ -54,7 +55,8 @@ internal static class ToposolidGrader
         double maxWidth,
         bool addEdgePoints,
         string transactionName,
-        ProgressService? progress = null)
+        ProgressService? progress = null,
+        bool perimeter = false)
     {
         if (document is null)
         {
@@ -74,8 +76,9 @@ internal static class ToposolidGrader
             progress is null ? null : (done, _) =>
             {
                 progress.ThrowIfCancelled();
-                progress.SetValue(done);
-            });
+                progress.SetValue(Math.Min(done, path.Count));
+            },
+            perimeter);
         progress?.SetIndeterminate("Preparing the points...");
 
         var result = new GradeToSurfaceResult
@@ -94,7 +97,9 @@ internal static class ToposolidGrader
         {
             throw new SlopeMissesToposolidException(
                 "The slope does not meet the toposolid anywhere along the line. " +
-                "Check that the side you picked is towards the toposolid, and that the maximum width is long enough.");
+                (perimeter
+                    ? "Check that the element is on the toposolid, and that the maximum width is long enough."
+                    : "Check that the side you picked is towards the toposolid, and that the maximum width is long enough."));
         }
 
         // Points on the toposolid's outline can't simply be added: a corner already holds a point, and Revit refuses

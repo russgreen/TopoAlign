@@ -237,6 +237,78 @@ public class SlopeGraderTests : TopoAlignTest
         await Assert.That(outward.Corridor.Count).IsEqualTo(square.Count);
     }
 
+    private static List<GradePoint> Square(bool anticlockwise)
+    {
+        var corners = new List<GradePoint>
+        {
+            new(-10, -10, 3.0), new(10, -10, 3.0), new(10, 10, 3.0), new(-10, 10, 3.0)
+        };
+
+        if (!anticlockwise)
+        {
+            corners.Reverse();
+        }
+
+        return corners;
+    }
+
+    [Test]
+    public async Task APerimeter_GradesOutwards_WhicheverWayTheOutlineRuns()
+    {
+        foreach (var anticlockwise in new[] { true, false })
+        {
+            var result = SlopeGrader.Grade(Square(anticlockwise), true, 0, 0, 1.0, 1.0, 100, Ground(0.0), true, null, perimeter: true);
+
+            // every daylight point is three feet (a 3 foot drop at 1:1) beyond the outline, never inside it
+            foreach (var station in result.Stations.Where(s => s.Hit))
+            {
+                var outsideX = Math.Max(Math.Abs(station.Daylight.X) - 10.0, 0.0);
+                var outsideY = Math.Max(Math.Abs(station.Daylight.Y) - 10.0, 0.0);
+                await Assert.That(Math.Sqrt(outsideX * outsideX + outsideY * outsideY)).IsEqualTo(3.0).Within(Tol);
+            }
+        }
+    }
+
+    [Test]
+    public async Task APerimeter_RoundsAConvexCorner_WithRaysSquareToACircleAroundIt()
+    {
+        var result = SlopeGrader.Grade(Square(true), true, 0, 0, 1.0, 1.0, 100, Ground(0.0), true, null, perimeter: true);
+
+        // a quarter turn is fanned into several rays from the one corner point, so more stations than path points
+        await Assert.That(result.Stations.Count).IsGreaterThan(4);
+
+        var atCorner = result.Stations.Where(s => Math.Abs(s.Edge.X - 10) < Tol && Math.Abs(s.Edge.Y - 10) < Tol).ToList();
+        await Assert.That(atCorner.Count).IsGreaterThan(2);
+        foreach (var station in atCorner)
+        {
+            var dx = station.Daylight.X - 10.0;
+            var dy = station.Daylight.Y - 10.0;
+            await Assert.That(Math.Sqrt(dx * dx + dy * dy)).IsEqualTo(3.0).Within(Tol);
+        }
+
+        // the corner's edge point is only added once
+        var edgePointsAtCorner = result.NewPoints.Count(p => Math.Abs(p.X - 10) < Tol && Math.Abs(p.Y - 10) < Tol && Math.Abs(p.Z - 3.0) < Tol);
+        await Assert.That(edgePointsAtCorner).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task APerimeter_GradesOutwardsAllRoundAConcaveOutline()
+    {
+        // an L-shape: its inner corner at (0, 0) is concave from outside and gets a single mitred ray
+        var path = new List<GradePoint>
+        {
+            new(-10, -10, 3.0), new(10, -10, 3.0), new(10, 0, 3.0), new(0, 0, 3.0), new(0, 10, 3.0), new(-10, 10, 3.0)
+        };
+
+        var result = SlopeGrader.Grade(path, true, 0, 0, 1.0, 1.0, 100, Ground(0.0), true, null, perimeter: true);
+
+        // the middle of the long west side (-10, 0) isn't a vertex; the west vertices' rays must point west, not east into the L
+        var west = result.Stations.Where(s => Math.Abs(s.Edge.X + 10) < Tol && s.Hit).ToList();
+        await Assert.That(west.Count).IsGreaterThan(0);
+        await Assert.That(west.Any(s => s.Daylight.X > -10.0 + Tol && Math.Abs(s.Edge.Y) < 10 - Tol)).IsFalse();
+        await Assert.That(result.Stations.Count(s => Math.Abs(s.Edge.X) < Tol && Math.Abs(s.Edge.Y) < Tol)).IsEqualTo(1);
+    }
+
     [Test]
     public async Task AtACorner_TheSlopeIsStillMeasuredSquareToTheLine()
     {

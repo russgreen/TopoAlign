@@ -13,14 +13,16 @@ internal sealed class GradeToSurfaceRequest
     public GradeToSurfaceRequest(
         Toposolid toposolid,
         IReadOnlyList<Curve> curves,
-        XYZ sidePoint,
+        XYZ? sidePoint,
         SlopeMode slopeMode,
         double slopeValue,
         double maxWidth,
         double verticalOffset,
         double interval,
-        bool addEdgePoints)
+        bool addEdgePoints,
+        bool gradeOutside = false)
     {
+        GradeOutside = gradeOutside;
         Toposolid = toposolid;
         Curves = curves;
         SidePoint = sidePoint;
@@ -37,7 +39,11 @@ internal sealed class GradeToSurfaceRequest
     /// <summary>The line to grade from, in order and end to end.</summary>
     public IReadOnlyList<Curve> Curves { get; }
 
-    public XYZ SidePoint { get; }
+    /// <summary>The side to grade towards; null when <see cref="GradeOutside"/> is set.</summary>
+    public XYZ? SidePoint { get; }
+
+    /// <summary>True when the curves are the outline of an element and the slope runs outwards all the way round, rounding the corners.</summary>
+    public bool GradeOutside { get; }
     public SlopeMode SlopeMode { get; }
     public double SlopeValue { get; }
 
