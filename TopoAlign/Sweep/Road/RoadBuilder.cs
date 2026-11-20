@@ -242,6 +242,12 @@ internal static class RoadBuilder
             RoadFamilyBuilder.DeleteFile(familyFile);
         }
 
+        if (options.ShapeTopoToBase)
+        {
+            progress?.SetIndeterminate("Shaping the toposolid to the base of the road...");
+            result.BaseShapeNotice = RoadBasePoints.Apply(document, path, stations, new[] { profile }, options, null);
+        }
+
         if (result.SkippedSpans > 0)
         {
             log.Warning("{skipped} spans of the road along {alignment} could not be built", result.SkippedSpans, alignment.UniqueId);

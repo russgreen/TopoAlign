@@ -42,6 +42,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(IsRoadOutput))]
     [NotifyPropertyChangedFor(nameof(CreateButtonText))]
     [NotifyPropertyChangedFor(nameof(ExistingRoadNote))]
+    [NotifyPropertyChangedFor(nameof(ShowShapeTopo))]
     [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
     private RoadChoice<RoadOutput>? _selectedOutput;
 
@@ -86,6 +87,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(ShowGradeTopo))]
     [NotifyPropertyChangedFor(nameof(ShowGradeTopoPick))]
     [NotifyPropertyChangedFor(nameof(GradeTopoStatus))]
+    [NotifyPropertyChangedFor(nameof(ShowShapeTopo))]
     [NotifyCanExecuteChangedFor(nameof(CreateCommand))]
     private RoadChoice<SweepMode>? _selectedMode;
 
@@ -123,6 +125,15 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
     /// <summary>Make each part of the assembly a family instead of a direct shape, so voids (such as a T-junction's) can cut it and be edited by hand.</summary>
     [ObservableProperty]
     private bool _assemblyAsFamilies;
+
+    // ---- shaping the topo to the base of the road ----------------------------------------------------------------
+
+    /// <summary>Add points along the bottom of the road elements to the toposolid so its surface follows the underside of the road.</summary>
+    [ObservableProperty]
+    private bool _shapeTopoToBase;
+
+    /// <summary>Toposolids need Revit 2024 or later, and a toposolid-only sweep adds no road to shape them to.</summary>
+    public bool ShowShapeTopo => CanGradeTopo && !IsToposolidOutput;
 
     public bool ShowGradeTopo => IsAssemblyMode && CanGradeTopo;
 
@@ -571,7 +582,8 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
                 Category = SelectedCategory?.Category ?? BuiltInCategory.OST_GenericModel,
                 ProfileName = SelectedProfileType?.Name ?? string.Empty,
                 GeometryMethod = SelectedGeometryMethod?.Value ?? RoadGeometryMethod.SegmentedLoft,
-                Output = SelectedOutput?.Value ?? RoadOutput.DirectShape
+                Output = SelectedOutput?.Value ?? RoadOutput.DirectShape,
+                ShapeTopoToBase = ShowShapeTopo && ShapeTopoToBase
             };
 
             if (options.Output == RoadOutput.Toposolid && SelectedToposolidType is not null && SelectedLevel is not null)
@@ -633,7 +645,8 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
                 VerticalOffset = ToInternal(VerticalOffset),
                 ProfileName = SelectedAssembly.Name,
                 GeometryMethod = SelectedGeometryMethod?.Value ?? RoadGeometryMethod.SegmentedLoft,
-                Output = AssemblyAsFamilies ? RoadOutput.Family : RoadOutput.DirectShape
+                Output = AssemblyAsFamilies ? RoadOutput.Family : RoadOutput.DirectShape,
+                ShapeTopoToBase = ShowShapeTopo && ShapeTopoToBase
             };
 
             SaveSettings();
@@ -666,6 +679,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         VerticalOffset = ToDisplay(_settings.SweepVerticalOffset);
         MirrorProfile = _settings.SweepMirrorProfile;
         GradeTopo = _settings.SweepGradeTopo;
+        ShapeTopoToBase = _settings.SweepShapeTopoToBase;
         AssemblyAsFamilies = _settings.SweepAssemblyFamilies;
 
         SelectedCategory = Categories.FirstOrDefault(c => c.Category.ToString() == _settings.SweepCategory) ?? Categories.FirstOrDefault();
@@ -689,6 +703,7 @@ internal partial class SweepAlignmentViewModel : BaseViewModel
         _settings.SweepVerticalOffset = (decimal)ToInternal(VerticalOffset);
         _settings.SweepMirrorProfile = MirrorProfile;
         _settings.SweepGradeTopo = GradeTopo;
+        _settings.SweepShapeTopoToBase = ShapeTopoToBase;
         _settings.SweepAssemblyFamilies = AssemblyAsFamilies;
         _settings.SweepCategory = SelectedCategory?.Category.ToString() ?? string.Empty;
         _settings.SweepProfileName = SelectedProfileType?.Name ?? string.Empty;

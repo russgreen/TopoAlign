@@ -110,6 +110,11 @@ public class CommandSweepAlignment : IExternalCommand
                 summary += $"{Environment.NewLine}{Environment.NewLine}{result.Notice}";
             }
 
+            if (!string.IsNullOrEmpty(result.BaseShapeNotice))
+            {
+                summary += $"{Environment.NewLine}{Environment.NewLine}{result.BaseShapeNotice}";
+            }
+
             if (result.SkippedSpans > 0)
             {
                 summary += $"{Environment.NewLine}{Environment.NewLine}{result.SkippedSpans} span{(result.SkippedSpans == 1 ? string.Empty : "s")} could not be built, " +
@@ -236,6 +241,11 @@ public class CommandSweepAlignment : IExternalCommand
         }
 
         summary += GradingSummary(result);
+
+        if (!string.IsNullOrEmpty(result.BaseShapeNotice))
+        {
+            summary += $"{Environment.NewLine}{Environment.NewLine}{result.BaseShapeNotice}";
+        }
 
         if (!string.IsNullOrEmpty(result.Notice))
         {
